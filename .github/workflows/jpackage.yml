@@ -27,6 +27,11 @@ jobs:
         with:
           distribution: zulu
           java-version: 25
+          architecture: ${{ matrix.arch }}
+
+      - name: Verify Java architecture
+        run: |
+          java -XshowSettings:properties -version 2>&1 | grep os.arch
 
       - name: Install Gradle (Windows)
         if: runner.os == 'Windows'
@@ -144,12 +149,15 @@ jobs:
       - name: Install AppImageTool
         if: runner.os == 'Linux' && matrix.arch == 'amd64'
         run: |
-          wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O appimagetool
+          sudo apt update
+          sudo apt install -y fuse libfuse2
+          wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O appimagetool
           chmod +x appimagetool
 
       - name: Build final .AppImage
         if: runner.os == 'Linux' && matrix.arch == 'amd64'
         run: |
+          export APPIMAGE_EXTRACT_AND_RUN=1
           ./appimagetool output/appimage/Cogfly_amd64 output/${{ runner.os }}-${{ matrix.arch }}/Cogfly_amd64.AppImage
 
       - uses: actions/upload-artifact@v4
