@@ -1,0 +1,68 @@
+name: macos-build.yml
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-mac:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Install build tools
+        run: |
+          brew update
+          brew install gradle 
+
+      - name: Build project
+        run: |
+          ./gradlew shadowJar
+
+      - name: build aarch64
+        run: |
+          mkdir -p output
+          jpackage \
+            --input target \
+            --main-jar cogfly-1.0.jar \
+            --name Cogfly_aarch64 \
+            --type dmg \
+            --vendor "Ambershadow" \
+            --module-path ./lib/aarch64 \
+            --add-modules javafx.controls,javafx.swing \
+            --icon ./icons/icon.icns \
+            --app-version 1.0 \
+            --dest output/aarch64
+
+      - name: build amd64
+        run: |
+          mkdir -p output
+          jpackage \
+            --input target \
+            --main-jar cogfly-1.0.jar \
+            --name Cogfly_amd64 \
+            --type dmg \
+            --vendor "Ambershadow" \
+            --module-path ./lib/x64 \
+            --add-modules javafx.controls,javafx.swing \
+            --icon ./icons/icon.icns \
+            --app-version 1.0 \
+            --dest output/amd64
+      
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: Cogfly_aarch64-dmg
+          path: output/aarch64/*.dmg
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: Cogfly_amd64-dmg
+          path: output/amd64/*.dmg

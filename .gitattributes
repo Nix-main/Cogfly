@@ -1,0 +1,2 @@
+lib/x64/* filter=lfs diff=lfs merge=lfs -text
+lib/aarch64/* filter=lfs diff=lfs merge=lfs -text
