@@ -24,6 +24,9 @@ jobs:
           brew update
           brew install gradle 
 
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
       - name: Build project
         run: |
           ./gradlew shadowJar
