@@ -1,0 +1,130 @@
+name: jpackage
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-mac:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        arch: [amd64]
+        include:
+          - os: macos-latest
+            arch: aarch64
+
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          lfs: true
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: zulu
+          java-version: 25
+
+      - name: Install Gradle (Windows)
+        if: runner.os == 'Windows'
+        run: choco install gradle --no-progress
+
+      - name: Make Gradle wrapper executable
+        if: runner.os != 'Windows'
+        run: chmod +x ./gradlew
+
+      - name: Build project
+        run: |
+          if [ ${{ runner.os }} == 'Windows' ]; then
+            gradle shadowJar
+          else
+            ./gradlew shadowJar
+          fi
+
+      - name: Build macOS DMGs
+        if: runner.os == 'macOS'
+        run: |
+          for arch in amd64 aarch64; do
+            output_dir="output/${{ runner.os }}-$arch"
+            mkdir -p "$output_dir"
+            module_path="./lib/x64"
+            name_suffix="amd64"
+            if [ "$arch" = "aarch64" ]; then
+              module_path="./lib/aarch64"
+              name_suffix="aarch64"
+            fi
+            jpackage \
+              --input build/libs \
+              --main-jar cogfly-1.0.jar \
+              --name "Cogfly_$name_suffix" \
+              --type dmg \
+              --vendor "Ambershadow" \
+              --module-path "$module_path" \
+              --add-modules javafx.controls,javafx.swing \
+              --icon ./icons/icon.icns \
+              --app-version 1.0 \
+              --dest "$output_dir"
+          done
+
+
+      - name: Build MSI
+        if: runner.os == 'Windows' && matrix.arch == 'amd64'
+        run: |
+          jpackage \
+            --input build/libs \
+            --main-jar cogfly-1.0.jar \
+            --name Cogfly_amd64 \
+            --type msi \
+            --vendor "Ambershadow" \
+            --icon ./icons/icon.ico \
+            --app-version 1.0 \
+            --dest output/${{ runner.os }}-${{ matrix.arch }} \
+            --win-menu \
+            --win-shortcut
+      - name: Build EXE
+        if: runner.os == 'Windows' && matrix.arch == 'amd64'
+        run: |
+          jpackage \
+            --input build/libs \
+            --main-jar cogfly-1.0.jar \
+            --name Cogfly_amd64 \
+            --type exe \
+            --vendor "Ambershadow" \
+            --icon ./icons/icon.ico \
+            --app-version 1.0 \
+            --dest output/${{ runner.os }}-${{ matrix.arch }} \
+            --win-menu \
+            --win-shortcut
+
+      - name: Build DEB
+        if: runner.os == 'Linux' && matrix.arch == 'amd64'
+        run: |
+          jpackage \
+            --input build/libs \
+            --main-jar cogfly-1.0.jar \
+            --name Cogfly_amd64 \
+            --type deb \
+            --vendor "Ambershadow" \
+            --icon ./icons/icon.png \
+            --app-version 1.0 \
+            --dest output/${{ runner.os }}-${{ matrix.arch }} \
+      - name: Build Appimage
+        if: runner.os == 'Linux' && matrix.arch == 'amd64'
+        run: |
+          jpackage \
+            --input build/libs \
+            --main-jar cogfly-1.0.jar \
+            --name Cogfly_amd64 \
+            --type app-image \
+            --vendor "Ambershadow" \
+            --icon ./icons/icon.png \
+            --app-version 1.0 \
+            --dest output/${{ runner.os }}-${{ matrix.arch }} \
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Cogfly-${{ runner.os }}-${{ matrix.arch }}
+          path: output/${{ runner.os }}-${{ matrix.arch }}/*
