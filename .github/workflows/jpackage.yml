@@ -46,7 +46,7 @@ jobs:
           fi
 
       - name: Build macOS amd64 dmg
-        if: runner.os == 'macOS'
+        if: runner.os == 'macOS' && matrix.arch == 'amd64'
         run: |
           jpackage \
               --input build/libs \
@@ -54,13 +54,14 @@ jobs:
               --name "Cogfly_amd64" \
               --type dmg \
               --vendor "Ambershadow" \
-              --module-path ./lib/amd64" \
+              --module-path ./lib/amd64 \
               --add-modules javafx.controls,javafx.swing \
               --icon ./icons/icon.icns \
               --app-version 1.0 \
               --dest "$output_dir"
 
       - name: Build macOS aarch64 dmg
+        if: runner.os == 'macOS' && matrix.arch == 'aarch64'
         run: |
           jpackage \
               --input build/libs \
@@ -68,7 +69,7 @@ jobs:
               --name "Cogfly_aarch64" \
               --type dmg \
               --vendor "Ambershadow" \
-              --module-path ./lib/aarch64" \
+              --module-path ./lib/aarch64 \
               --add-modules javafx.controls,javafx.swing \
               --icon ./icons/icon.icns \
               --app-version 1.0 \
