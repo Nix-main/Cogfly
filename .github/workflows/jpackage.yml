@@ -51,7 +51,6 @@ jobs:
           mkdir -p ./lib/aarch64
           curl -L -o openjfx.zip https://download2.gluonhq.com/openjfx/25.0.1/openjfx-25.0.1_osx-aarch64_bin-sdk.zip
           unzip openjfx.zip -d ./lib/aarch64
-          run: ls -R ./lib
 
       - name: Build macOS amd64 dmg
         if: runner.os == 'macOS' && matrix.arch == 'amd64'
@@ -75,7 +74,7 @@ jobs:
               --name "Cogfly_aarch64" \
               --type dmg \
               --vendor "Ambershadow" \
-              --module-path ./lib/aarch64/lib \
+              --module-path ./lib/aarch64/javafx-sdk-25.0.1/lib \
               --add-modules javafx.controls,javafx.swing \
               --icon ./icons/icon.icns \
               --app-version 1.0 \
