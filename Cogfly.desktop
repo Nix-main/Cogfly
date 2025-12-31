@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=Cogfly
-Exec=bin/Cogfly
+Exec=Cogfly
 Icon=icon
 Type=Application
 Categories=Utility;

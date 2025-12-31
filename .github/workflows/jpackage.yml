@@ -124,9 +124,16 @@ jobs:
             --dest output/appimage
           cp ./icons/icon.png output/appimage/Cogfly/
           cp ./Cogfly.desktop output/appimage/Cogfly/
+          cat > output/appimage/Cogfly/AppRun << 'EOF'
+          #!/bin/sh
+          HERE="$(dirname "$(readlink -f "$0")")"
+          exec "$HERE/bin/Cogfly" "$@"
+          EOF
+          chmod +x output/appimage/Cogfly/AppRun
           sudo apt update
           wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O appimagetool
           chmod +x appimagetool
+          ls -l output/appimage/Cogfly
           export APPIMAGE_EXTRACT_AND_RUN=1
           ./appimagetool output/appimage/Cogfly output/${{ runner.os }}-${{ matrix.arch }}/Cogfly.AppImage
 
