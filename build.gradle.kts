@@ -58,10 +58,4 @@ tasks.shadowJar {
     manifest {
         attributes["Main-Class"] = "dev.ambershadow.cogfly.Cogfly"
     }
-
-    exclude(
-        "javafx/**",
-        "com/sun/javafx/**",
-        "META-INF/services/javafx*"
-    )
 }
