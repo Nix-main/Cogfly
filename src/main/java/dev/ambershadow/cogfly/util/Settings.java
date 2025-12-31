@@ -37,8 +37,7 @@ public class Settings {
         for (Path root : FileSystems.getDefault().getRootDirectories()) {
             for (String path : STATIC_PATHS) {
                 Path combined = root.resolve(path);
-                if (Files.exists(combined)) {
-                    System.out.println(combined);
+                if (Files.isDirectory(combined)) {
                     return combined.toAbsolutePath().toString();
                 }
             }
@@ -47,7 +46,11 @@ public class Settings {
             String path = AppDirsFactory.getInstance().getUserDataDir
                     ("Steam", null, "Steam")
                     + "/steamapps/common/Hollow Knight Silksong/";
-            return Files.exists(Paths.get(path)) ? path : "";
+            return Files.isDirectory(Paths.get(path)) ? path : "";
+        }
+        if (Utils.OperatingSystem.current() == Utils.OperatingSystem.LINUX){
+            String path = System.getProperty("user.home") + "/.local/share/Steam/steamapps/common/Hollow Knight Silksong/";
+            return Files.isDirectory(Paths.get(path)) ? path : "";
         }
         return "";
     }
