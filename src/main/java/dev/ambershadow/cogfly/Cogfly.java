@@ -4,11 +4,10 @@ import com.formdev.flatlaf.intellijthemes.FlatAllIJThemes;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.sun.jna.Native;
 import dev.ambershadow.cogfly.loader.ModData;
 import dev.ambershadow.cogfly.loader.ModFetcher;
 import dev.ambershadow.cogfly.util.*;
-import javafx.embed.swing.JFXPanel;
-import javafx.stage.FileChooser;
 import net.harawata.appdirs.AppDirs;
 import net.harawata.appdirs.AppDirsFactory;
 
@@ -21,7 +20,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -29,12 +27,6 @@ public class Cogfly {
 
     public static URL getResource(String path){
         return Cogfly.class.getResource(path);
-    }
-
-    public static String getResourceContentRaw(String path) throws IOException {
-        try(InputStream is = getResource(path).openStream()) {
-            return new String(is.readAllBytes());
-        }
     }
 
     public static List<String> excludedMods = new ArrayList<>(){
@@ -54,14 +46,32 @@ public class Cogfly {
     public static String latestPackVer;
     public static URL packUrlNoConsole;
 
+    public static WinFolderPicker FOLDER_PICKER;
+    public static WinTinyFileDialogs FILE_DIALOGS;
     static void main() {
+        if (Utils.OperatingSystem.current() == Utils.OperatingSystem.WINDOWS){
+            try {
+                FOLDER_PICKER =
+                        Native.load(Native.extractFromResourcePath("winfolderpicker").getAbsolutePath(),
+                                WinFolderPicker.class
+                                );
+                FILE_DIALOGS =
+                        Native.load(Native.extractFromResourcePath("wintinyfiledialogs").getAbsolutePath(),
+                                WinTinyFileDialogs.class
+                        );
+            } catch (IOException | UnsatisfiedLinkError e) {
+                throw new RuntimeException(e);
+            }
+        }
         AppDirs dirs = AppDirsFactory.getInstance();
         localDataPath = dirs.getUserDataDir("Cogfly", null, "");
         roamingDataPath = dirs.getUserDataDir("Cogfly", null, "", true);
         dataJson = new File(localDataPath + "/settings.json");
+        //noinspection ResultOfMethodCallIgnored
         dataJson.getParentFile().mkdirs();
         if (!dataJson.exists()) {
             try {
+                //noinspection ResultOfMethodCallIgnored
                 dataJson.createNewFile();
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -71,25 +81,24 @@ public class Cogfly {
         packUrl = Cogfly.getResource("/packs/BepInExPack.zip");
         packUrlNoConsole = Cogfly.getResource("/packs/BepInExPack_NoConsole.zip");
 
-        new JFXPanel();
         CompletableFuture.runAsync(() -> downloadBepInExNoConsole(Paths.get(settings.gamePath)));
-                List<JsonObject> m = ModFetcher.getAllMods();
-                List<ModData> data = new ArrayList<>();
-                m.forEach(object -> {
-                    if (object.get("full_name").getAsString().equals("BepInEx-BepInExPack_Silksong")){
-                        latestPackVer = object.get("versions").getAsJsonArray().get(0).getAsJsonObject().get("version_number").getAsString();
-                    }
-                    if (object.get("is_deprecated").getAsBoolean())
-                        return;
-                    if (excludedMods.contains(object.get("full_name").getAsString()))
-                        return;
-                    data.add(new ModData(object));
-                });
-                data.sort(
-                    Comparator.comparing(
-                            o -> o.getName().toLowerCase(),
-                            Comparator.nullsLast(Comparator.naturalOrder())
-                    ));
+        List<JsonObject> m = ModFetcher.getAllMods();
+        List<ModData> data = new ArrayList<>();
+        m.forEach(object -> {
+            if (object.get("full_name").getAsString().equals("BepInEx-BepInExPack_Silksong")){
+                latestPackVer = object.get("versions").getAsJsonArray().get(0).getAsJsonObject().get("version_number").getAsString();
+            }
+            if (object.get("is_deprecated").getAsBoolean())
+                return;
+            if (excludedMods.contains(object.get("full_name").getAsString()))
+                return;
+            data.add(new ModData(object));
+        });
+        data.sort(
+                Comparator.comparing(
+                        o -> o.getName().toLowerCase(),
+                        Comparator.nullsLast(Comparator.naturalOrder())
+                ));
                 Cogfly.mods = data;
                 ProfileManager.loadProfiles();
                 if (ProfileManager.profiles.isEmpty()){
@@ -113,7 +122,7 @@ public class Cogfly {
         Path bepindll = path.resolve("BepInEx/core/BepInEx.dll");
         if (bepindll.toFile().exists())
             return;
-        Utils.downloadAndExtract(packUrl, path);
+        Utils.downloadAndExtract(packUrl, path  );
     }
 
     public static void sortList(SortingType type, String direction){
@@ -151,7 +160,7 @@ public class Cogfly {
     public static JsonObject jsonSettingsFile;
 
     private static void loadSettings() {
-        String content = "";
+        String content;
         try(FileReader reader = new FileReader(dataJson)) {
             content = new BufferedReader(reader).lines().collect(Collectors.joining("\n"));
         } catch (Exception e) {
@@ -161,7 +170,7 @@ public class Cogfly {
         if (!content.isEmpty()) {
             JsonElement element = JsonParser.parseString(content);
             if (element != null) {
-                jsonSettingsFile = element.getAsJsonObject();;
+                jsonSettingsFile = element.getAsJsonObject();
                 if (jsonSettingsFile.has("theme")) {
                     Cogfly.settings.theme = jsonSettingsFile.get("theme").getAsString();
                 }
@@ -217,16 +226,14 @@ public class Cogfly {
             prompt.add(texts, BorderLayout.NORTH);
 
             JButton path = new JButton("Click here to select a file.");
-            path.addActionListener(e -> Utils.pickFolderAsync((folder) -> {
-                path.setText(folder.toFile().getAbsolutePath());
-            }));
+            path.addActionListener(_ -> Utils.pickFolder((folder) -> path.setText(folder.toFile().getAbsolutePath())));
             JPanel centerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
             centerPanel.add(path);
             prompt.add(centerPanel, BorderLayout.CENTER);
 
             JButton confirm = new JButton("Confirm");
 
-            confirm.addActionListener(e -> {
+            confirm.addActionListener(_ -> {
                 settings.profileSavePath =
                         !path.getText().equals("Click here to select a file.") ? path.getText() : settings.profileSavePath;
                 prompt.dispose();
@@ -265,19 +272,16 @@ public class Cogfly {
             JButton confirm = new JButton("Confirm");
             confirm.setEnabled(false);
 
-            confirm.addActionListener(e -> {
+            confirm.addActionListener(_ -> {
                 settings.gamePath = path.getText();
                 prompt.dispose();
                 settings.save();
             });
 
-            path.addActionListener(e -> Utils.pickFileAsync((file) -> {
+            path.addActionListener(_ -> Utils.pickFile((file) -> {
                 path.setText(file.toFile().getParentFile().getAbsolutePath());
                 confirm.setEnabled(true);
-            }, new FileChooser.ExtensionFilter(
-                    "Silksong Executable",
-                    "*.exe", "*.app", "*.   x86_64"
-            )));
+            }, "exe", "app", "x86_64"));
             JPanel confirmPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
             confirmPanel.add(confirm);
             prompt.add(confirmPanel, BorderLayout.SOUTH);
@@ -299,6 +303,10 @@ public class Cogfly {
                 cmds.add("sh");
                 cmds.add(gameAppPath.toString());
                 cmds.add(Paths.get(settings.gamePath).resolve("Hollow Knight Silksong.app").toString());
+            } else if (Utils.OperatingSystem.current().equals(Utils.OperatingSystem.WINDOWS)) {
+                cmds.add("sh");
+                cmds.add(gameAppPath.toString());
+                cmds.add(Paths.get(settings.gamePath).resolve("Hollow Knight Silksong.x86_64").toString());
             } else {
                 cmds.add(gameAppPath.toString());
             }

@@ -1,21 +1,18 @@
 package dev.ambershadow.cogfly.elements.profiles;
 
-import dev.ambershadow.cogfly.Cogfly;
 import dev.ambershadow.cogfly.asset.Assets;
 import dev.ambershadow.cogfly.elements.ModPanelElement;
 import dev.ambershadow.cogfly.loader.ModData;
 import dev.ambershadow.cogfly.util.*;
-import javafx.stage.DirectoryChooser;
 
 import javax.swing.*;
 import java.awt.*;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 
 public class ProfileOpenPageCardElement extends JPanel {
 
-    private Profile profile;
-    private JButton updateAll;
+    private final Profile profile;
+    private final JButton updateAll;
     public ProfileOpenPageCardElement(Profile profile) {
         super(new BorderLayout());
         this.profile = profile;
@@ -23,16 +20,12 @@ public class ProfileOpenPageCardElement extends JPanel {
         upperPanel.setPreferredSize(new Dimension(getWidth(), 100));
 
         JButton launch = new JButton("Launch");
-        launch.addActionListener(_ -> {
-            Utils.launchModdedGame(ProfileManager.getCurrentProfile());
-        });
+        launch.addActionListener(_ -> Utils.launchModdedGame(ProfileManager.getCurrentProfile()));
 
         updateAll = new JButton("Update All");
         updateAll.setEnabled(false);
-        updateAll.addActionListener(_ -> {
-            profile.getInstalledMods().stream().filter(ModData::isOutdated)
-                    .forEach(mod -> Utils.downloadMod(mod, profile));
-        });
+        updateAll.addActionListener(_ -> profile.getInstalledMods().stream().filter(ModData::isOutdated)
+                .forEach(mod -> Utils.downloadMod(mod, profile)));
 
         JButton copyLogToClipboard = new JButton("Copy Log To Clipboard");
         copyLogToClipboard.addActionListener(_ -> {
@@ -65,9 +58,7 @@ public class ProfileOpenPageCardElement extends JPanel {
         });
 
         JButton exportAsFile = new JButton("Export As File");
-        exportAsFile.addActionListener(_ -> Utils.pickFolderAsync(path -> {
-            ProfileManager.toFile(profile, path);
-        }));
+        exportAsFile.addActionListener(_ -> Utils.pickFolder(path -> ProfileManager.toFile(profile, path)));
 
         JButton openFileLocation = new JButton("Open Profile Folder");
         openFileLocation.addActionListener(_ -> Utils.openProfilePath(profile));

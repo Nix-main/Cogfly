@@ -2,7 +2,6 @@ package dev.ambershadow.cogfly.elements.settings;
 
 import dev.ambershadow.cogfly.Cogfly;
 import dev.ambershadow.cogfly.util.Utils;
-import javafx.scene.control.TableFocusModel;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -19,7 +18,7 @@ public class ManageProfileSourcesDialog extends JDialog {
             @Override
             public boolean isCellEditable(int row, int column){
                 return false;
-            };
+            }
         };
         Cogfly.settings.profileSources.forEach(
                 source -> model.addRow(new Object[]{source}));
@@ -41,18 +40,16 @@ public class ManageProfileSourcesDialog extends JDialog {
 
         JPanel buttonWrapper = new JPanel(new FlowLayout(FlowLayout.CENTER));
         JButton button1 = new JButton("Add");
-        button1.addActionListener(e -> {
-            Utils.pickFolderAsync((path) -> {
-                model.setRowCount(model.getRowCount() + 1);
-                table.setModel(model);
-                table.setValueAt(path.toString(), model.getRowCount()-1, 0);
-                Cogfly.settings.profileSources.add(path.toString());
-                Cogfly.settings.save();
-            });
-        });
+        button1.addActionListener(_ -> Utils.pickFolder((path) -> {
+            model.setRowCount(model.getRowCount() + 1);
+            table.setModel(model);
+            table.setValueAt(path.toString(), model.getRowCount()-1, 0);
+            Cogfly.settings.profileSources.add(path.toString());
+            Cogfly.settings.save();
+        }));
         JButton button2 = new JButton("Remove");
         button2.setEnabled(table.getSelectedRow() != -1);
-        button2.addActionListener(e -> {
+        button2.addActionListener(_ -> {
             int row = table.getSelectedRow();
             if (row >= 0 && row < Cogfly.settings.profileSources.size()) {
                 Cogfly.settings.profileSources.remove(row);
@@ -61,9 +58,7 @@ public class ManageProfileSourcesDialog extends JDialog {
                 Cogfly.settings.save();
             }
         });
-        Timer timer = new Timer(50, (listener) -> {
-            button2.setEnabled(table.getSelectedRow() != -1);
-        });
+        Timer timer = new Timer(50, _ -> button2.setEnabled(table.getSelectedRow() != -1));
         timer.start();
         buttonWrapper.add(button1, BorderLayout.EAST);
         buttonWrapper.add(Box.createHorizontalStrut(200));

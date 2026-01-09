@@ -35,9 +35,9 @@ jobs:
         shell: bash
         run: |
           if [ "${{ runner.os }}" == "Windows" ]; then
-            ./gradlew.bat clean buildForArch -Pname=Windowsamd64
+            ./gradlew.bat clean shadowJar
           else
-            ./gradlew clean buildForArch -Pname=${{runner.os}}${{matrix.arch}}
+            ./gradlew clean shadowJar
           fi
 
       - name: Build macOS amd64 dmg

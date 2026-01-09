@@ -3,18 +3,14 @@ package dev.ambershadow.cogfly.elements.profiles;
 import dev.ambershadow.cogfly.Cogfly;
 import dev.ambershadow.cogfly.loader.ModData;
 import dev.ambershadow.cogfly.util.*;
-import javafx.stage.FileChooser;
 
 import javax.swing.*;
 import java.awt.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ProfilesScreenElement extends JPanel implements ReloadablePage {
 
-    private JScrollPane pane;
     public JPanel parentPanel;
 
     public ProfilesScreenElement() {
@@ -22,48 +18,36 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
         upperPanel.setPreferredSize(new Dimension(getWidth(), 30));
 
         JButton launchVanilla = new JButton("Launch Vanilla Game");
-        launchVanilla.addActionListener(_ -> {
-            Cogfly.launchGameAsync("");
-        });
+        launchVanilla.addActionListener(_ -> Cogfly.launchGameAsync(""));
 
         JButton importFromFile = new JButton("Import From File");
-        importFromFile.addActionListener(_ -> {
-            Utils.pickFileAsync((path) -> {
-                ProfileManager.fromFile(path, (profile, outdated) -> {
-                    if (outdated.length > 0) {
-                        JOptionPane out = new JOptionPane("");
-                        List<Object> msg = new ArrayList<>();
-                        msg.add("This profile has outdated mods.");
-                        msg.add("");
-                        for (ModData modData : outdated) {
-                            msg.add("• " + modData.getName());
-                        }
-                        msg.add("");
-                        msg.add("Would you like to update them?");
-                        int result = JOptionPane.showConfirmDialog(
-                                FrameManager.getOrCreate().frame,
-                                msg.toArray(),
-                                "Outdated Mods",
-                                JOptionPane.YES_NO_OPTION,
-                                JOptionPane.QUESTION_MESSAGE);
-                        if (result == JOptionPane.YES_OPTION) {
-                            for (ModData modData : outdated) {
-                                Utils.downloadMod(
-                                        ModData.getMod(modData.getFullName()),
-                                        profile
-                                );
-                            }
-                        }
+        importFromFile.addActionListener(_ -> Utils.pickFile((path) -> ProfileManager.fromFile(path, (profile, outdated) -> {
+            if (outdated.length > 0) {
+                List<Object> msg = new ArrayList<>();
+                msg.add("This profile has outdated mods.");
+                msg.add("");
+                for (ModData modData : outdated) {
+                    msg.add("• " + modData.getName());
+                }
+                msg.add("");
+                msg.add("Would you like to update them?");
+                int result = JOptionPane.showConfirmDialog(
+                        FrameManager.getOrCreate().frame,
+                        msg.toArray(),
+                        "Outdated Mods",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE);
+                if (result == JOptionPane.YES_OPTION) {
+                    for (ModData modData : outdated) {
+                        Utils.downloadMod(
+                                ModData.getMod(modData.getFullName()),
+                                profile
+                        );
                     }
-                    drawProfiles();
-                });
-            },
-                    new FileChooser.ExtensionFilter(
-                            "Profile file", "*.r2z"
-                    )
-            );
-
-        });
+                }
+            }
+            drawProfiles();
+        }), "r2z"));
 
         JButton importFromCode = new JButton("Import From Code");
         importFromCode.addActionListener(_ -> {
@@ -102,7 +86,7 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
         JPanel wrapper = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
         wrapper.add(parentPanel);
 
-        pane = new JScrollPane(wrapper, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+        JScrollPane pane = new JScrollPane(wrapper, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
                 JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
         JButton createProfile = new JButton("Create Profile");
@@ -131,12 +115,7 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
                                 button.getText());
                 drawProfiles();
             });
-            button.addActionListener(_ -> {
-                Utils.pickFileAsync((path) -> {
-                    button.setText(path.toString());
-                }, new FileChooser.ExtensionFilter(
-                        "Image", "*.png", "*.jpg", "*.jpeg", "*.gif"));
-            });
+            button.addActionListener(_ -> Utils.pickFile((path) -> button.setText(path.toString()), "png", "jpg", "jpeg", "gif"));
             create.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
             holder.add(name, BorderLayout.WEST);
             holder.add(nameField, BorderLayout.EAST);

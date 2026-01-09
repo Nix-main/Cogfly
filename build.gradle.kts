@@ -1,6 +1,5 @@
 plugins {
     id("java")
-    id("org.openjfx.javafxplugin") version("0.1.0")
     id("com.gradleup.shadow") version "9.3.0"
 
 }
@@ -16,6 +15,7 @@ dependencies {
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    implementation("net.java.dev.jna:jna:5.14.0")
     implementation("com.formdev:flatlaf:3.7")
     implementation("com.formdev:flatlaf-intellij-themes:3.7")
     implementation("com.google.code.gson:gson:2.10.1")
@@ -25,30 +25,6 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
-}
-
-javafx {
-    version = "25"
-    modules("javafx.controls", "javafx.swing")
-}
-
-tasks.register("buildForArch"){
-    val name: String? by project
-    when (name) {
-        "Windowsamd64" -> {
-            javafx.setPlatform("win")
-        }
-        "Linuxamd64" -> {
-            javafx.setPlatform("linux")
-        }
-        "macOSaarch64" -> {
-            javafx.setPlatform("macos-aarch64")
-        }
-        "macOSamd64" -> {
-            javafx.setPlatform("macos")
-        }
-    }
-    finalizedBy(tasks.shadowJar)
 }
 
 tasks.shadowJar {

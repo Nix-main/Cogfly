@@ -1,12 +1,8 @@
 package dev.ambershadow.cogfly.util;
 
+import com.sun.jna.Pointer;
 import dev.ambershadow.cogfly.Cogfly;
 import dev.ambershadow.cogfly.loader.ModData;
-import javafx.application.Platform;
-import javafx.embed.swing.JFXPanel;
-import javafx.stage.DirectoryChooser;
-import javafx.stage.FileChooser;
-import javafx.stage.Stage;
 
 import javax.swing.*;
 import java.awt.*;
@@ -15,14 +11,12 @@ import java.awt.datatransfer.StringSelection;
 import java.io.*;
 import java.net.URI;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Comparator;
+import java.nio.file.*;
+import java.util.*;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -42,7 +36,7 @@ public class Utils {
     public static String getGameExecutable(){
         return switch (OperatingSystem.current()){
             case WINDOWS -> "Hollow Knight Silksong.exe";
-            case LINUX -> "Hollow Knight Silksong.x86_64";
+            case LINUX -> "run_bepinex.sh";
             case MAC -> "run_bepinex.sh";
             default -> "";
         };
@@ -89,35 +83,116 @@ public class Utils {
             throw new RuntimeException(e);
         }
     }
-    public static void pickFolderAsync(Consumer<Path> callback){
-        Platform.runLater(() -> {
-            DirectoryChooser chooser = new DirectoryChooser();
-            chooser.setTitle("Select a folder");
-            File folder = chooser.showDialog(null);
-            if (folder != null) {
-                String path = folder.getAbsolutePath();
-                callback.accept(Paths.get(path));
+    public static void pickFolder(Consumer<Path> callback){
+        switch (OperatingSystem.current()){
+            case MAC -> {
+                ProcessBuilder pb = new ProcessBuilder("osascript", "-e", "'POSIX path of (choose folder)'");
+                readValue(pb).ifPresent(callback);
             }
-        });
+            case WINDOWS -> {
+                Pointer ptr = Cogfly.FOLDER_PICKER.pickFolder();
+                String path;
+                if (ptr != null && !(path = ptr.getString(0)).isEmpty())
+                    callback.accept(Paths.get(path));
+
+            }
+            case LINUX -> {
+                Optional<Path> path = readValue(new ProcessBuilder(
+                        "zenity", "--file-selection", "--directory"
+                ));
+
+                if (path.isEmpty()) {
+                    path = readValue(new ProcessBuilder(
+                            "kdialog", "--getexistingdirectory"
+                    ));
+                }
+
+                path.ifPresentOrElse(
+                        callback,
+                        () -> {
+                            // JDialog
+                        }
+                );
+            }
+        }
     }
 
-    public static void pickFileAsync(Consumer<Path> callback, FileChooser.ExtensionFilter... filters){
-        Platform.runLater(() -> {
-            Stage stage = new Stage();
-            JFXPanel dummy = new JFXPanel();
-            FileChooser chooser = new FileChooser();
-            chooser.getExtensionFilters().addAll(filters);
-            chooser.setTitle("Select a file");
-            File file = chooser.showOpenDialog(null);
-            if (file != null) {
-                String path = file.getAbsolutePath();
-                callback.accept(Paths.get(path));
+    public static void pickFile(Consumer<Path> callback, String... extensions){
+        switch (OperatingSystem.current()){
+            case MAC -> {
+                StringJoiner filterJoiner = new StringJoiner(",");
+                for (String extension : extensions) {
+
+                    filterJoiner.add("\"" + extension + "\"");
+                }
+                String appleScriptCommand = "POSIX path of (choose file of type {" + filterJoiner + "})";
+                ProcessBuilder pb = new ProcessBuilder(
+                        "osascript", "-e", appleScriptCommand
+                );
+                readValue(pb).ifPresent(callback);
             }
-        });
+            case WINDOWS -> {
+                for (int i = 0; i < extensions.length; i++) {
+                    extensions[i] = "*." + extensions[i];
+                }
+                Pointer pointer = Cogfly.FILE_DIALOGS.tinyfd_openFileDialog(
+                        "Select File",
+                        null,
+                        extensions.length,
+                        extensions,
+                        "",
+                        0
+                );
+                String path;
+                if (pointer != null && !(path = pointer.getString(0)).isEmpty())
+                    callback.accept(Paths.get(path));
+            }
+            case LINUX -> {
+                String patterns = Arrays.stream(extensions)
+                        .map(ext -> "*." + ext)
+                        .collect(Collectors.joining(" "));
+                List<String> zenityCmd = new ArrayList<>();
+                zenityCmd.add("zenity");
+                zenityCmd.add("--file-selection");
+                zenityCmd.add("--file-filter=Files | " + patterns);
+                Optional<Path> path = readValue(new ProcessBuilder(zenityCmd));
+                if (path.isEmpty()) {
+                    List<String> kdialogCmd = List.of(
+                            "kdialog",
+                            "--getopenfilename",
+                            ".",
+                            patterns + "|Files"
+                    );
+
+                    path = readValue(new ProcessBuilder(kdialogCmd));
+                }
+
+                if (path.isEmpty()) {
+                    // JDialog
+                }
+
+                path.ifPresent(callback);
+            }
+        }
     }
 
-    public static void downloadAndExtract(URL url, String output){
-        downloadAndExtract(url, Paths.get(output));
+    private static Optional<Path> readValue(ProcessBuilder pb) {
+        try {
+            Process p = pb.start();
+
+            try (BufferedReader reader =
+                         new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+
+                String value = reader.readLine();
+                int exit = p.waitFor();
+
+                if (exit == 0 && value != null && !value.isBlank()) {
+                    return Optional.of(Paths.get(value.trim()));
+                }
+            }
+        } catch (IOException | InterruptedException ignored) {
+        }
+        return Optional.empty();
     }
     public static void downloadAndExtract(URL url, Path output){
         try (ZipInputStream zis = new ZipInputStream(url.openStream())) {
@@ -236,31 +311,6 @@ public class Utils {
         StringSelection selection = new StringSelection(text);
         clipboard.setContents(selection, null);
     }
-
-    public static void replaceLineInFile(Path file, String line, String replacement){
-        try (InputStream in = Files.newInputStream(file)){
-            String content = new String(in.readAllBytes());
-            content = content.replace(line, replacement);
-            Files.writeString(file, content);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static void replaceEntireLine(Path file, String startOfLine, String replacement){
-        try {
-            List<String> lines = Files.readAllLines(file);
-            for (String line : new ArrayList<>(lines)) {
-                if (line.startsWith(startOfLine)){
-                    lines.set(lines.indexOf(line), replacement);
-                }
-            }
-            Files.write(file, lines);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     public static void launchModdedGame(Profile profile){
         Cogfly.launchGameAsync(profile.getBepInExPath().toString());
     }
