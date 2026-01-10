@@ -145,16 +145,14 @@ jobs:
           ZIP_NAME="${ARTIFACT_NAME}.zip"
 
           echo "Zipping $OUTPUT_DIR → $ZIP_NAME"
-          cd output
-          if [[ "$RUNNER_OS" == "Windows" ]]; then
-            powershell Compress-Archive -Path "${OUTPUT_DIR}\*" -DestinationPath "..\${ZIP_NAME}" -Force
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            powershell Compress-Archive -Path "${OUTPUT_DIR}\*" -DestinationPath "${ZIP_NAME}" -Force
           else
             zip -r "$ZIP_NAME" "$OUTPUT_DIR"
           fi
-          cd ..
 
           echo "Uploading $ZIP_NAME"
-          if [[ "$RUNNER_OS" == "Windows" ]]; then
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
             powershell -Command "
               \$headers = @{ Authorization = 'Bearer $env:COGFLY_UPLOAD_TOKEN' }
               Invoke-RestMethod -Uri 'https://ambershadow.dev/api/cogfly/upload-artifact/' `
