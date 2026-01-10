@@ -90,7 +90,7 @@ public class Utils {
     public static void pickFolder(Consumer<Path> callback){
         switch (OperatingSystem.current()){
             case MAC -> {
-                ProcessBuilder pb = new ProcessBuilder("osascript", "-e", "'POSIX path of (choose folder)'");
+                ProcessBuilder pb = new ProcessBuilder("osascript", "-e", "POSIX path of (choose folder)");
                 readValue(pb).ifPresent((p) -> {
                     if (!p.equals(Paths.get("")))
                         callback.accept(p);

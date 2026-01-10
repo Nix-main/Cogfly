@@ -314,6 +314,7 @@ public class Cogfly {
             cmds.add("--doorstop-target-assembly");
             cmds.add(Paths.get(path).resolve("core/BepInEx.Preloader.dll").toString());
             builder.command(cmds);
+            builder.inheritIO();
             System.out.println(builder.command());
             try {
                 Process process = builder.start();
