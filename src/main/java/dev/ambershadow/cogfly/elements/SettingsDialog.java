@@ -153,6 +153,9 @@ public class SettingsDialog extends JDialog {
         ProfileManager.baseGame = new Profile("Base Game", Paths.get(Cogfly.settings.gamePath), Assets.silksongIcon.getAsIcon());
         if (!queuedGamePath.equals(initialGamePath))
             Cogfly.downloadBepInEx(Paths.get(queuedGamePath));
+
+        ModPanelElement.redraw();
+
         Cogfly.settings.save();
     }
 

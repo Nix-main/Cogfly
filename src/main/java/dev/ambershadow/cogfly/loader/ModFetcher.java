@@ -84,53 +84,52 @@ public class ModFetcher {
             if (innerFiles == null)
                 continue;
             Path manifest = Paths.get(file.getAbsolutePath() + "/manifest.json");
+            if (manifest.toFile().exists()) {
+                try (JsonReader reader = new JsonReader(Files.newBufferedReader(manifest))) {
+                    JsonObject object = JsonParser.parseReader(reader).getAsJsonObject();
+                    String author = get(object, "namespace");
+                    String website = get(object, "website_url");
+                    String name = get(object, "name");
+                    String description = get(object, "description");
+                    List<String> dependencies = new ArrayList<>();
+                    JsonArray deps = object.has("dependencies") ? object.get("dependencies").getAsJsonArray() : null;
+                    if (deps != null)
+                        deps.forEach(dep -> {
+                            if (dep.getAsString().contains("BepInEx-BepInExPack") || dep.getAsString().trim().isEmpty())
+                                return;
+                            dependencies.add(dep.getAsString());
+                        });
 
-            try(JsonReader reader = new JsonReader(Files.newBufferedReader(manifest))) {
-                JsonObject object = JsonParser.parseReader(reader).getAsJsonObject();
-                String author = get(object, "namespace");
-                String website = get(object, "website_url");
-                String name = get(object, "name");
-                String description = get(object, "description");
-                List<String> dependencies = new ArrayList<>();
-                JsonArray deps = object.has("dependencies") ? object.get("dependencies").getAsJsonArray() : null;
-                if (deps != null)
-                    deps.forEach(dep -> {
-                        if (dep.getAsString().contains("BepInEx-BepInExPack") || dep.getAsString().trim().isEmpty())
-                           return;
-                        dependencies.add(dep.getAsString());
-                    });
-
-                for (ModData mod : Cogfly.mods) {
-                    if (installedMods.contains(mod))
-                        continue;
-                    int matches = 0;
-                    if (author.equals(mod.getAuthor()))
-                        matches++;
-                    if (description.equals(mod.getDescription()))
-                        matches++;
-                    if (mod.getWebsiteUrl() != null)
-                        if (website.equals(mod.getWebsiteUrl().getPath()))
+                    for (ModData mod : Cogfly.mods) {
+                        if (installedMods.contains(mod))
+                            continue;
+                        int matches = 0;
+                        if (author.equals(mod.getAuthor()))
                             matches++;
-                    if (name.equals(mod.getName()))
-                        matches++;
-                    boolean de = new HashSet<>(dependencies).equals(new HashSet<>(mod.getDependencies()));
-                    if (de)
-                        matches++;
-                    if (matches >= 3) {
-                        var installedVersion = get(object, "version_number");
-                        if (installedVersion.isEmpty()) {
-                            installedVersion = mod.getVersionNumber();
+                        if (description.equals(mod.getDescription()))
+                            matches++;
+                        if (mod.getWebsiteUrl() != null)
+                            if (website.equals(mod.getWebsiteUrl().getPath()))
+                                matches++;
+                        if (name.equals(mod.getName()))
+                            matches++;
+                        boolean de = new HashSet<>(dependencies).equals(new HashSet<>(mod.getDependencies()));
+                        if (de)
+                            matches++;
+                        if (matches >= 3) {
+                            var installedVersion = get(object, "version_number");
+                            if (installedVersion.isEmpty()) {
+                                installedVersion = mod.getVersionNumber();
+                            }
+                            var md = ModData.getModAtVersion(mod.rawObj, installedVersion);
+                            installedMods.add(md);
+                            break;
                         }
-                        var md = ModData.getModAtVersion(mod.rawObj, installedVersion);
-                        installedMods.add(md);
-                        break;
                     }
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
                 }
-
-            } catch (IOException e) {
-                throw new RuntimeException(e);
             }
-
         }
         return installedMods;
     }
