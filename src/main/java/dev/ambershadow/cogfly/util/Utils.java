@@ -86,11 +86,15 @@ public class Utils {
             throw new RuntimeException(e);
         }
     }
+
     public static void pickFolder(Consumer<Path> callback){
         switch (OperatingSystem.current()){
             case MAC -> {
-                ProcessBuilder pb = new ProcessBuilder("osascript", "-e", "'POSIX path of (choose folder)'");
-                readValue(pb).ifPresent(callback);
+                ProcessBuilder pb = new ProcessBuilder("osascript", "-e", "POSIX path of (choose folder)");
+                readValue(pb).ifPresent((p) -> {
+                    if (!p.equals(Paths.get("")))
+                        callback.accept(p);
+                });
             }
             case WINDOWS -> {
                 WString path = Cogfly.FOLDER_PICKER.pickFolder();
@@ -110,13 +114,18 @@ public class Utils {
                 }
 
                 path.ifPresentOrElse(
-                        callback,
+                        (p) -> {
+                            if (!p.equals(Paths.get("")))
+                                callback.accept(p);
+                        },
                         () -> {
                             String input = JOptionPane.showInputDialog(FrameManager.getOrCreate().frame,
                                     "Please manually enter a folder path. It is highly recommended that you install either Zenity or KDialog for a proper display."
                             );
-                            Path p = Paths.get(input);
-                            callback.accept(p.toFile().isDirectory() ? p : p.getParent());
+                            if (input != null) {
+                                Path p = Paths.get(input);
+                                callback.accept(p.toFile().isDirectory() ? p : p.getParent());
+                            }
                         }
                 );
             }
@@ -143,7 +152,10 @@ public class Utils {
                 ProcessBuilder pb = new ProcessBuilder(
                         "osascript", "-e", appleScriptCommand
                 );
-                readValue(pb).ifPresent(callback);
+                readValue(pb).ifPresent(p -> {
+                    if (!p.equals(Paths.get("")))
+                        callback.accept(p);
+                });
             }
             case WINDOWS -> {
                 for (int i = 0; i < extensions.length; i++) {
@@ -168,14 +180,15 @@ public class Utils {
                 List<String> zenityCmd = new ArrayList<>();
                 zenityCmd.add("zenity");
                 zenityCmd.add("--file-selection");
-                zenityCmd.add("--file-filter=Files | " + patterns);
+                zenityCmd.add("--file-filter=" + patterns + "| " + patterns);
+                zenityCmd.add("--file-filter=All files | *");
                 Optional<Path> path = readValue(new ProcessBuilder(zenityCmd));
                 if (path.isEmpty()) {
                     List<String> kdialogCmd = List.of(
                             "kdialog",
                             "--getopenfilename",
                             ".",
-                            patterns + "|Files"
+                            patterns + "|" + name + "files\n*|All files"
                     );
 
                     path = readValue(new ProcessBuilder(kdialogCmd));
@@ -186,7 +199,10 @@ public class Utils {
                     callback.accept(Paths.get(val));
                 }
 
-                path.ifPresent(callback);
+                path.ifPresent(p -> {
+                    if (!p.equals(Paths.get("")))
+                        callback.accept(p);
+                });
             }
         }
     }
@@ -196,11 +212,13 @@ public class Utils {
         for (String extension : extensions)
             filterJoiner.add("\"" + extension + "\"");
         String input = JOptionPane.showInputDialog(FrameManager.getOrCreate().frame,
-                (invalid ? "Invalid extension. " : "") + "Please manually enter a file path. Allowed extensions: " + filterJoiner + ". It is highly recommended that you install either Zenity or KDialog for a proper display."
+                (invalid ? "Invalid extension or null input. " : "") + "Please manually enter a file path. Allowed extensions: " + filterJoiner + ". It is highly recommended that you install either Zenity or KDialog for a proper display."
         );
-        for (String val : extensions){
-            if (input.endsWith(name + "." + val))
-                return input;
+        if (input != null) {
+            for (String val : extensions) {
+                if (input.endsWith(name + "." + val))
+                    return input;
+            }
         }
         return manualFilePath(true, name, extensions);
     }
@@ -214,6 +232,10 @@ public class Utils {
 
                 String value = reader.readLine();
                 int exit = p.waitFor();
+
+                if (exit == 1){ // cancelled in zenity/dialog
+                    return Optional.of(Paths.get(""));
+                }
 
                 if (exit == 0 && value != null && !value.isBlank()) {
                     return Optional.of(Paths.get(value.trim()));

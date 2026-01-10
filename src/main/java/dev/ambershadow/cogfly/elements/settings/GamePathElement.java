@@ -18,7 +18,7 @@ public class GamePathElement extends JPanel {
                     .getParentFile().getAbsolutePath();
             button.setText(p);
             parent.updateGamePath(p);
-        }, "Hollow Knight Silksong", "exe", "app", "x86_64"));
+        }, "Hollow Knight Silksong", "exe", "app", "*"));
 
         setLayout(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();

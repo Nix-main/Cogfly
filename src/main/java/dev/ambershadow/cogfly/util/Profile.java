@@ -38,7 +38,7 @@ public class Profile {
     }
 
     public void removeMod(ModData mod){
-        ModData m = installedMods.stream().filter(md ->md.getFullName().equals(mod.getFullName()) && md.getDescription().equals(mod.getDescription())
+        ModData m = new ArrayList<>(installedMods).stream().filter(md ->md.getFullName().equals(mod.getFullName()) && md.getDescription().equals(mod.getDescription())
                 && md.getAuthor().equals(mod.getAuthor())).findFirst().orElse(null);
         installedMods.remove(m);
     }

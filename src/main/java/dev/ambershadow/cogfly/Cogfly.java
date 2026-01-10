@@ -303,11 +303,11 @@ public class Cogfly {
                 cmds.add("-x86_64");
                 cmds.add("sh");
                 cmds.add(gameAppPath.toString());
-                cmds.add(Paths.get(settings.gamePath).resolve("Hollow Knight Silksong.app").toString());
+                cmds.add("Hollow Knight Silksong.app");
             } else if (Utils.OperatingSystem.current().equals(Utils.OperatingSystem.LINUX)) {
+                builder.directory(Paths.get(settings.gamePath).toFile());
                 cmds.add("sh");
-                cmds.add(gameAppPath.toString());
-                cmds.add(Paths.get(settings.gamePath).resolve("Hollow Knight Silksong.x86_64").toString());
+                cmds.add(Utils.getGameExecutable());
             } else {
                 cmds.add(gameAppPath.toString());
             }
