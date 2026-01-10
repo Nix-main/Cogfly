@@ -300,7 +300,7 @@ public class Utils {
                 if (dep.contains("BepInExPack"))
                     continue;
                 ModData m = getModFromDependency(dep);
-                if (m != null && !m.isOutdated())
+                if (m != null && !m.isOutdated(profile))
                     CompletableFuture.runAsync(() -> downloadMod(m, profile));
             }
         }

@@ -25,7 +25,7 @@ public class ProfileOpenPageCardElement extends JPanel {
 
         JButton launch = new JButton("Launch");
         launch.addActionListener(_ -> {
-            List<ModData> outdated = profile.getInstalledMods().stream().filter(ModData::isOutdated).toList();
+            List<ModData> outdated = profile.getInstalledMods().stream().filter(m -> m.isOutdated(profile)).toList();
             if (!outdated.isEmpty()) {
                 List<Object> msg = new ArrayList<>();
                 msg.add("This profile has outdated mods.");
@@ -51,8 +51,10 @@ public class ProfileOpenPageCardElement extends JPanel {
                         )));
                     }
                     CompletableFuture.allOf(voids.toArray(CompletableFuture[]::new)).thenRun(() -> Utils.launchModdedGame(profile)).join();
+                    return;
                 }
-            } else Utils.launchModdedGame(profile);
+            }
+            Utils.launchModdedGame(profile);
         });
 
         updateAll = new JButton("Update All");
@@ -60,7 +62,7 @@ public class ProfileOpenPageCardElement extends JPanel {
         updateAll.addActionListener(_ -> {
             updateAll.setEnabled(false);
             for (ModData modData : profile.getInstalledMods()) {
-                if (!modData.isOutdated()) continue;
+                if (!modData.isOutdated(profile)) continue;
                 CompletableFuture.runAsync(() -> Utils.downloadLatestMod(
                         ModData.getMod(modData.getFullName()),
                         profile,
@@ -129,7 +131,7 @@ public class ProfileOpenPageCardElement extends JPanel {
 
     public void reload(){
         boolean anyOutdated = profile.getInstalledMods()
-                .stream().anyMatch(ModData::isOutdated);
+                .stream().anyMatch(mod -> mod.isOutdated(profile));
         updateAll.setEnabled(anyOutdated);
     }
 }

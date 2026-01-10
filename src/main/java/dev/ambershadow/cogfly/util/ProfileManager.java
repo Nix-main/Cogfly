@@ -106,6 +106,7 @@ public class ProfileManager {
                     }
                 }
                 Profile profile = new Profile(file.getName(), Paths.get(file.getAbsolutePath()), icon);
+                profile.installedMods = ModFetcher.getInstalledMods(profile.getPluginsPath());
                 profiles.add(profile);
             }
         }
@@ -113,7 +114,6 @@ public class ProfileManager {
     }
     public static void setProfile(Profile profile){
         current = profile;
-        profile.installedMods = ModFetcher.getInstalledMods(profile.getPluginsPath());
     }
 
     public static void fromFile(Path path, BiConsumer<Profile, ModData[]> outdated){
@@ -211,7 +211,7 @@ public class ProfileManager {
             String v = String.format("%d.%d.%d", major, minor, patch);
             ModData d = ModData.getModAtVersion(name, v);
             if (d != null) {
-                if (d.isOutdated()) {
+                if (d.isOutdated(profile)) {
                     outdatedMods.add(d);
                 }
                 Utils.downloadMod(d, profile, false);

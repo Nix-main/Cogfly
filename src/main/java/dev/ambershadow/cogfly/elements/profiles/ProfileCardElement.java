@@ -21,7 +21,6 @@ public class ProfileCardElement extends JPanel {
     public static Color hover = UIManager.getColor("Button.pressedBackground");
 
     private LookAndFeel lastLaf = null;
-
     public ProfileCardElement(Profile profile, Icon icon) {
         setPreferredSize(new Dimension(200, 160));
         setLayout(new BorderLayout(8, 8));
@@ -39,35 +38,37 @@ public class ProfileCardElement extends JPanel {
         JButton launchButton = new JButton("Launch");
 
         launchButton.addActionListener(_ -> {
-                    List<ModData> outdated = profile.getInstalledMods().stream().filter(ModData::isOutdated).toList();
-                    if (!outdated.isEmpty()) {
-                        List<Object> msg = new ArrayList<>();
-                        msg.add("This profile has outdated mods.");
-                        msg.add("");
-                        for (ModData modData : outdated) {
-                            msg.add("• " + modData.getName());
-                        }
-                        msg.add("");
-                        msg.add("Would you like to update them?");
-                        int result = JOptionPane.showConfirmDialog(
-                                FrameManager.getOrCreate().frame,
-                                msg.toArray(),
-                                "Outdated Mods",
-                                JOptionPane.YES_NO_OPTION,
-                                JOptionPane.QUESTION_MESSAGE);
-                        if (result == JOptionPane.YES_OPTION) {
-                            List<CompletableFuture<Void>> voids = new ArrayList<>();
-                            for (ModData modData : outdated) {
-                                voids.add(CompletableFuture.runAsync(() -> Utils.downloadLatestMod(
-                                        ModData.getMod(modData.getFullName()),
-                                        profile,
-                                        false
-                                )));
-                            }
-                            CompletableFuture.allOf(voids.toArray(CompletableFuture[]::new)).thenRun(() -> Utils.launchModdedGame(profile)).join();
-                        }
-                    } else
-                        Utils.launchModdedGame(profile);
+            System.out.println("Launching!");
+            List<ModData> outdated = profile.getInstalledMods().stream().filter(mod -> mod.isOutdated(profile)).toList();
+            if (!outdated.isEmpty()) {
+                List<Object> msg = new ArrayList<>();
+                msg.add("This profile has outdated mods.");
+                msg.add("");
+                for (ModData modData : outdated) {
+                    msg.add("• " + modData.getName());
+                }
+                msg.add("");
+                msg.add("Would you like to update them?");
+                int result = JOptionPane.showConfirmDialog(
+                        FrameManager.getOrCreate().frame,
+                        msg.toArray(),
+                        "Outdated Mods",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE);
+                if (result == JOptionPane.YES_OPTION) {
+                    List<CompletableFuture<Void>> voids = new ArrayList<>();
+                    for (ModData modData : outdated) {
+                        voids.add(CompletableFuture.runAsync(() -> Utils.downloadLatestMod(
+                                ModData.getMod(modData.getFullName()),
+                                profile,
+                                false
+                        )));
+                    }
+                    CompletableFuture.allOf(voids.toArray(CompletableFuture[]::new)).thenRun(() -> Utils.launchModdedGame(profile)).join();
+                    return;
+                }
+            }
+            Utils.launchModdedGame(profile);
         });
 
         add(iconLabel, BorderLayout.CENTER);
@@ -139,8 +140,8 @@ public class ProfileCardElement extends JPanel {
 
         float target = hovering ? 1f : 0f;
 
-        hoverTimer = new Timer(16, e -> { // ~60 FPS
-            float speed = 0.12f; // adjust feel here
+        hoverTimer = new Timer(16, e -> {
+            float speed = 0.12f;
 
             if (hoverProgress < target) {
                 hoverProgress = Math.min(target, hoverProgress + speed);
