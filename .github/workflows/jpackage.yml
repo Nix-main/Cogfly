@@ -154,4 +154,4 @@ jobs:
             zip -r "$ZIP_NAME" "$OUTPUT_DIR"
           fi
           
-          dotnet ArtifactUploader.dll "$ZIP_NAME" "${{ runner.os }}" "${{ matrix.arch }}" "${{ github.sha }}" "${{ github.run_id }}" "${{ secrets.COGFLY_UPLOAD_TOKEN }}"
+          dotnet ArtifactUploader/ArtifactUploader.dll "$ZIP_NAME" "${{ runner.os }}" "${{ matrix.arch }}" "${{ github.sha }}" "${{ github.run_id }}" "${{ secrets.COGFLY_UPLOAD_TOKEN }}"
