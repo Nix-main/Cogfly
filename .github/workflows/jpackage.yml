@@ -146,14 +146,28 @@ jobs:
 
           echo "Zipping $OUTPUT_DIR → $ZIP_NAME"
           cd output
-          zip -r "../$ZIP_NAME" "${{ runner.os }}-${{ matrix.arch }}"
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            powershell Compress-Archive -Path "${OUTPUT_DIR}\*" -DestinationPath "..\${ZIP_NAME}" -Force
+          else
+            zip -r "$ZIP_NAME" "$OUTPUT_DIR"
+          fi
           cd ..
 
           echo "Uploading $ZIP_NAME"
-          curl -X POST https://ambershadow.dev/api/cogfly/upload-artifact/ \
-            -H "Authorization: Bearer ${{ secrets.COGFLY_UPLOAD_TOKEN }}" \
-            -F "file=@$ZIP_NAME" \
-            -F "os=${{ runner.os }}" \
-            -F "arch=${{ matrix.arch }}" \
-            -F "commit=${{ github.sha }}" \
-            -F "run_id=${{ github.run_id }}"
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            powershell -Command "
+              \$headers = @{ Authorization = 'Bearer $env:COGFLY_UPLOAD_TOKEN' }
+              Invoke-RestMethod -Uri 'https://ambershadow.dev/api/cogfly/upload-artifact/' `
+                                -Method Post `
+                                -Headers \$headers `
+                                -Form @{ file = Get-Item \"$PWD\\$ZIP_NAME\"; os='$RUNNER_OS'; arch='${{ matrix.arch }}'; commit='${{ github.sha }}'; run_id='${{ github.run_id }}' }
+            "
+          else
+            curl -X POST https://ambershadow.dev/api/cogfly/upload-artifact/ \
+              -H "Authorization: Bearer ${{ secrets.COGFLY_UPLOAD_TOKEN }}" \
+              -F "file=@$ZIP_NAME" \
+              -F "os=${{ runner.os }}" \
+              -F "arch=${{ matrix.arch }}" \
+              -F "commit=${{ github.sha }}" \
+              -F "run_id=${{ github.run_id }}"
+          fi
