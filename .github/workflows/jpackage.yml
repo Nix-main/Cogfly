@@ -45,12 +45,12 @@ jobs:
         run: |
           jpackage \
               --input build/libs \
-              --main-jar cogfly-1.0.jar \
+              --main-jar cogfly-1.0.1.jar \
               --name "Cogfly" \
               --type dmg \
               --vendor "Ambershadow" \
               --icon ./icons/icon.icns \
-              --app-version 1.0 \
+              --app-version 1.0.1 \
               --dest output/${{ runner.os }}-${{ matrix.arch }}
 
       - name: Build macOS aarch64 dmg
@@ -58,12 +58,12 @@ jobs:
         run: |
           jpackage \
               --input build/libs \
-              --main-jar cogfly-1.0.jar \
+              --main-jar cogfly-1.0.1.jar \
               --name "Cogfly" \
               --type dmg \
               --vendor "Ambershadow" \
               --icon ./icons/icon.icns \
-              --app-version 1.0 \
+              --app-version 1.0.1 \
               --dest output/${{ runner.os }}-${{ matrix.arch }}
 
       - name: Build MSI
@@ -71,12 +71,12 @@ jobs:
         run: |
           jpackage `
             --input build/libs `
-            --main-jar cogfly-1.0.jar `
+            --main-jar cogfly-1.0.1.jar `
             --name Cogfly `
             --type msi `
             --vendor "Ambershadow" `
             --icon ./icons/icon.ico `
-            --app-version 1.0 `
+            --app-version 1.0.1 `
             --dest output/${{ runner.os }}-${{ matrix.arch }} `
             --win-menu `
             --win-shortcut
@@ -85,12 +85,12 @@ jobs:
         run: |
           jpackage `
             --input build/libs `
-            --main-jar cogfly-1.0.jar `
+            --main-jar cogfly-1.0.1.jar `
             --name Cogfly `
             --type exe `
             --vendor "Ambershadow" `
             --icon ./icons/icon.ico `
-            --app-version 1.0 `
+            --app-version 1.0.1 `
             --dest output/${{ runner.os }}-${{ matrix.arch }} `
             --win-menu `
             --win-shortcut
@@ -100,12 +100,12 @@ jobs:
         run: |
           jpackage \
             --input build/libs \
-            --main-jar cogfly-1.0.jar \
+            --main-jar cogfly-1.0.1.jar \
             --name Cogfly \
             --type deb \
             --vendor "Ambershadow" \
             --icon ./icons/icon.png \
-            --app-version 1.0 \
+            --app-version 1.0.1 \
             --dest output/${{ runner.os }}-${{ matrix.arch }} \
           
 
@@ -115,12 +115,12 @@ jobs:
           mkdir -p output/appimage
           jpackage \
             --input build/libs \
-            --main-jar cogfly-1.0.jar \
+            --main-jar cogfly-1.0.1.jar \
             --name Cogfly \
             --type app-image \
             --vendor "Ambershadow" \
             --icon ./icons/icon.png \
-            --app-version 1.0 \
+            --app-version 1.0.1 \
             --dest output/appimage
           cp ./icons/icon.png output/appimage/Cogfly/
           cp ./Cogfly.desktop output/appimage/Cogfly/

@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "dev.ambershadow"
-version = "1.0-SNAPSHOT"
+version = "1.0.1"
 
 repositories {
     mavenCentral()
@@ -31,7 +31,7 @@ tasks.test {
 tasks.shadowJar {
     archiveBaseName.set("cogfly")
     archiveClassifier.set("")
-    archiveVersion.set("1.0")
+    archiveVersion.set("1.0.1")
     manifest {
         attributes["Main-Class"] = "dev.ambershadow.cogfly.Cogfly"
     }
