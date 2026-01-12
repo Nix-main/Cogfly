@@ -1,6 +1,7 @@
 package dev.ambershadow.cogfly.util;
 
 import dev.ambershadow.cogfly.loader.ModData;
+import dev.ambershadow.cogfly.loader.ModFetcher;
 
 import javax.swing.*;
 import java.nio.file.Path;
@@ -59,5 +60,9 @@ public class Profile {
         return obj instanceof Profile prof &&
                 prof.getPath().equals(path)
                 && prof.getName().equals(name);
+    }
+
+    public void refreshMods(){
+        installedMods = ModFetcher.getInstalledMods(getPluginsPath());
     }
 }

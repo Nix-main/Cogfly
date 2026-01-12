@@ -245,6 +245,7 @@ public class Utils {
         }
         return Optional.empty();
     }
+
     public static void downloadAndExtract(URL url, Path output){
         try (ZipInputStream zis = new ZipInputStream(url.openStream())) {
             Files.createDirectories(output);
@@ -269,21 +270,31 @@ public class Utils {
     }
 
     public static void removeMod(ModData mod, Profile profile){
+        Cogfly.logger.info("Attempting to remove {} at version {} for profile {}.", mod.getFullName(), mod.getVersionNumber(), profile.getName());
         profile.getInstalledMods().remove(mod);
         Path path = profile.getPluginsPath()
-                .resolve(mod.getName() + "/");
-        try(Stream<Path> walk = Files.walk(path)) {
-            walk.sorted(Comparator.reverseOrder())
-                    .forEach(p -> {
-                        try {
-                            Files.delete(p);
-                        } catch (IOException e) {
-                            throw new UncheckedIOException(e);
-                        }
-                    });
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+                .resolve(mod.getFullName());
+        if (!path.toFile().exists()) {
+            Cogfly.logger.warn("Could not find a folder at {} to remove this mod!", path);
+            path = profile.getPluginsPath().resolve(mod.getName());
         }
+        if (!path.toFile().exists()) {
+            Cogfly.logger.warn("Could not find a folder at {} to remove this mod!", path);
+            Cogfly.logger.warn("Could not find any folder to remove this mod.");
+            return;
+        }
+        deleteFolder(path);
+        Path patcher = profile.getBepInExPath().resolve("patchers").resolve(mod.getFullName());
+        if (patcher.toFile().exists())
+            deleteFolder(patcher);
+        Path core = profile.getBepInExPath().resolve("core").resolve(mod.getFullName());
+        if (core.toFile().exists())
+            deleteFolder(core);
+        Path monomod = profile.getBepInExPath().resolve("monomod").resolve(mod.getFullName());
+        if (monomod.toFile().exists())
+            deleteFolder(monomod);
+
+        ModPanelElement.redraw();
     }
     public static void downloadLatestMod(ModData mod, Profile profile, boolean deps){
         downloadMod(ModData.getMod(mod), profile, deps);
@@ -293,6 +304,7 @@ public class Utils {
         downloadMod(ModData.getMod(mod), profile, true);
     }
     public static void downloadMod(ModData mod, Profile profile, boolean deps){
+        Cogfly.logger.info("Attempting to download {} at version {} for profile {}.", mod.getFullName(), mod.getVersionNumber(), profile.getName());
         profile.removeMod(mod);
         profile.getInstalledMods().add(mod);
         if (deps) {
@@ -304,9 +316,56 @@ public class Utils {
                     CompletableFuture.runAsync(() -> downloadMod(m, profile));
             }
         }
-        Path path = profile.getPluginsPath()
-                .resolve(mod.getName() + "/");
-        downloadAndExtract(mod.getDownloadUrl(), path);
+        Path bepinexRoot = profile.getBepInExPath();
+
+        try (ZipInputStream zis = new ZipInputStream(mod.getDownloadUrl().openStream())) {
+            ZipEntry entry;
+
+            while ((entry = zis.getNextEntry()) != null) {
+                if (entry.getName().isBlank()) continue;
+
+                Path zipPath = Path.of(entry.getName()).normalize();
+
+                if (zipPath.isAbsolute() || zipPath.startsWith("..")) {
+                    throw new IOException("Bad zip entry: " + entry.getName());
+                }
+
+                Path targetBase;
+                Path relativeInsideMod;
+
+                if (zipPath.getNameCount() > 0) {
+                    String root = zipPath.getName(0).toString();
+
+                    switch (root) {
+                        case "monomod", "patchers", "plugins", "core" -> {
+                            targetBase = bepinexRoot.resolve(root).resolve(mod.getFullName());
+                            relativeInsideMod = zipPath.subpath(1, zipPath.getNameCount());
+                        }
+                        default -> {
+                            targetBase = bepinexRoot.resolve("plugins").resolve(mod.getFullName());
+                            relativeInsideMod = zipPath;
+                        }
+                    }
+                } else
+                    continue;
+
+                Path outputPath = targetBase.resolve(relativeInsideMod).normalize();
+
+                if (!outputPath.startsWith(targetBase))
+                    throw new IOException("Zip traversal detected: " + entry.getName());
+
+                if (entry.isDirectory())
+                    Files.createDirectories(outputPath);
+                else {
+                    Files.createDirectories(outputPath.getParent());
+                    try (OutputStream os = Files.newOutputStream(outputPath)) {
+                        zis.transferTo(os);
+                    }
+                }
+
+                zis.closeEntry();
+            }
+        } catch (IOException ignored){}
         ModPanelElement.redraw();
     }
     private static ModData getModFromDependency(String dependency){
@@ -349,6 +408,7 @@ public class Utils {
                     } catch (Exception ignored) {}
                 }
                 break;
+                // this doesn't really work...at all, and is kind of a broken impl to begin with. I need to fix it.
         }
 
         ProcessBuilder pb = new ProcessBuilder(command);
@@ -365,7 +425,23 @@ public class Utils {
         clipboard.setContents(selection, null);
     }
     public static void launchModdedGame(Profile profile){
+        Cogfly.logger.info("Attempting to launch game with profile: {}",  profile.getName());
         Cogfly.launchGameAsync(profile.getBepInExPath().toString());
+    }
+
+    private static void deleteFolder(Path folder){
+        try(Stream<Path> walk = Files.walk(folder)) {
+            walk.sorted(Comparator.reverseOrder())
+                    .forEach(p -> {
+                        try {
+                            Files.delete(p);
+                        } catch (IOException e) {
+                            throw new UncheckedIOException(e);
+                        }
+                    });
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
     public enum OperatingSystem {
         WINDOWS, MAC, LINUX, OTHER;

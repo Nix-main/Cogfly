@@ -38,7 +38,6 @@ public class ProfileCardElement extends JPanel {
         JButton launchButton = new JButton("Launch");
 
         launchButton.addActionListener(_ -> {
-            System.out.println("Launching!");
             List<ModData> outdated = profile.getInstalledMods().stream().filter(mod -> mod.isOutdated(profile)).toList();
             if (!outdated.isEmpty()) {
                 List<Object> msg = new ArrayList<>();
@@ -98,6 +97,7 @@ public class ProfileCardElement extends JPanel {
                     return;
                 }
                 JPanel pages = FrameManager.getOrCreate().getPagePanel();
+                profile.refreshMods();
                 panel.reload();
                 ((CardLayout)pages.getLayout()).show(pages, profile.getName());
                 SelectedPageButtonElement button = FrameManager.getOrCreate().getCurrentPageButton();

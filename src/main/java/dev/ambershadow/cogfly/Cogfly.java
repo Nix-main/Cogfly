@@ -10,6 +10,8 @@ import dev.ambershadow.cogfly.loader.ModFetcher;
 import dev.ambershadow.cogfly.util.*;
 import net.harawata.appdirs.AppDirs;
 import net.harawata.appdirs.AppDirsFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
@@ -28,7 +30,7 @@ public class Cogfly {
     public static URL getResource(String path){
         return Cogfly.class.getResource(path);
     }
-
+    public static Logger logger;
     public static List<String> excludedMods = new ArrayList<>(){
         {
             add("ebkr-r2modman");
@@ -48,6 +50,17 @@ public class Cogfly {
     public static WinFolderPicker FOLDER_PICKER;
     public static WinTinyFileDialogs FILE_DIALOGS;
     static void main() {
+        AppDirs dirs = AppDirsFactory.getInstance();
+        localDataPath = dirs.getUserDataDir("Cogfly", null, "");
+        roamingDataPath = dirs.getUserDataDir("Cogfly", null, "", true);
+        String logDir = Paths.get(localDataPath).resolve("logs").toString();
+        System.setProperty("app.log.dir", logDir);
+
+        logger = LoggerFactory.getLogger(Cogfly.class);
+        logger.info("Initializing...");
+
+        Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> logger.error("Uncaught exception in thread {}", thread.getName(), throwable));
+
         if (Utils.OperatingSystem.current() == Utils.OperatingSystem.WINDOWS){
             try {
                 FOLDER_PICKER =
@@ -62,9 +75,6 @@ public class Cogfly {
                 throw new RuntimeException(e);
             }
         }
-        AppDirs dirs = AppDirsFactory.getInstance();
-        localDataPath = dirs.getUserDataDir("Cogfly", null, "");
-        roamingDataPath = dirs.getUserDataDir("Cogfly", null, "", true);
         dataJson = new File(localDataPath + "/settings.json");
         //noinspection ResultOfMethodCallIgnored
         dataJson.getParentFile().mkdirs();
@@ -79,7 +89,8 @@ public class Cogfly {
         loadSettings();
         packUrl = Cogfly.getResource("/packs/BepInExPack.zip");
         packUrlNoConsole = Cogfly.getResource("/packs/BepInExPack_NoConsole.zip");
-
+        logger.info("Loaded settings");
+        long start = System.currentTimeMillis();
         CompletableFuture.runAsync(() -> downloadBepInExNoConsole(Paths.get(settings.gamePath)));
         List<JsonObject> m = ModFetcher.getAllMods();
         List<ModData> data = new ArrayList<>();
@@ -100,10 +111,13 @@ public class Cogfly {
                         o -> o.getName().toLowerCase(),
                         Comparator.nullsLast(Comparator.naturalOrder())
                 ));
-                Cogfly.mods = data;
-                ProfileManager.loadProfiles();
-
+        Cogfly.mods = data;
+        logger.info("Loaded and parsed mods in {} milliseconds", (System.currentTimeMillis() - start));
+        start = System.currentTimeMillis();
+        ProfileManager.loadProfiles();
+        logger.info("Loaded profiles in {} milliseconds", (System.currentTimeMillis() - start));
         UIManager.put("TextComponent.arc", 5);
+        logger.info("Showing UI");
         FrameManager.getOrCreate().frame.setVisible(true);
         showEarlyDialogs();
     }
@@ -183,6 +197,9 @@ public class Cogfly {
                 if (jsonSettingsFile.has("baseGameEnabled")){
                     settings.baseGameEnabled = jsonSettingsFile.get("baseGameEnabled").getAsBoolean();
                 }
+                if (jsonSettingsFile.has("modNameSpaces")){
+                    settings.modNameSpaces = jsonSettingsFile.get("modNameSpaces").getAsBoolean();
+                }
             }
         }
         settings.save();
@@ -201,6 +218,7 @@ public class Cogfly {
         if (jsonSettingsFile != null && jsonSettingsFile.has("profileSavePath")) {
             Cogfly.settings.profileSavePath = jsonSettingsFile.get("profileSavePath").getAsString();
         } else {
+            logger.info("No stored profile save path! Prompting:");
             JDialog prompt = new JDialog(FrameManager.getOrCreate().frame, "Profile Save Path", true);
             prompt.setLayout(new BorderLayout());
             prompt.setLocationRelativeTo(null);
@@ -243,6 +261,7 @@ public class Cogfly {
             prompt.setVisible(true);
         }
         if (settings.gamePath.isEmpty()) {
+            logger.info("No game path! Prompting:");
             JDialog prompt = new JDialog(FrameManager.getOrCreate().frame, "Game Path", true);
             prompt.setLayout(new BorderLayout());
             prompt.setLocationRelativeTo(null);
@@ -290,6 +309,7 @@ public class Cogfly {
 
     public static void launchGameAsync(String path){
         CompletableFuture.runAsync(() -> {
+            logger.info("Launching game. OS: {}, Path: {}", Utils.OperatingSystem.current(), path);
             ProcessBuilder builder = new ProcessBuilder();
             List<String> cmds = new ArrayList<>();
             Path gameAppPath = Paths.get(settings.gamePath).resolve(Utils.getGameExecutable());
@@ -309,8 +329,8 @@ public class Cogfly {
             cmds.add("--doorstop-target-assembly");
             cmds.add(Paths.get(path).resolve("core/BepInEx.Preloader.dll").toString());
             builder.command(cmds);
-            builder.inheritIO();
-            System.out.println(builder.command());
+            builder.redirectErrorStream(false);
+            logger.info("Launch command: {}", cmds);
             try {
                 Process process = builder.start();
                 process.waitFor();

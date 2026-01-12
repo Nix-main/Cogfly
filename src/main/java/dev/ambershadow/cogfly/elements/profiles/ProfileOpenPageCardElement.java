@@ -17,6 +17,7 @@ public class ProfileOpenPageCardElement extends JPanel {
 
     private final Profile profile;
     private final JButton updateAll;
+    private final JButton remove;
     public ProfileOpenPageCardElement(Profile profile) {
         super(new BorderLayout());
         this.profile = profile;
@@ -106,7 +107,7 @@ public class ProfileOpenPageCardElement extends JPanel {
         JButton openFileLocation = new JButton("Open Profile Folder");
         openFileLocation.addActionListener(_ -> Utils.openProfilePath(profile));
 
-        JButton remove = new JButton("Remove Profile");
+        remove = new JButton("Remove Profile");
         remove.addActionListener(_ -> {
             ProfileManager.removeProfile(profile);
             FrameManager.getOrCreate().setPage(
@@ -133,5 +134,8 @@ public class ProfileOpenPageCardElement extends JPanel {
         boolean anyOutdated = profile.getInstalledMods()
                 .stream().anyMatch(mod -> mod.isOutdated(profile));
         updateAll.setEnabled(anyOutdated);
+        if (profile.getPath().equals(Paths.get(Cogfly.settings.gamePath))){
+            remove.setEnabled(false);
+        }
     }
 }

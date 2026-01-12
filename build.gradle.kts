@@ -20,6 +20,7 @@ dependencies {
     implementation("com.formdev:flatlaf-intellij-themes:3.7")
     implementation("com.google.code.gson:gson:2.10.1")
     implementation("net.harawata:appdirs:1.5.0")
+    implementation("ch.qos.logback:logback-classic:1.5.6")
     implementation("org.yaml:snakeyaml:2.2")
 }
 

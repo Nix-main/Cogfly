@@ -34,6 +34,7 @@ public class Settings {
     public boolean baseGameEnabled = false;
     public boolean modNameSpaces = true;
 
+
     private String findDefaultPath(){
         for (Path root : FileSystems.getDefault().getRootDirectories()) {
             for (String path : STATIC_PATHS) {
