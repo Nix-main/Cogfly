@@ -15,28 +15,28 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class ModPanelElement extends JPanel {
+    private static final HashMap<Profile, ModPanelElement> panels = new HashMap<>();
+
+    public static void redraw(Profile profile) {
+        if (panels.containsKey(profile))
+            panels.get(profile).redrawPanel();
+    }
+
+
+    private final Profile profile;
     private final JTextField searchField;
     private final JPanel buttonsPanel;
     private Cogfly.SortingType current;
 
-    private static ModPanelElement panel;
-    public static void redraw(){
-        String query = panel.searchField.getText().toLowerCase();
-        if (query.isEmpty())
-            panel.refreshButtons(Cogfly.getDisplayedMods(panel.current, panel.profile));
-        else
-            panel.filterButtons();
-    }
-
-    private final Profile profile;
 
     public ModPanelElement(Profile profile) {
         super(new BorderLayout());
         this.profile = profile;
-        panel = this;
+        panels.put(profile, this);
         setBorder(BorderFactory.createEmptyBorder());
         setPreferredSize(new Dimension(1100, 525));
         JPanel searchPanel = new JPanel(new BorderLayout(5, 0));
@@ -81,7 +81,7 @@ public class ModPanelElement extends JPanel {
             current = sortingType;
             //noinspection DataFlowIssue
             Cogfly.sortList(sortingType, sortingDirection.getSelectedItem().toString());
-            refreshButtons(Cogfly.getDisplayedMods(sortingType, profile));
+            redrawPanel();
         });
 
         sortingDirection.addActionListener(_ -> {
@@ -89,7 +89,7 @@ public class ModPanelElement extends JPanel {
             current = sortingType;
             //noinspection DataFlowIssue
             Cogfly.sortList(sortingType, sortingDirection.getSelectedItem().toString());
-            refreshButtons(Cogfly.getDisplayedMods(sortingType, profile));
+            redrawPanel();
         });
 
         JScrollPane scrollPane = new JScrollPane(
@@ -104,7 +104,7 @@ public class ModPanelElement extends JPanel {
         add(scrollPane, BorderLayout.CENTER);
 
 
-        refreshButtons(Cogfly.getDisplayedMods(current, profile));
+        redrawPanel();
 
         searchField.getDocument().addDocumentListener(new DocumentListener() {
             @Override
@@ -262,5 +262,13 @@ public class ModPanelElement extends JPanel {
             }
         }
         refreshButtons(filtered);
+    }
+
+    private void redrawPanel(){
+        String query = searchField.getText();
+        if (query.isEmpty())
+            refreshButtons(Cogfly.getDisplayedMods(current, profile));
+        else
+            filterButtons();
     }
 }

@@ -19,7 +19,6 @@ public class ProfileCardElement extends JPanel {
     private Timer hoverTimer;
     public static Color normal = UIManager.getColor("Button.background").darker();
     public static Color hover = UIManager.getColor("Button.pressedBackground");
-
     private LookAndFeel lastLaf = null;
     public ProfileCardElement(Profile profile, Icon icon) {
         setPreferredSize(new Dimension(200, 160));
@@ -97,7 +96,6 @@ public class ProfileCardElement extends JPanel {
                     return;
                 }
                 JPanel pages = FrameManager.getOrCreate().getPagePanel();
-                profile.refreshMods();
                 panel.reload();
                 ((CardLayout)pages.getLayout()).show(pages, profile.getName());
                 SelectedPageButtonElement button = FrameManager.getOrCreate().getCurrentPageButton();
@@ -126,7 +124,7 @@ public class ProfileCardElement extends JPanel {
 
     private static Color lerp(Color a, Color b, float t) {
         t = Math.max(0f, Math.min(1f, t));
-        int r = (int) (a.getRed()   + (b.getRed()   - a.getRed())   * t);
+        int r = (int) (a.getRed() + (b.getRed() - a.getRed()) * t);
         int g = (int) (a.getGreen() + (b.getGreen() - a.getGreen()) * t);
         int b2 = (int) (a.getBlue()  + (b.getBlue()  - a.getBlue())  * t);
         return new Color(r, g, b2);

@@ -294,7 +294,7 @@ public class Utils {
         if (monomod.toFile().exists())
             deleteFolder(monomod);
 
-        ModPanelElement.redraw();
+        ModPanelElement.redraw(profile);
     }
     public static void downloadLatestMod(ModData mod, Profile profile, boolean deps){
         downloadMod(ModData.getMod(mod), profile, deps);
@@ -366,7 +366,7 @@ public class Utils {
                 zis.closeEntry();
             }
         } catch (IOException ignored){}
-        ModPanelElement.redraw();
+        ModPanelElement.redraw(profile);
     }
     private static ModData getModFromDependency(String dependency){
         for (ModData mod : Cogfly.mods) {

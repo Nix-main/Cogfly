@@ -154,8 +154,6 @@ public class SettingsDialog extends JDialog {
         if (!queuedGamePath.equals(initialGamePath))
             Cogfly.downloadBepInEx(Paths.get(queuedGamePath));
 
-        ModPanelElement.redraw();
-
         Cogfly.settings.save();
     }
 
