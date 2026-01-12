@@ -8,6 +8,7 @@ import dev.ambershadow.cogfly.util.Utils;
 
 import javax.swing.*;
 import java.awt.*;
+import java.nio.file.Paths;
 
 public class SidebarElement extends JPanel {
 
@@ -29,13 +30,23 @@ public class SidebarElement extends JPanel {
         savesButton.setPreferredSize(new Dimension(EXPANDED_WIDTH, savesButton.getPreferredSize().height));
         savesButton.setMaximumSize(new Dimension(EXPANDED_WIDTH, savesButton.getMaximumSize().height));
         savesButton.setMinimumSize(new Dimension(EXPANDED_WIDTH, savesButton.getMinimumSize().height));
-
         savesButton.addActionListener(_ -> Utils.openSavePath());
+
+        FadeButton logsButton = new FadeButton();
+        logsButton.setText("Open Logs Folder");
+        logsButton.setIcon(Assets.openSaves.getAsIconWithColor(Color.WHITE));
+        logsButton.setHorizontalAlignment(SwingConstants.LEFT);
+        logsButton.setTextAlpha(0f);
+        logsButton.setPreferredSize(new Dimension(EXPANDED_WIDTH, logsButton.getPreferredSize().height));
+        logsButton.setMaximumSize(new Dimension(EXPANDED_WIDTH, logsButton.getMaximumSize().height));
+        logsButton.setMinimumSize(new Dimension(EXPANDED_WIDTH, logsButton.getMinimumSize().height));
+        logsButton.addActionListener(_ -> Utils.openPath(Paths.get(Cogfly.localDataPath).resolve("logs")));
 
         JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
         buttonPanel.setOpaque(false);
         buttonPanel.add(savesButton);
+        buttonPanel.add(logsButton);
 
         setLayout(new BorderLayout());
         add(buttonPanel, BorderLayout.SOUTH);
@@ -59,6 +70,7 @@ public class SidebarElement extends JPanel {
                         (EXPANDED_WIDTH - COLLAPSED_WIDTH);
                 textProgress = Math.max(0f, Math.min(1f, textProgress));
                 savesButton.setTextAlpha(textProgress);
+                logsButton.setTextAlpha(textProgress);
 
                 revalidate();
                 repaint();
@@ -83,7 +95,7 @@ public class SidebarElement extends JPanel {
                         (EXPANDED_WIDTH - COLLAPSED_WIDTH)) * -1;
                 textProgress = Math.max(0f, Math.min(1f, textProgress));
                 savesButton.setTextAlpha(textProgress);
-
+                logsButton.setTextAlpha(textProgress);
                 revalidate();
                 repaint();
             } else {
@@ -126,7 +138,6 @@ public class SidebarElement extends JPanel {
 
             Graphics2D g2 = (Graphics2D) g.create();
 
-            // Clip to button bounds (important!)
             g2.setClip(0, 0, getWidth(), getHeight());
 
             g2.setComposite(AlphaComposite.getInstance(

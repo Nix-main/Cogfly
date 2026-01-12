@@ -55,6 +55,16 @@ public class Utils {
         };
     }
 
+
+    public static void openPath(Path path){
+        if (!(Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)))
+            return;
+        try {
+            Desktop.getDesktop().browse(path.toUri());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
     public static void openSavePath(){
         Path savePath = getSavePath();
         if (savePath.toString().isEmpty() || savePath.toString().isBlank())
