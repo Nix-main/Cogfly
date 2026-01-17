@@ -436,7 +436,7 @@ public class Utils {
     }
     public static void launchModdedGame(Profile profile){
         Cogfly.logger.info("Attempting to launch game with profile: {}",  profile.getName());
-        Cogfly.launchGameAsync(profile.getBepInExPath().toString());
+        Cogfly.launchGameAsync(true, profile.getBepInExPath().toString());
     }
 
     private static void deleteFolder(Path folder){

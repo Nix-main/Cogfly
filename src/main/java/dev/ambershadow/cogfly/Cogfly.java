@@ -132,7 +132,7 @@ public class Cogfly {
         Path bepindll = path.resolve("BepInEx/core/BepInEx.dll");
         if (bepindll.toFile().exists())
             return;
-        Utils.downloadAndExtract(packUrl, path  );
+        Utils.downloadAndExtract(packUrl, path);
     }
 
     public static void sortList(SortingType type, String direction){
@@ -306,7 +306,7 @@ public class Cogfly {
     }
 
 
-    public static void launchGameAsync(String path){
+    public static void launchGameAsync(boolean enabled, String path){
         CompletableFuture.runAsync(() -> {
             logger.info("Launching game. OS: {}, Path: {}", Utils.OperatingSystem.current(), path);
             ProcessBuilder builder = new ProcessBuilder();
@@ -320,20 +320,27 @@ public class Cogfly {
                 cmds.add(Utils.getGameExecutable());
             } else if (Utils.OperatingSystem.current().equals(Utils.OperatingSystem.LINUX)) {
                 builder.directory(Paths.get(settings.gamePath).toFile());
+                cmds.add("setsid");
                 cmds.add("sh");
                 cmds.add(Utils.getGameExecutable());
             } else {
+                cmds.add("cmd");
+                cmds.add("/c");
+                cmds.add("start");
+                cmds.add("\"\"");
                 cmds.add(gameAppPath.toString());
             }
-            cmds.add("--doorstop-target-assembly");
-            cmds.add(Paths.get(path).resolve("core/BepInEx.Preloader.dll").toString());
+            cmds.add("--doorstop-enabled");
+            cmds.add(String.valueOf(enabled));
+            if (enabled) {
+                cmds.add("--doorstop-target-assembly");
+                cmds.add(Paths.get(path).resolve("core/BepInEx.Preloader.dll").toString());
+            }
             builder.command(cmds);
-            builder.redirectErrorStream(false);
             logger.info("Launch command: {}", cmds);
             try {
-                Process process = builder.start();
-                process.waitFor();
-            } catch (IOException | InterruptedException e) {
+                builder.start();
+            } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         });
