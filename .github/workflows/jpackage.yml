@@ -46,7 +46,7 @@ jobs:
           jpackage \
               --input build/libs \
               --main-jar cogfly-1.0.2.jar \
-              --name "Cogfly" \
+              --name "Cogfly-macOS_amd64" \
               --type dmg \
               --vendor "Ambershadow" \
               --icon ./icons/icon.icns \
@@ -59,7 +59,7 @@ jobs:
           jpackage \
               --input build/libs \
               --main-jar cogfly-1.0.2.jar \
-              --name "Cogfly" \
+              --name "Cogfly-macOS_aarch64" \
               --type dmg \
               --vendor "Ambershadow" \
               --icon ./icons/icon.icns \
@@ -72,7 +72,7 @@ jobs:
           jpackage `
             --input build/libs `
             --main-jar cogfly-1.0.2.jar `
-            --name Cogfly `
+            --name Cogfly-Windows `
             --type msi `
             --vendor "Ambershadow" `
             --icon ./icons/icon.ico `
@@ -86,7 +86,7 @@ jobs:
           jpackage `
             --input build/libs `
             --main-jar cogfly-1.0.2.jar `
-            --name Cogfly `
+            --name Cogfly-Windows `
             --type exe `
             --vendor "Ambershadow" `
             --icon ./icons/icon.ico `
@@ -101,7 +101,7 @@ jobs:
           jpackage \
             --input build/libs \
             --main-jar cogfly-1.0.2.jar \
-            --name Cogfly \
+            --name Cogfly-Linux \
             --type deb \
             --vendor "Ambershadow" \
             --icon ./icons/icon.png \
@@ -116,7 +116,7 @@ jobs:
           jpackage \
             --input build/libs \
             --main-jar cogfly-1.0.2.jar \
-            --name Cogfly \
+            --name Cogfly-Linux \
             --type app-image \
             --vendor "Ambershadow" \
             --icon ./icons/icon.png \
