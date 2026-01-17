@@ -14,6 +14,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -177,8 +178,14 @@ public class ModPanelElement extends JPanel {
             ZonedDateTime localModified = updated.atZone(userZone);
             DateTimeFormatter formatter =
                     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-            infoPanel.add(new JLabel("Date created: " + localCreated.format(formatter)));
-            infoPanel.add(new JLabel("Date updated: " + localModified.format(formatter)));
+            if (!Cogfly.settings.useRelativeTime) {
+                infoPanel.add(new JLabel("Date created: " + localCreated.format(formatter)));
+                infoPanel.add(new JLabel("Date updated: " + localModified.format(formatter)));
+            } else {
+                Instant now = Instant.now();
+                infoPanel.add(new JLabel("Date created: " + formatRelative(localCreated.toInstant(), now)));
+                infoPanel.add(new JLabel("Date updated: " + formatRelative(localModified.toInstant(), now)));
+            }
             if (!mod.getDependencies().isEmpty()) {
                 infoPanel.add(new JLabel(" "));
                 infoPanel.add(new JLabel("Dependencies"));
@@ -272,5 +279,48 @@ public class ModPanelElement extends JPanel {
             refreshButtons(Cogfly.getDisplayedMods(current, profile));
         else
             filterButtons();
+    }
+
+
+    // this method is SO UGLY
+    public static String formatRelative(Instant then, Instant now) {
+
+        long minutes = ChronoUnit.MINUTES.between(then, now);
+        if (minutes < 60) {
+            return minutes + " minute" + plural(minutes) + " ago";
+        }
+
+        long hours = ChronoUnit.HOURS.between(then, now);
+        if (hours < 24) {
+            return hours + " hour" + plural(hours) + " ago";
+        }
+
+        long days = ChronoUnit.DAYS.between(then, now);
+        if (days < 7) {
+            return days + " day" + plural(days) + " ago";
+        }
+
+        long weeks = days / 7;
+        if (weeks < 4) {
+            return weeks + " week" + plural(weeks) + " ago";
+        }
+
+        long months = ChronoUnit.MONTHS.between(
+                then.atZone(ZoneId.systemDefault()).toLocalDate(),
+                now.atZone(ZoneId.systemDefault()).toLocalDate()
+        );
+        if (months < 12) {
+            return months + " month" + plural(months) + " ago";
+        }
+
+        long years = ChronoUnit.YEARS.between(
+                then.atZone(ZoneId.systemDefault()).toLocalDate(),
+                now.atZone(ZoneId.systemDefault()).toLocalDate()
+        );
+        return years + " year" + plural(years) + " ago";
+    }
+
+    private static String plural(long value) {
+        return value == 1 ? "" : "s";
     }
 }

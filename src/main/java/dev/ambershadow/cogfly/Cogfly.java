@@ -197,6 +197,8 @@ public class Cogfly {
                     settings.modNameSpaces = jsonSettingsFile.get("modNameSpaces").getAsBoolean();
                 if (jsonSettingsFile.has("scrollingIncrement"))
                     settings.scrollingIncrement = jsonSettingsFile.get("scrollingIncrement").getAsInt();
+                if (jsonSettingsFile.has("useRelativeTime"))
+                    settings.useRelativeTime = jsonSettingsFile.get("useRelativeTime").getAsBoolean();
             }
         }
         settings.save();

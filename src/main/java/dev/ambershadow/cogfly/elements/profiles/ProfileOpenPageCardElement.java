@@ -134,6 +134,7 @@ public class ProfileOpenPageCardElement extends JPanel {
         boolean anyOutdated = profile.getInstalledMods()
                 .stream().anyMatch(mod -> mod.isOutdated(profile));
         updateAll.setEnabled(anyOutdated);
+        ModPanelElement.redraw(profile);
         if (profile.getPath().equals(Paths.get(Cogfly.settings.gamePath))){
             remove.setEnabled(false);
         }

@@ -43,7 +43,10 @@ public class Profile {
     }
 
     public String getInstalledVersion(ModData mod) {
-        return installedMods.stream().filter(md -> md.equalsIgnoreVersion(mod)).toList().getFirst().getVersionNumber();
+        var x = installedMods.stream().filter(md -> md.equalsIgnoreVersion(mod)).toList();
+        if (!x.isEmpty())
+            return x.getFirst().getVersionNumber();
+        return "";
     }
 
     public Icon getIcon() {

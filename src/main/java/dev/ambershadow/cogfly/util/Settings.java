@@ -34,6 +34,7 @@ public class Settings {
     public boolean baseGameEnabled = false;
     public boolean modNameSpaces = true;
     public int scrollingIncrement = 16;
+    public boolean useRelativeTime = false;
 
     private String findDefaultPath(){
         for (Path root : FileSystems.getDefault().getRootDirectories()) {

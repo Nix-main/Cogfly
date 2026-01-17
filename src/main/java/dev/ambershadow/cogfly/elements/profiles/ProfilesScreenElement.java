@@ -148,10 +148,11 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
     public void drawProfiles(){
         parentPanel.removeAll();
         int maxPerRow = 5;
-        List<Profile> profiles = new ArrayList<>(ProfileManager.profiles);
+        List<Profile> profiles = new ArrayList<>();
         if (Cogfly.settings.baseGameEnabled) {
             profiles.add(ProfileManager.baseGame);
         }
+        profiles.addAll(ProfileManager.profiles);
         int totalProfiles = profiles.size();
         parentPanel.setLayout(new BoxLayout(parentPanel, BoxLayout.Y_AXIS));
         parentPanel.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
