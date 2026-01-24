@@ -42,8 +42,6 @@ public class Settings {
     public boolean useRelativeTime = false;
 
 
-    public JsonObject jsonSettingsFile;
-
     private final transient File dataJson;
     public Settings(File data){
         dataJson = data;
@@ -93,7 +91,7 @@ public class Settings {
         if (!content.isEmpty()) {
             JsonElement element = JsonParser.parseString(content);
             if (element != null) {
-                jsonSettingsFile = element.getAsJsonObject();
+                JsonObject jsonSettingsFile = element.getAsJsonObject();
                 if (jsonSettingsFile.has("theme"))
                     theme = jsonSettingsFile.get("theme").getAsString();
                 if (jsonSettingsFile.has("gamePath"))
