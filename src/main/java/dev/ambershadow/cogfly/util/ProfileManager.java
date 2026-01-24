@@ -76,6 +76,35 @@ public class ProfileManager {
         deleteFolder(profile.getPath());
     }
 
+    public static void changeIcon(Profile profile, String iconPath, boolean setToDefault){
+        String[] extensions = {"png", "jpeg", "jpg", "gif"};
+        for (String extension : extensions) {
+            Path existingIconPath = Paths.get(profile.getPath().toString()+"/icon."+extension);
+            if (existingIconPath.toFile().exists()) {
+                try{
+                    Files.delete(Path.of(profile.getPath().toString()+"/icon."+extension));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                break;
+            }
+        }
+        if (setToDefault) {
+            profile.setIcon(UIManager.getIcon("OptionPane.informationIcon"));
+
+            return;
+        }
+
+        try {
+            Files.copy(Paths.get(iconPath),
+                    profile.getPath().resolve("icon." + Paths.get(iconPath).getFileName().toString()
+                            .split("\\.")[1]));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        profile.setIcon(new ImageIcon(iconPath));
+    }
+
     public static void loadProfiles() {
         profiles.clear();
         List<String> paths = new ArrayList<>(Cogfly.settings.profileSources);

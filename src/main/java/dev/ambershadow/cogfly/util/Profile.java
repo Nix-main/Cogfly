@@ -12,7 +12,7 @@ public class Profile {
     private final Path path;
     private final String name;
 
-    private final Icon icon;
+    private Icon icon;
     public Profile(String name, Path path) {
         this(name, path, null);
     }
@@ -51,6 +51,9 @@ public class Profile {
 
     public Icon getIcon() {
         return icon;
+    }
+    public void setIcon(Icon icon) {
+        this.icon = icon;
     }
 
     public String getName() {

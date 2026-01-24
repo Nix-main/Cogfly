@@ -119,12 +119,53 @@ public class ProfileOpenPageCardElement extends JPanel {
             remove.setEnabled(false);
         }
 
+        JButton changeProfileIcon = new JButton("Change Icon");
+        changeProfileIcon.addActionListener(_ -> {
+            JDialog prompt = new JDialog(FrameManager.getOrCreate().frame);
+            prompt.setModal(true);
+            prompt.setSize(new Dimension(300, 150));
+            prompt.setResizable(false);
+            prompt.setLocationRelativeTo(null);
+            prompt.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+
+            JPanel customIconPanel = new JPanel();
+            JLabel customIconLabel = new JLabel("Custom Icon:");
+            JButton customIconButton = new JButton("Click here to select a file");
+
+            JPanel defaultIconPanel = new JPanel();
+            JButton defaultIconButton = new JButton("Reset Icon to Default");
+
+            customIconPanel.add(customIconLabel);
+            customIconPanel.add(customIconButton);
+            defaultIconPanel.add(defaultIconButton);
+
+            JButton applyButton = new JButton("Apply");
+            applyButton.setPreferredSize(new Dimension(50, 20));
+            applyButton.addActionListener(_ -> {
+                if (customIconButton.getText().equals("Click here to select a file")) {
+                    ProfileManager.changeIcon(profile, customIconButton.getText(), true);
+                } else {
+                    ProfileManager.changeIcon(profile, customIconButton.getText(), false);
+                }
+                prompt.dispose();
+            });
+            customIconButton.addActionListener(_ -> Utils.pickFile((path) -> customIconButton.setText(path.toString()), "*", "png", "jpg", "jpeg", "gif"));
+            defaultIconButton.addActionListener(_ -> customIconButton.setText("Click here to select a file"));
+            applyButton.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+            prompt.add(customIconPanel, BorderLayout.CENTER);
+            prompt.add(defaultIconPanel, BorderLayout.NORTH);
+            prompt.add(applyButton, BorderLayout.SOUTH);
+            prompt.setVisible(true);
+        });
+
+
         upperPanel.add(launch);
         upperPanel.add(updateAll);
         upperPanel.add(copyLogToClipboard);
         upperPanel.add(exportAsId);
         upperPanel.add(exportAsFile);
         upperPanel.add(openFileLocation);
+        upperPanel.add(changeProfileIcon);
         upperPanel.add(remove);
         add(upperPanel, BorderLayout.NORTH);
         add(new ModPanelElement(profile), BorderLayout.CENTER);
