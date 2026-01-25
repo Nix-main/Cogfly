@@ -45,7 +45,8 @@ public class ProfileManager {
         }
         Profile prof = new Profile(name, profile, icon);
         try {
-            Files.copy(Paths.get(iconPath), prof.getPath().resolve("icon." + Paths.get(iconPath).getFileName().toString()
+            Path source = Paths.get(iconPath);
+            Files.copy(source, prof.getPath().resolve("icon." + source.getFileName().toString()
                             .split("\\.")[1]));
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -76,7 +77,7 @@ public class ProfileManager {
         deleteFolder(profile.getPath());
     }
 
-    public static void changeIcon(Profile profile, String iconPath, boolean setToDefault){
+    public static void changeIcon(Profile profile, String iconPath){
         String[] extensions = {"png", "jpeg", "jpg", "gif"};
         for (String extension : extensions) {
             Path existingIconPath = Paths.get(profile.getPath().toString()+"/icon."+extension);
@@ -89,16 +90,17 @@ public class ProfileManager {
                 break;
             }
         }
-        if (setToDefault) {
+        if (iconPath.isEmpty()) {
             profile.setIcon(UIManager.getIcon("OptionPane.informationIcon"));
-
             return;
         }
-
+        Path path = Paths.get(iconPath);
+        String fileName = path.getFileName().toString();
+        int dot = fileName.lastIndexOf('.');
+        String extension = (dot == -1) ? "" : fileName.substring(dot + 1);
         try {
-            Files.copy(Paths.get(iconPath),
-                    profile.getPath().resolve("icon." + Paths.get(iconPath).getFileName().toString()
-                            .split("\\.")[1]));
+            Files.copy(path,
+                    profile.getPath().resolve("icon." + extension));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

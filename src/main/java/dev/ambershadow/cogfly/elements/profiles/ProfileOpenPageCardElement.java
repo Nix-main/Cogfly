@@ -123,38 +123,31 @@ public class ProfileOpenPageCardElement extends JPanel {
         changeProfileIcon.addActionListener(_ -> {
             JDialog prompt = new JDialog(FrameManager.getOrCreate().frame);
             prompt.setModal(true);
-            prompt.setSize(new Dimension(300, 150));
+            prompt.setSize(new Dimension(300, 100));
             prompt.setResizable(false);
             prompt.setLocationRelativeTo(null);
             prompt.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-
-            JPanel customIconPanel = new JPanel();
-            JLabel customIconLabel = new JLabel("Custom Icon:");
-            JButton customIconButton = new JButton("Click here to select a file");
-
-            JPanel defaultIconPanel = new JPanel();
+            JPanel content = new JPanel();
+            content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+            prompt.setContentPane(content);
+            JButton customIconButton = new JButton("Select a file");
             JButton defaultIconButton = new JButton("Reset Icon to Default");
 
-            customIconPanel.add(customIconLabel);
-            customIconPanel.add(customIconButton);
-            defaultIconPanel.add(defaultIconButton);
-
-            JButton applyButton = new JButton("Apply");
-            applyButton.setPreferredSize(new Dimension(50, 20));
-            applyButton.addActionListener(_ -> {
-                if (customIconButton.getText().equals("Click here to select a file")) {
-                    ProfileManager.changeIcon(profile, customIconButton.getText(), true);
-                } else {
-                    ProfileManager.changeIcon(profile, customIconButton.getText(), false);
-                }
+            customIconButton.addActionListener(_ -> Utils.pickFile((path) -> {
+                ProfileManager.changeIcon(profile, path.toString());
+                prompt.dispose();
+            }, "*", "png", "jpg", "jpeg", "gif"));
+            defaultIconButton.addActionListener(_ -> {
+                ProfileManager.changeIcon(profile, "");
                 prompt.dispose();
             });
-            customIconButton.addActionListener(_ -> Utils.pickFile((path) -> customIconButton.setText(path.toString()), "*", "png", "jpg", "jpeg", "gif"));
-            defaultIconButton.addActionListener(_ -> customIconButton.setText("Click here to select a file"));
-            applyButton.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-            prompt.add(customIconPanel, BorderLayout.CENTER);
-            prompt.add(defaultIconPanel, BorderLayout.NORTH);
-            prompt.add(applyButton, BorderLayout.SOUTH);
+
+            customIconButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+            defaultIconButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+            content.add(defaultIconButton);
+            content.add(Box.createVerticalStrut(5));
+            content.add(customIconButton);
             prompt.setVisible(true);
         });
 

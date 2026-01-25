@@ -167,8 +167,8 @@ public class Cogfly {
     }
 
     private static void showEarlyDialogs(){
-        if (settings.jsonSettingsFile != null && settings.jsonSettingsFile.has("profileSavePath")) {
-            Cogfly.settings.profileSavePath = settings.jsonSettingsFile.get("profileSavePath").getAsString();
+        if (settings.getData() != null && settings.getData().has("profileSavePath")) {
+            Cogfly.settings.profileSavePath = settings.getData().get("profileSavePath").getAsString();
         } else {
             logger.info("No stored profile save path! Prompting:");
             JDialog prompt = new JDialog(FrameManager.getOrCreate().frame, "Profile Save Path", true);

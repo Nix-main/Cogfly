@@ -47,6 +47,21 @@ public class Settings {
         dataJson = data;
     }
 
+    public JsonObject getData(){
+        String content;
+        try(FileReader reader = new FileReader(dataJson)) {
+            content = new BufferedReader(reader).lines().collect(Collectors.joining("\n"));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        if (!content.isEmpty()) {
+            JsonElement element = JsonParser.parseString(content);
+            if (element != null)
+                return element.getAsJsonObject();
+        }
+        return null;
+    }
+
     private String findDefaultPath(){
         for (Path root : FileSystems.getDefault().getRootDirectories()) {
             for (String path : STATIC_PATHS) {
@@ -82,36 +97,25 @@ public class Settings {
 
 
     public void load(){
-        String content;
-        try(FileReader reader = new FileReader(dataJson)) {
-            content = new BufferedReader(reader).lines().collect(Collectors.joining("\n"));
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        JsonObject jsonSettingsFile = getData();
+        if (jsonSettingsFile.has("theme"))
+            theme = jsonSettingsFile.get("theme").getAsString();
+        if (jsonSettingsFile.has("gamePath"))
+            gamePath = jsonSettingsFile.get("gamePath").getAsString();
+        if (jsonSettingsFile.has("profileSources")){
+            List<String> src = new ArrayList<>();
+            jsonSettingsFile.get("profileSources")
+                    .getAsJsonArray().forEach(o -> src.add(o.getAsString()));
+            profileSources = src;
         }
-        if (!content.isEmpty()) {
-            JsonElement element = JsonParser.parseString(content);
-            if (element != null) {
-                JsonObject jsonSettingsFile = element.getAsJsonObject();
-                if (jsonSettingsFile.has("theme"))
-                    theme = jsonSettingsFile.get("theme").getAsString();
-                if (jsonSettingsFile.has("gamePath"))
-                    gamePath = jsonSettingsFile.get("gamePath").getAsString();
-                if (jsonSettingsFile.has("profileSources")){
-                    List<String> src = new ArrayList<>();
-                    jsonSettingsFile.get("profileSources")
-                            .getAsJsonArray().forEach(o -> src.add(o.getAsString()));
-                    profileSources = src;
-                }
-                if (jsonSettingsFile.has("baseGameEnabled"))
-                    baseGameEnabled = jsonSettingsFile.get("baseGameEnabled").getAsBoolean();
-                if (jsonSettingsFile.has("modNameSpaces"))
-                    modNameSpaces = jsonSettingsFile.get("modNameSpaces").getAsBoolean();
-                if (jsonSettingsFile.has("scrollingIncrement"))
-                    scrollingIncrement = jsonSettingsFile.get("scrollingIncrement").getAsInt();
-                if (jsonSettingsFile.has("useRelativeTime"))
-                    useRelativeTime = jsonSettingsFile.get("useRelativeTime").getAsBoolean();
-            }
-        }
+        if (jsonSettingsFile.has("baseGameEnabled"))
+            baseGameEnabled = jsonSettingsFile.get("baseGameEnabled").getAsBoolean();
+        if (jsonSettingsFile.has("modNameSpaces"))
+            modNameSpaces = jsonSettingsFile.get("modNameSpaces").getAsBoolean();
+        if (jsonSettingsFile.has("scrollingIncrement"))
+            scrollingIncrement = jsonSettingsFile.get("scrollingIncrement").getAsInt();
+        if (jsonSettingsFile.has("useRelativeTime"))
+            useRelativeTime = jsonSettingsFile.get("useRelativeTime").getAsBoolean();
         save();
 
         for (FlatAllIJThemes.FlatIJLookAndFeelInfo info : FlatAllIJThemes.INFOS) {
