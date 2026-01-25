@@ -25,7 +25,6 @@ public class SettingsDialog extends JDialog {
     public SettingsDialog(Frame parent, String name, boolean modal) {
         super(parent, name, modal);
         resetQueue();
-        setSize(650, 350);
         setResizable(false);
         JPanel panel = new JPanel(new BorderLayout());
         JPanel holder = new JPanel();
@@ -49,6 +48,10 @@ public class SettingsDialog extends JDialog {
         panel.add(saveButton, BorderLayout.SOUTH);
         panel.add(holder, BorderLayout.NORTH);
         add(panel);
+
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        pack();
 
         saveButton.setEnabled(false);
         addWindowListener(new WindowAdapter() {

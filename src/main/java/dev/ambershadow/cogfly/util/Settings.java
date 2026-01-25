@@ -2,10 +2,7 @@ package dev.ambershadow.cogfly.util;
 
 import com.formdev.flatlaf.intellijthemes.FlatAllIJThemes;
 import com.formdev.flatlaf.intellijthemes.FlatNordIJTheme;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import dev.ambershadow.cogfly.Cogfly;
 import net.harawata.appdirs.AppDirsFactory;
 
@@ -20,7 +17,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class Settings {
-
     private static final String[] STATIC_PATHS = new String[]
     {
             "Program Files/Steam/steamapps/common/Hollow Knight Silksong",
@@ -32,23 +28,7 @@ public class Settings {
             "GOG Galaxy/Games/Hollow Knight Silksong",
     };
 
-    public String theme = FlatNordIJTheme.class.getName();
-    public String gamePath = findDefaultPath();
-    public String profileSavePath = Paths.get(Cogfly.roamingDataPath + "/profiles/").toString();
-    public List<String> profileSources = new ArrayList<>();
-    public boolean baseGameEnabled = false;
-    public boolean modNameSpaces = true;
-    public int scrollingIncrement = 16;
-    public boolean useRelativeTime = false;
-    public boolean profileSpecificPaths = false;
-
-
-    private final transient File dataJson;
-    public Settings(File data){
-        dataJson = data;
-    }
-
-    public JsonObject getData(){
+    private static JsonObject getData(File dataJson){
         String content;
         try(FileReader reader = new FileReader(dataJson)) {
             content = new BufferedReader(reader).lines().collect(Collectors.joining("\n"));
@@ -62,7 +42,41 @@ public class Settings {
         }
         return null;
     }
+    public static Settings load(File file) {
+        Settings settings = new Gson().fromJson(getData(file), Settings.class);
+        settings.dataFile = file;
+        settings.save();
 
+        for (FlatAllIJThemes.FlatIJLookAndFeelInfo info : FlatAllIJThemes.INFOS) {
+            if (info.getClassName().equals(settings.theme)) {
+                try {
+                    UIManager.setLookAndFeel(info.getClassName());
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+        return settings;
+    }
+
+
+    public String theme = FlatNordIJTheme.class.getName();
+    public String gamePath = findDefaultPath();
+    public String profileSavePath = Paths.get(Cogfly.roamingDataPath + "/profiles/").toString();
+    public List<String> profileSources = new ArrayList<>();
+    public boolean baseGameEnabled = false;
+    public boolean modNameSpaces = true;
+    public int scrollingIncrement = 16;
+    public boolean useRelativeTime = false;
+    public boolean profileSpecificPaths = false;
+
+
+
+    private Settings(){}
+    private transient File dataFile;
+    public JsonObject getData() {
+        return getData(dataFile);
+    }
     private String findDefaultPath(){
         for (Path root : FileSystems.getDefault().getRootDirectories()) {
             for (String path : STATIC_PATHS) {
@@ -86,7 +100,7 @@ public class Settings {
     }
 
     public void save(){
-        try (Writer writer = Files.newBufferedWriter(dataJson.toPath())) {
+        try (Writer writer = Files.newBufferedWriter(dataFile.toPath())) {
             new GsonBuilder().setPrettyPrinting().create()
                     .toJson(this, writer);
         } catch (IOException ex) {
@@ -94,39 +108,5 @@ public class Settings {
         }
         if (FrameManager.isCreated)
             FrameManager.getOrCreate().getCurrentPage().reload();
-    }
-
-
-    public void load(){
-        JsonObject jsonSettingsFile = getData();
-        if (jsonSettingsFile.has("theme"))
-            theme = jsonSettingsFile.get("theme").getAsString();
-        if (jsonSettingsFile.has("gamePath"))
-            gamePath = jsonSettingsFile.get("gamePath").getAsString();
-        if (jsonSettingsFile.has("profileSources")){
-            List<String> src = new ArrayList<>();
-            jsonSettingsFile.get("profileSources")
-                    .getAsJsonArray().forEach(o -> src.add(o.getAsString()));
-            profileSources = src;
-        }
-        if (jsonSettingsFile.has("baseGameEnabled"))
-            baseGameEnabled = jsonSettingsFile.get("baseGameEnabled").getAsBoolean();
-        if (jsonSettingsFile.has("modNameSpaces"))
-            modNameSpaces = jsonSettingsFile.get("modNameSpaces").getAsBoolean();
-        if (jsonSettingsFile.has("scrollingIncrement"))
-            scrollingIncrement = jsonSettingsFile.get("scrollingIncrement").getAsInt();
-        if (jsonSettingsFile.has("useRelativeTime"))
-            useRelativeTime = jsonSettingsFile.get("useRelativeTime").getAsBoolean();
-        save();
-
-        for (FlatAllIJThemes.FlatIJLookAndFeelInfo info : FlatAllIJThemes.INFOS) {
-            if (info.getClassName().equals(Cogfly.settings.theme)) {
-                try {
-                    UIManager.setLookAndFeel(info.getClassName());
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }
     }
 }

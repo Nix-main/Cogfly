@@ -82,8 +82,7 @@ public class Cogfly {
                 throw new RuntimeException(e);
             }
         }
-        settings = new Settings(dataJson);
-        settings.load();
+        settings = Settings.load(dataJson);
         packUrl = Cogfly.getResource("/packs/BepInExPack.zip");
         packUrlNoConsole = Cogfly.getResource("/packs/BepInExPack_NoConsole.zip");
         logger.info("Loaded settings");

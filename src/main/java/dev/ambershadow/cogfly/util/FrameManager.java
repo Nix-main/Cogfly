@@ -95,8 +95,6 @@ public class FrameManager {
         // Button.select
         if (page.equals(CogflyPage.SETTINGS)){
             JDialog dialog = new SettingsDialog(frame, "Settings", true);
-            dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-            dialog.setLocationRelativeTo(null);
             dialog.setVisible(true);
         } else {
             Color unhoveredColor = UIManager.getColor("Button.background");
