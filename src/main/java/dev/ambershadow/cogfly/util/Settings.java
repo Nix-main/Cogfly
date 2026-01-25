@@ -117,6 +117,8 @@ public class Settings {
             scrollingIncrement = jsonSettingsFile.get("scrollingIncrement").getAsInt();
         if (jsonSettingsFile.has("useRelativeTime"))
             useRelativeTime = jsonSettingsFile.get("useRelativeTime").getAsBoolean();
+        if (jsonSettingsFile.has("profileSpecificPaths"))
+            profileSpecificPaths = jsonSettingsFile.get("profileSpecificPaths").getAsBoolean();
         save();
 
         for (FlatAllIJThemes.FlatIJLookAndFeelInfo info : FlatAllIJThemes.INFOS) {
