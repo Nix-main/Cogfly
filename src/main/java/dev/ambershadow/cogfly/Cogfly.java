@@ -121,15 +121,15 @@ public class Cogfly {
 
     public static void downloadBepInExNoConsole(Path path){
         Path bepindll = path.resolve("BepInEx/core/BepInEx.dll");
-        if (bepindll.toFile().exists())
+        if (Files.exists(bepindll))
             return;
-        if (!path.toFile().exists())
+        if (Files.exists(path))
             return;
         Utils.downloadAndExtract(packUrlNoConsole, path);
     }
     public static void downloadBepInEx(Path path){
         Path bepindll = path.resolve("BepInEx/core/BepInEx.dll");
-        if (bepindll.toFile().exists())
+        if (Files.exists(bepindll))
             return;
         Utils.downloadAndExtract(packUrl, path);
     }

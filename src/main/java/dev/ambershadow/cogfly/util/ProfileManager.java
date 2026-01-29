@@ -82,7 +82,7 @@ public class ProfileManager {
         String[] extensions = {"png", "jpeg", "jpg", "gif"};
         for (String extension : extensions) {
             Path existingIconPath = Paths.get(profile.getPath().toString()+"/icon."+extension);
-            if (existingIconPath.toFile().exists()) {
+            if (Files.exists(existingIconPath)) {
                 try{
                     Files.delete(Path.of(profile.getPath().toString()+"/icon."+extension));
                 } catch (IOException e) {
@@ -114,7 +114,7 @@ public class ProfileManager {
         paths.add(Cogfly.settings.profileSavePath);
         for (String m : paths) {
             Path path = Paths.get(m);
-            if (!path.toFile().exists())
+            if (!Files.exists(path))
                 continue;
             File[] files = path.toFile().listFiles();
             if (files == null)
@@ -126,14 +126,14 @@ public class ProfileManager {
                 ImageIcon icon = null;
                 for (String extension : extensions) {
                     Path path2 = file.toPath().resolve("icon." + extension);
-                    if (path2.toFile().exists()){
+                    if (Files.exists(path2)){
                         icon = new ImageIcon(path2.toString());
                         break;
                     }
                 }
                 Path data = file.toPath().resolve("cogfly_data.json");
                 String gamePath = "";
-                if (data.toFile().exists()){
+                if (Files.exists(data)){
                     try(JsonReader reader = new JsonReader(Files.newBufferedReader(data))) {
                         reader.beginObject();
                         if (reader.nextName().equals("gamePath")) {

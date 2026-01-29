@@ -74,7 +74,7 @@ public class ModFetcher {
     }
     public static List<ModData> getInstalledMods(Path plugins){
         List<ModData> installedMods = new ArrayList<>();
-        if (!plugins.toFile().exists())
+        if (!Files.exists(plugins))
             return installedMods;
         File[] files = plugins.toFile().listFiles();
         if (files == null)
@@ -84,7 +84,7 @@ public class ModFetcher {
             if (innerFiles == null)
                 continue;
             Path manifest = Paths.get(file.getAbsolutePath() + "/manifest.json");
-            if (manifest.toFile().exists()) {
+            if (Files.exists(manifest)) {
                 try (JsonReader reader = new JsonReader(Files.newBufferedReader(manifest))) {
                     JsonObject object = JsonParser.parseReader(reader).getAsJsonObject();
                     String author = get(object, "namespace");

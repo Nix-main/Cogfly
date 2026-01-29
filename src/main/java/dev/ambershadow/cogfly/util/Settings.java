@@ -15,12 +15,12 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-
 public class Settings {
     private static final String[] STATIC_PATHS = new String[]
     {
             "Program Files/Steam/steamapps/common/Hollow Knight Silksong",
             "XboxGames/Hollow Knight Silksong/Content",
+            "XboxGames/Hollow Knight- Silksong/Content",
             "Program Files (x86)/Steam/steamapps/common/Hollow Knight Silksong",
             "Program Files/GOG Galaxy/Games/Hollow Knight Silksong",
             "Program Files (x86)/GOG Galaxy/Games/Hollow Knight Silksong",
@@ -43,7 +43,11 @@ public class Settings {
         return null;
     }
     public static Settings load(File file) {
-        Settings settings = new Gson().fromJson(getData(file), Settings.class);
+        Settings settings = null;
+        if (file.exists())
+            settings = new Gson().fromJson(getData(file), Settings.class);
+        if (settings == null)
+            settings = new Settings();
         settings.dataFile = file;
         settings.save();
 
