@@ -2,6 +2,7 @@ package dev.ambershadow.cogfly;
 
 import com.google.gson.JsonObject;
 import com.sun.jna.Native;
+import dev.ambershadow.cogfly.elements.profiles.ProfilesScreenElement;
 import dev.ambershadow.cogfly.loader.ModData;
 import dev.ambershadow.cogfly.loader.ModFetcher;
 import dev.ambershadow.cogfly.util.*;
@@ -254,6 +255,27 @@ public class Cogfly {
 
             prompt.pack();
             prompt.setVisible(true);
+        }
+
+
+        if (ProfileManager.profiles.isEmpty() && !settings.baseGameEnabled){
+            int confirm = JOptionPane.showConfirmDialog(FrameManager.getOrCreate().frame,
+                    "You don't have any profiles! Are you ready to create one?",
+                    "Profile Onboarding",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE);
+
+            if (confirm == JOptionPane.YES_OPTION) {
+                FrameManager.getOrCreate().setPage(
+                        FrameManager.CogflyPage.PROFILES,
+                        FrameManager.getOrCreate().profilesPageButton
+                );
+                ProfilesScreenElement.promptCreation(() -> JOptionPane.showMessageDialog(
+                        FrameManager.getOrCreate().frame,
+                        "Congratulations on creating your first profile! Click on its icon to manage it and install mods!",
+                        "Profile Onboarding",
+                        JOptionPane.INFORMATION_MESSAGE));
+            }
         }
     }
 

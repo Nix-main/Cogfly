@@ -1,11 +1,14 @@
 package dev.ambershadow.cogfly.elements.profiles;
 
 import com.formdev.flatlaf.FlatLaf;
+import dev.ambershadow.cogfly.elements.SelectedPageButtonElement;
 import dev.ambershadow.cogfly.loader.ModData;
 import dev.ambershadow.cogfly.util.*;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -69,6 +72,27 @@ public class ProfileCardElement extends JPanel {
         add(launchButton, BorderLayout.SOUTH);
 
         setBackground(normal);
+        MouseAdapter mouseHandler = new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (SwingUtilities.isDescendingFrom(
+                        e.getComponent(), launchButton)) {
+                    return;
+                }
+                JPanel pages = FrameManager.getOrCreate().getPagePanel();
+                panel.reload();
+                ((CardLayout)pages.getLayout()).show(pages, profile.getName());
+                SelectedPageButtonElement button = FrameManager.getOrCreate().getCurrentPageButton();
+                button.setBackground(UIManager.getColor("Button.background"));
+                button.selected = false;
+            }
+        };
+
+        addMouseListener(mouseHandler);
+
+        for (Component c : getComponents()) {
+            c.addMouseListener(mouseHandler);
+        }
 
         Timer colorUpdate = new Timer(100, _ -> {
             normal = UIManager.getColor("Button.background").darker();
@@ -80,7 +104,6 @@ public class ProfileCardElement extends JPanel {
             hover = FlatLaf.isLafDark() ? hover.brighter() : hover.darker();
         });
         colorUpdate.start();
-
         HoverLerp.install(this, () -> normal, () -> hover);
     }
 }
