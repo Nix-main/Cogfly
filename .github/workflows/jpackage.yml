@@ -147,7 +147,7 @@ jobs:
           chmod +x appimagetool
           ls -l output/appimage/Cogfly-Linux_amd64
           export APPIMAGE_EXTRACT_AND_RUN=1
-          ./appimagetool output/appimage/Cogfly-Linux_amd64 output/${{ runner.os }}-${{ matrix.arch }}/Cogfly.AppImage
+          ./appimagetool output/appimage/Cogfly-Linux_amd64 output/${{ runner.os }}-${{ matrix.arch }}/Cogfly-1.1.0.AppImage
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
