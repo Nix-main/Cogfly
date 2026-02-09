@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "dev.ambershadow"
-version = "1.0.3"
+version = "1.1.0"
 
 repositories {
     mavenCentral()
