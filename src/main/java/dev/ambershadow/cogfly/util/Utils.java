@@ -76,17 +76,10 @@ public class Utils {
         }
     }
     public static void openSavePath(){
-        Path savePath = getSavePath();
-        if (savePath.toString().isEmpty() || savePath.toString().isBlank())
-            return;
-        if (new File(savePath.toString()).exists()){
-            File file = new File(savePath.toString());
-            if (!file.isDirectory())
-                return;
-            String[] files =  file.list();
-            if (files == null || files.length == 0)
-                return;
-           openPath(savePath.resolve(files[0]));
+        if (Files.isDirectory(getSavePath())) {
+            try (Stream<Path> stream = Files.list(getSavePath())) {
+                stream.findFirst().ifPresent(Utils::openPath);
+            } catch (IOException ignored) {}
         }
     }
 
