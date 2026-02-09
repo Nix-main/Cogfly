@@ -9,9 +9,10 @@ A cross-platform mod manager for [Hollow Knight: Silksong](https://hollowknights
 - Requires an internet connection
 - Download the latest version [here](https://github.com/nix-main/Cogfly/releases/latest)
   - Pick your installation based on operating system and architecture
-    - Windows: MSI or EXE (does not matter, both are installers)
+    - Windows: MSI or EXE (does not matter, both are **installers**, running them will not open the app)
     - Linux:
       - deb (debian or debian-based)
+      - rpm (Fedora/Redhat)
       - AppImage (everything else)
     - MacOS:
       - aarch64 (Silicon)
@@ -49,4 +50,7 @@ Please submit actual information about the bug experienced. Please also submit y
 
 - Art
     - [Jngo](https://github.com/jngo102) - Main icon on the info page
+- Contributions
+    - [Hien Ngo](https://github.com/hien-ngo29) - RPM build in the workflow
+    - [FabBeyond](https://github.com/FabBeyond) - Profile icon switching
 </details>
