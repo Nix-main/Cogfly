@@ -107,7 +107,19 @@ jobs:
             --icon ./icons/icon.png \
             --app-version 1.0.3 \
             --dest output/${{ runner.os }}-${{ matrix.arch }} \
-          
+
+      - name: Build RPM
+        if: runner.os == 'Linux' && matrix.arch == 'amd64'
+        run: |
+          jpackage \
+            --input build/libs \
+            --main-jar cogfly-1.0.3.jar \
+            --name Cogfly \
+            --type rpm \
+            --vendor "Ambershadow" \
+            --icon ./icons/icon.png \
+            --app-version 1.0.3 \
+            --dest output/${{ runner.os }}-${{ matrix.arch }} \
 
       - name: Build APPIMAGE
         if: runner.os == 'Linux' && matrix.arch == 'amd64'
