@@ -47,13 +47,15 @@ public class InfoPageElement extends JPanel implements ReloadablePage {
         } catch (URISyntaxException e){
             throw new RuntimeException(e);
         }
-        icon.setPreferredSize(new Dimension(90, 0));
+        icon.setPreferredSize(new Dimension(75, 0));
         icon.setAutosize(SVGIcon.AUTOSIZE_HORIZ);
+        icon.setAntiAlias(true);
         github = new JButton("Source Code", icon);
+        github.setForeground(Color.WHITE);
         github.setFont(new Font("Arial", Font.PLAIN, 14));
         github.setHorizontalTextPosition(SwingConstants.CENTER);
         github.setVerticalTextPosition(SwingConstants.TOP);
-        github.setIconTextGap(10);
+        github.setIconTextGap(8);
         github.setPreferredSize(size);
         github.setToolTipText("https://github.com/nix-main/Cogfly");
         github.addActionListener(_ -> Utils.openURI(URI.create("https://github.com/nix-main/Cogfly")));
@@ -66,14 +68,15 @@ public class InfoPageElement extends JPanel implements ReloadablePage {
         } catch (URISyntaxException e){
             throw new RuntimeException(e);
         }
-        icon2.setPreferredSize(new Dimension(100, 0));
+        icon2.setPreferredSize(new Dimension(75, 0));
         icon2.setAutosize(SVGIcon.AUTOSIZE_HORIZ);
+        icon2.setAntiAlias(true);
         discord = new JButton("Modding Discord", icon2);
         discord.setForeground(Color.WHITE);
         discord.setFont(new Font("Arial", Font.PLAIN, 14));
         discord.setHorizontalTextPosition(SwingConstants.CENTER);
         discord.setVerticalTextPosition(SwingConstants.TOP);
-        discord.setIconTextGap(14);
+        discord.setIconTextGap(8);
         discord.setPreferredSize(size);
         discord.setToolTipText("https://discord.gg/VDsg3HmWuB");
         discord.addActionListener(_ -> Utils.openURI(URI.create("https://discord.gg/VDsg3HmWuB")));
