@@ -379,46 +379,18 @@ public class Utils {
         return null;
     }
 
-    public static void copyFile(Path path){
-
-        List<String> command = new ArrayList<>();
-        String file = path.toAbsolutePath().toString();
-
-        switch (OperatingSystem.current()) {
-            case WINDOWS:
-                command.add("powershell.exe");
-                command.add("Set-Clipboard");
-                command.add("-Path");
-                command.add("'" + file + "'");
-                break;
-            case MAC:
-                command.add("osascript");
-                command.add("-e");
-                command.add("set the clipboard to (POSIX file \"" + file + "\")");
-                break;
-            case LINUX:
-                String[][] cmds = {
-                        {"bash", "-c", "echo \"" + file + "\" | xclip -selection clipboard -t text/uri-list"},
-                        {"bash", "-c", "echo \"" + file + "\" | xsel --clipboard --input"},
-                        {"bash", "-c", "echo \"" + file + "\" | wl-copy"}
-                };
-                for (String[] cmd : cmds) {
-                    ProcessBuilder builder = new ProcessBuilder(cmd);
-                    try {
-                        builder.inheritIO().start().waitFor();
-                        return;
-                    } catch (Exception ignored) {}
-                }
-                break;
-                // this doesn't really work...at all, and is kind of a broken impl to begin with. I need to fix it.
-        }
-
-        ProcessBuilder pb = new ProcessBuilder(command);
+    public static void copyFile(Path path) {
+        String fileContent;
         try {
-            pb.inheritIO().start().waitFor();
-        } catch (IOException | InterruptedException e) {
-            throw new RuntimeException(e);
+            fileContent = Files.readString(path);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
         }
+
+        Toolkit.getDefaultToolkit()
+                .getSystemClipboard()
+                .setContents(new StringSelection(fileContent), null);
     }
 
     public static void copyString(String text) {
