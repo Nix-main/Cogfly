@@ -34,10 +34,6 @@ tasks.withType<JavaExec>().configureEach {
     jvmArgs("--enable-preview")
 }
 
-tasks.test {
-    useJUnitPlatform()
-}
-
 tasks.shadowJar {
     archiveBaseName.set("cogfly")
     archiveClassifier.set("")
