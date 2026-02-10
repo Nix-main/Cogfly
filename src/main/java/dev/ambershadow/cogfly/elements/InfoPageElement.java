@@ -49,6 +49,7 @@ public class InfoPageElement extends JPanel implements ReloadablePage {
         }
         icon.setPreferredSize(new Dimension(90, 0));
         icon.setAutosize(SVGIcon.AUTOSIZE_HORIZ);
+        icon.setAntiAlias(true);
         github = new JButton("Source Code", icon);
         github.setFont(new Font("Arial", Font.PLAIN, 14));
         github.setHorizontalTextPosition(SwingConstants.CENTER);
@@ -68,6 +69,7 @@ public class InfoPageElement extends JPanel implements ReloadablePage {
         }
         icon2.setPreferredSize(new Dimension(100, 0));
         icon2.setAutosize(SVGIcon.AUTOSIZE_HORIZ);
+        icon2.setAntiAlias(true);
         discord = new JButton("Modding Discord", icon2);
         discord.setForeground(Color.WHITE);
         discord.setFont(new Font("Arial", Font.PLAIN, 14));
