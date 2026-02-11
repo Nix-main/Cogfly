@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "dev.ambershadow"
-version = "1.1.1"
+version = "1.1.2"
 
 repositories {
     mavenCentral()
@@ -34,7 +34,7 @@ tasks.withType<JavaExec>().configureEach {
 }
 
 tasks.shadowJar {
-    archiveBaseName.set("cogfly")
+    archiveBaseName.set("Cogfly")
     archiveClassifier.set("")
     archiveVersion.set("" + version)
     manifest {

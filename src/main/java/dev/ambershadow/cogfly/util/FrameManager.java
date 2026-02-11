@@ -1,5 +1,6 @@
 package dev.ambershadow.cogfly.util;
 
+import dev.ambershadow.cogfly.Cogfly;
 import dev.ambershadow.cogfly.asset.Assets;
 import dev.ambershadow.cogfly.elements.InfoPageElement;
 import dev.ambershadow.cogfly.elements.SettingsDialog;
@@ -33,7 +34,7 @@ public class FrameManager {
         pagePanel = new JPanel(new CardLayout());
         screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         frame = new JFrame();
-        frame.setTitle("Cogfly");
+        frame.setTitle("Cogfly - v" + Cogfly.version);
         frame.setResizable(false);
         frame.setMinimumSize(new Dimension(1200, 750));
         frame.setPreferredSize(new Dimension(1200, 750));
