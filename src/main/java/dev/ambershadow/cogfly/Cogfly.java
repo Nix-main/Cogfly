@@ -45,7 +45,6 @@ public class Cogfly {
             add("ebkr-r2modman");
             add("BepInEx-BepInExPack_Silksong");
             add("Kesomannen-GaleModManager");
-            add("ambershadow-Cogfly");
         }
     };
     public static List<ModData> mods = null;
