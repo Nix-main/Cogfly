@@ -119,6 +119,11 @@ public class ModFetcher {
                                 installedVersion = mod.getVersionNumber();
                             }
                             var md = ModData.getModAtVersion(mod.rawObj, installedVersion);
+                            if (md == null) {
+                                Cogfly.logger.info("Failed to check if mod '" + mod.getFullName() +
+                                        "' is installed. Make sure you are using an official version published on Thunderstore");
+                                break;
+                            }
                             installedMods.add(md);
                             break;
                         }
