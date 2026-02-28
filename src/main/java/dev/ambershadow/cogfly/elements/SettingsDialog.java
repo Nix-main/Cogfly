@@ -38,6 +38,7 @@ public class SettingsDialog extends JDialog {
         holder.add(new UseRelativeTimeElement(this));
         holder.add(new PerProfileGamePathsElement(this));
         holder.add(new LaunchWithSteamElement(this));
+        holder.add(new InstalledModsOnTopElement(this));
         holder.add(new ProfileSourcesPanelElement(this));
 
         saveButton = new JButton("Apply & Save");
@@ -92,6 +93,7 @@ public class SettingsDialog extends JDialog {
     private boolean initialRelativeTime;
     private boolean initialPerProfilePaths;
     private boolean initialLaunchWithSteam;
+    private boolean initialShowInstalledModsOnTop;
     private String queuedTheme;
     private String queuedGamePath;
     public List<String> queuedProfileSources;
@@ -102,6 +104,7 @@ public class SettingsDialog extends JDialog {
     private boolean queuedRelativeTime;
     private boolean queuedPerProfilePaths;
     private boolean queuedLaunchWithSteam;
+    private boolean queuedShowInstalledModsOnTop;
 
     public void updateTheme(UIManager.LookAndFeelInfo theme){
         queuedTheme = theme.getClassName();
@@ -145,6 +148,11 @@ public class SettingsDialog extends JDialog {
         update();
     }
 
+    public void updateShowInstalledModsOnTop(boolean n){
+        queuedShowInstalledModsOnTop = n;
+        update();
+    }
+
     public void updateProfileSources(){
         update();
     }
@@ -160,7 +168,8 @@ public class SettingsDialog extends JDialog {
                         initialScrollIncrement != queuedScrollIncrement ||
                         initialRelativeTime != queuedRelativeTime ||
                         initialPerProfilePaths != queuedPerProfilePaths ||
-                        initialLaunchWithSteam != queuedLaunchWithSteam;
+                        initialLaunchWithSteam != queuedLaunchWithSteam ||
+                        initialShowInstalledModsOnTop != queuedShowInstalledModsOnTop;
 
         saveButton.setEnabled(dirty);
     }
@@ -190,6 +199,7 @@ public class SettingsDialog extends JDialog {
         Cogfly.settings.useRelativeTime = queuedRelativeTime;
         Cogfly.settings.profileSpecificPaths = queuedPerProfilePaths;
         Cogfly.settings.launchWithSteam = queuedLaunchWithSteam;
+        Cogfly.settings.showInstalledModsOnTop = queuedShowInstalledModsOnTop;
 
         if (!queuedProfileSources.equals(initialProfileSources))
             ProfileManager.loadProfiles();
@@ -211,6 +221,7 @@ public class SettingsDialog extends JDialog {
         queuedRelativeTime = Cogfly.settings.useRelativeTime;
         queuedPerProfilePaths = Cogfly.settings.profileSpecificPaths;
         queuedLaunchWithSteam = Cogfly.settings.launchWithSteam;initialProfileSources = new ArrayList<>(Cogfly.settings.profileSources);
+        queuedShowInstalledModsOnTop = Cogfly.settings.showInstalledModsOnTop;
         initialAutoNameSpacing = Cogfly.settings.modNameSpaces;
         initialBaseGameEnabled = Cogfly.settings.baseGameEnabled;
         initialSavePath = Cogfly.settings.profileSavePath;
@@ -220,5 +231,6 @@ public class SettingsDialog extends JDialog {
         initialRelativeTime = Cogfly.settings.useRelativeTime;
         initialPerProfilePaths = Cogfly.settings.profileSpecificPaths;
         initialLaunchWithSteam = Cogfly.settings.launchWithSteam;
+        initialShowInstalledModsOnTop = Cogfly.settings.showInstalledModsOnTop;
     }
 }

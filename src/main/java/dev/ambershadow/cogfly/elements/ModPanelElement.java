@@ -129,7 +129,22 @@ public class ModPanelElement extends JPanel {
 
     private void refreshButtons(List<ModData> mods) {
         buttonsPanel.removeAll();
-        for (ModData mod : mods) {
+        List<ModData> installed = new ArrayList<>();
+        if (Cogfly.settings.showInstalledModsOnTop) {
+            List<ModData> notInstalled = new ArrayList<>();
+
+            for (ModData mod : mods) {
+                if (mod.isInstalled(profile))
+                    installed.add(mod);
+                else
+                    notInstalled.add(mod);
+            }
+            installed.addAll(notInstalled);
+        }
+        else
+            installed.addAll(mods);
+
+        for (ModData mod : installed) {
             JPanel modPanel = new JPanel();
             modPanel.setLayout(new BoxLayout(modPanel, BoxLayout.Y_AXIS));
 
