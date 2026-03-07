@@ -273,7 +273,17 @@ public class Utils {
         Cogfly.logger.info("Attempting to remove {} at version {} for profile {}.",
                 mod.getFullName(), mod.getVersionNumber(), profile.getName());
 
-        profile.getInstalledMods().remove(mod);
+        if (mod.isManual()){
+            try {
+                Files.delete(profile.getPluginsPath().resolve(mod.getManualFileName()));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            ModPanelElement.redraw(profile);
+            return;
+        }
+
+        profile.removeMod(mod);
 
         List<Path> toDelete = new ArrayList<>();
 
@@ -301,7 +311,6 @@ public class Utils {
             return;
         Cogfly.logger.info("Attempting to download {} at version {} for profile {}.", mod.getFullName(), mod.getVersionNumber(), profile.getName());
         profile.removeMod(mod);
-        profile.getInstalledMods().add(mod);
         if (deps) {
             for (String dep : mod.getDependencies()) {
                 if (dep.contains("BepInExPack"))

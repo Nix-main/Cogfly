@@ -17,7 +17,6 @@ public class Profile {
     List<ModData> installedMods = new ArrayList<>();
     private final Path path;
     private final String name;
-
     private String gamePath = Cogfly.settings.gamePath;
     private Icon icon;
     public Profile(String name, Path path) {

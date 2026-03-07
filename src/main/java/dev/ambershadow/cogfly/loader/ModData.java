@@ -104,7 +104,6 @@ public class ModData {
     private final List<String> dependencies;
     private final String versionNumber;
     private final String description;
-
     private final String dateCreated;
     private final String dateModified;
     private int totalDownloads;
@@ -143,6 +142,26 @@ public class ModData {
         JsonArray versions = parentObject.get("versions").getAsJsonArray();
         JsonObject latestVersion = versions.get(0).getAsJsonObject();
         this(parentObject, latestVersion);
+    }
+
+    private boolean manual = false;
+    // for disabling & enabling manuals
+    private boolean enabled = true;
+
+    public ModData(String name, boolean enabled){
+        manual = true;
+        rawObj = new JsonObject();
+        this.name = name;
+        fullName = this.name;
+        author = this.name;
+        dependencies = new ArrayList<>();
+        versionNumber = "Manually installed, no version data.";
+        description = "Manually installed, no description data.";
+        dateCreated = "2000-01-01T00:00:00Z";
+        dateModified = "2000-01-01T00:00:00Z";
+        packageUrl = null;
+        websiteUrl = null;
+        this.enabled = enabled;
     }
 
     public List<String> getDependencies() {
@@ -186,12 +205,16 @@ public class ModData {
     }
 
     public boolean isInstalled(Profile profile){
+        if (manual)
+            return true;
         return profile.getInstalledMods()
                 .stream().anyMatch(m ->
                         m.getFullName().equals(getFullName()));
     }
 
     public boolean isOutdated(Profile profile){
+        if (manual)
+            return false;
         if (!isInstalled(profile))
             return false;
         JsonObject version = rawObj.get("versions").getAsJsonArray().get(0).getAsJsonObject();
@@ -200,6 +223,8 @@ public class ModData {
     }
 
     public boolean isEnabled(Profile profile) {
+        if (manual)
+            return enabled;
         if (!isInstalled(profile))
             return false;
         try (Stream<Path> paths = Files.walk(profile.getBepInExPath())) {
@@ -213,6 +238,19 @@ public class ModData {
     }
 
     public void setEnabled(Profile profile, boolean enabled) {
+        if (manual) {
+            if (enabled == this.enabled)
+                return;
+            try (Stream<Path> paths = Files.walk(profile.getPluginsPath())) {
+                paths
+                        .filter(Files::isRegularFile)
+                        .filter(p -> p.getFileName().toString().startsWith(name))
+                        .forEach(p -> renameFile(p, enabled));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            this.enabled = enabled;
+        }
         if (enabled == isEnabled(profile))
             return;
         try (Stream<Path> paths = Files.walk(profile.getBepInExPath())) {
@@ -224,6 +262,15 @@ public class ModData {
             throw new RuntimeException(e);
         }
     }
+
+    public boolean isManual(){
+        return manual;
+    }
+
+    public String getManualFileName() {
+        return name + (enabled ? "" : ".old");
+    }
+
     @Override
     public boolean equals(Object o){
         return o instanceof ModData md &&

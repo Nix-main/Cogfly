@@ -218,7 +218,8 @@ public class ModPanelElement extends JPanel {
             openWebsite.addActionListener(_ -> Utils.openURI(mod.getWebsiteUrl()));
 
             Box buttonBox = Box.createHorizontalBox();
-            buttonBox.add(open);
+            if (mod.getPackageUrl() != null)
+                buttonBox.add(open);
             if (mod.getWebsiteUrl() != null) {
                 buttonBox.add(Box.createRigidArea(new Dimension(10, 0)));
                 buttonBox.add(openWebsite);

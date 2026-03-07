@@ -3,6 +3,7 @@ package dev.ambershadow.cogfly.elements.profiles;
 import dev.ambershadow.cogfly.Cogfly;
 import dev.ambershadow.cogfly.elements.ModPanelElement;
 import dev.ambershadow.cogfly.loader.ModData;
+import dev.ambershadow.cogfly.loader.ModFetcher;
 import dev.ambershadow.cogfly.util.*;
 
 import javax.swing.*;
@@ -192,6 +193,13 @@ public class ProfileOpenPageCardElement extends JPanel {
             prompt.setVisible(true);
         });
 
+        JButton refresh = new JButton("Refresh All");
+        refresh.addActionListener(_ -> {
+            profile.getInstalledMods().clear();
+            profile.getInstalledMods().addAll(ModFetcher.getInstalledMods(profile.getPluginsPath()));
+            ModPanelElement.redraw(profile);
+        });
+
         upperPanel.add(launch);
         upperPanel.add(updateAll);
         upperPanel.add(copyLogToClipboard);
@@ -201,6 +209,7 @@ public class ProfileOpenPageCardElement extends JPanel {
         upperPanel.add(changeProfileIcon);
         upperPanel.add(setPath);
         upperPanel.add(remove);
+        upperPanel.add(refresh);
         add(upperPanel, BorderLayout.NORTH);
         add(new ModPanelElement(profile), BorderLayout.CENTER);
     }

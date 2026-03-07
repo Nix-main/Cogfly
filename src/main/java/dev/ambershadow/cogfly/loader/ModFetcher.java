@@ -20,6 +20,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.List;
+import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 
 public class ModFetcher {
@@ -127,6 +128,19 @@ public class ModFetcher {
                     throw new RuntimeException(e);
                 }
             }
+        }
+        try (Stream<Path> paths = Files.list(plugins)){
+            paths
+                    .filter(Files::isRegularFile)
+                    .filter(pth -> pth.getFileName().toString().endsWith(".dll")
+                            || pth.getFileName().toString().endsWith(".dll.old"))
+                    .forEach(pth -> {
+                        System.out.println(pth);
+                        installedMods.add(new ModData(pth.getFileName().toString(), !pth.getFileName().toString().endsWith(".dll.old")));
+                    });
+        }
+        catch (IOException e){
+            throw new RuntimeException(e);
         }
         return installedMods;
     }
