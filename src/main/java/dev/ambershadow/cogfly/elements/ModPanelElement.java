@@ -31,6 +31,7 @@ public class ModPanelElement extends JPanel {
     private Cogfly.SortingType current;
     private String currentDirection = "descending";
     private final JScrollPane scrollPane;
+    private final JCheckBox showInstalled;
 
 
     public ModPanelElement(Profile profile) {
@@ -52,9 +53,11 @@ public class ModPanelElement extends JPanel {
         sortingOrder.addItem("Downloads");
         sortingOrder.addItem("Date Created");
         sortingOrder.addItem("Date Updated");
-        sortingOrder.addItem("Installed");
         sortingOrder.setSelectedIndex(0);
         current = Cogfly.SortingType.values()[0];
+
+        showInstalled = new JCheckBox("Show Installed");
+        showInstalled.addActionListener(_ -> redrawPanel());
 
         JComboBox<String> sortingDirection = new JComboBox<>();
         sortingDirection.addItem("Ascending");
@@ -63,6 +66,7 @@ public class ModPanelElement extends JPanel {
 
         sortingPanel.add(sortingDirection);
         sortingPanel.add(sortingOrder);
+        sortingPanel.add(showInstalled);
 
         searchPanel.add(searchField, BorderLayout.CENTER);
         searchPanel.add(sortingPanel, BorderLayout.EAST);
@@ -255,7 +259,7 @@ public class ModPanelElement extends JPanel {
     private void filterButtons() {
         String query = searchField.getText().toLowerCase();
         List<ModData> filtered = new ArrayList<>();
-        for (ModData mod : Cogfly.getDisplayedMods(current, profile)) {
+        for (ModData mod : Cogfly.getDisplayedMods(profile, showInstalled.isSelected())) {
             if (mod.getName().replaceAll(" ", "")
                     .toLowerCase().contains(query.replaceAll(" ", ""))) {
                 filtered.add(mod);
@@ -268,7 +272,7 @@ public class ModPanelElement extends JPanel {
         scrollPane.getVerticalScrollBar().setUnitIncrement(Cogfly.settings.scrollingIncrement);
         String query = searchField.getText();
         if (query.isEmpty())
-            refreshButtons(Cogfly.sortList(current, currentDirection, profile));
+            refreshButtons(Cogfly.sortList(current, currentDirection, profile, showInstalled.isSelected()));
         else
             filterButtons();
     }

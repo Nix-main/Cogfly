@@ -149,8 +149,8 @@ public class Cogfly {
         Utils.downloadAndExtract(packUrl, path);
     }
 
-    public static List<ModData> sortList(SortingType type, String direction, Profile profile){
-        List<ModData> mods = getDisplayedMods(type, profile);
+    public static List<ModData> sortList(SortingType type, String direction, Profile profile, boolean installedOnly){
+        List<ModData> mods = getDisplayedMods(profile, installedOnly);
         switch (type) {
             case NAME:
                 mods.sort(
@@ -168,8 +168,6 @@ public class Cogfly {
             case DATE_UPDATED:
                 mods.sort(Comparator.comparing(mod -> Instant.parse(mod.getDateModified())));
                 break;
-            case INSTALLED:
-                break;
         }
         if (direction.equalsIgnoreCase("descending")){
             mods = mods.reversed();
@@ -177,8 +175,8 @@ public class Cogfly {
         return mods;
     }
 
-    public static List<ModData> getDisplayedMods(SortingType type, Profile profile){
-        if (type == SortingType.INSTALLED)
+    public static List<ModData> getDisplayedMods(Profile profile, boolean installedOnly){
+        if (installedOnly)
             return profile.getInstalledMods();
         List<ModData> mds = new ArrayList<>(profile.getManualMods());
         mds.addAll(mods);
@@ -397,6 +395,5 @@ public class Cogfly {
         DOWNLOADS,
         DATE_CREATED,
         DATE_UPDATED,
-        INSTALLED
     }
 }
