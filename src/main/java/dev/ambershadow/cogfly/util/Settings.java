@@ -73,7 +73,7 @@ public class Settings {
     public int scrollingIncrement = 16;
     public boolean useRelativeTime = false;
     public boolean profileSpecificPaths = false;
-    public boolean launchWithSteam = false;
+    //public boolean launchWithSteam = false;
 
 
 

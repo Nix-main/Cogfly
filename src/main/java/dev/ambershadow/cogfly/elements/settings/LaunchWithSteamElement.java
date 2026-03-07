@@ -14,7 +14,7 @@ public class LaunchWithSteamElement extends SettingsElement {
             boolean enabled = checkBox.isSelected();
             parent.updateLaunchWithSteam(enabled);
         });
-        checkBox.setSelected(Cogfly.settings.launchWithSteam);
+//        checkBox.setSelected(Cogfly.settings.launchWithSteam);
         label.setToolTipText("Allows the Steam Client to own the process. Enables controller compatability and playtime tracking but requires confirming in Steam each launch. A similar affect can be achieved by pressing \"Launch\" with Steam open. Does nothing if not using steam.");
         add(label, checkBox);
     }

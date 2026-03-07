@@ -37,7 +37,7 @@ public class SettingsDialog extends JDialog {
         holder.add(new AutoNameSpacingElement(this));
         holder.add(new UseRelativeTimeElement(this));
         holder.add(new PerProfileGamePathsElement(this));
-        holder.add(new LaunchWithSteamElement(this));
+//        holder.add(new LaunchWithSteamElement(this));
         holder.add(new ProfileSourcesPanelElement(this));
 
         saveButton = new JButton("Apply & Save");
@@ -189,7 +189,7 @@ public class SettingsDialog extends JDialog {
         Cogfly.settings.scrollingIncrement = queuedScrollIncrement;
         Cogfly.settings.useRelativeTime = queuedRelativeTime;
         Cogfly.settings.profileSpecificPaths = queuedPerProfilePaths;
-        Cogfly.settings.launchWithSteam = queuedLaunchWithSteam;
+//        Cogfly.settings.launchWithSteam = queuedLaunchWithSteam;
 
         if (!queuedProfileSources.equals(initialProfileSources))
             ProfileManager.loadProfiles();
@@ -210,7 +210,8 @@ public class SettingsDialog extends JDialog {
         queuedScrollIncrement = Cogfly.settings.scrollingIncrement;
         queuedRelativeTime = Cogfly.settings.useRelativeTime;
         queuedPerProfilePaths = Cogfly.settings.profileSpecificPaths;
-        queuedLaunchWithSteam = Cogfly.settings.launchWithSteam;initialProfileSources = new ArrayList<>(Cogfly.settings.profileSources);
+//        queuedLaunchWithSteam = Cogfly.settings.launchWithSteam;
+        initialProfileSources = new ArrayList<>(Cogfly.settings.profileSources);
         initialAutoNameSpacing = Cogfly.settings.modNameSpaces;
         initialBaseGameEnabled = Cogfly.settings.baseGameEnabled;
         initialSavePath = Cogfly.settings.profileSavePath;
@@ -219,6 +220,6 @@ public class SettingsDialog extends JDialog {
         initialScrollIncrement = Cogfly.settings.scrollingIncrement;
         initialRelativeTime = Cogfly.settings.useRelativeTime;
         initialPerProfilePaths = Cogfly.settings.profileSpecificPaths;
-        initialLaunchWithSteam = Cogfly.settings.launchWithSteam;
+//        initialLaunchWithSteam = Cogfly.settings.launchWithSteam;
     }
 }

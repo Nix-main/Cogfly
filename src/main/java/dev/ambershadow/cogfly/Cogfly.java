@@ -363,7 +363,7 @@ public class Cogfly {
             }
             builder.command(cmds);
             logger.info("Launch command: {}", cmds);
-            if (settings.launchWithSteam) {
+            /*if (settings.launchWithSteam) {
                 logger.info("Launching with Steam Client");
                 if (Files.exists(game.resolve("steam_appid.txt")))
                     try {
@@ -379,7 +379,7 @@ public class Cogfly {
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
-            }
+            }*/
             try {
                 builder.start();
             } catch (IOException e) {
