@@ -3,7 +3,6 @@ package dev.ambershadow.cogfly.elements.profiles;
 import dev.ambershadow.cogfly.Cogfly;
 import dev.ambershadow.cogfly.elements.ModPanelElement;
 import dev.ambershadow.cogfly.loader.ModData;
-import dev.ambershadow.cogfly.loader.ModFetcher;
 import dev.ambershadow.cogfly.util.*;
 
 import javax.swing.*;
@@ -201,17 +200,15 @@ public class ProfileOpenPageCardElement extends JPanel {
         });
 
         JButton install = new JButton("Install Manually");
-        install.addActionListener(_ -> {
-            Utils.pickFile((path) -> {
-                try {
-                    Files.copy(path, profile.getPluginsPath().resolve(path.getFileName()));
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-                profile.refreshMods();
-                ModPanelElement.redraw(profile);
-            }, "*", "dll");
-        });
+        install.addActionListener(_ -> Utils.pickFile((path) -> {
+            try {
+                Files.copy(path, profile.getPluginsPath().resolve(path.getFileName()));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            profile.refreshMods();
+            ModPanelElement.redraw(profile);
+        }, "*", "dll"));
 
         upperPanel.add(launch);
         upperPanel.add(updateAll);
