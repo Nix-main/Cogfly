@@ -29,6 +29,7 @@ public class ModPanelElement extends JPanel {
     private final JTextField searchField;
     private final JPanel buttonsPanel;
     private Cogfly.SortingType current;
+    private String currentDirection = "descending";
     private final JScrollPane scrollPane;
 
 
@@ -76,18 +77,14 @@ public class ModPanelElement extends JPanel {
         );
 
         sortingOrder.addActionListener(_ -> {
-            Cogfly.SortingType sortingType = Cogfly.SortingType.values()[sortingOrder.getSelectedIndex()];
-            current = sortingType;
-            //noinspection DataFlowIssue
-            Cogfly.sortList(sortingType, sortingDirection.getSelectedItem().toString());
+            current = Cogfly.SortingType.values()[sortingOrder.getSelectedIndex()];
+            currentDirection = sortingDirection.getSelectedIndex() == 0 ? "Ascending" : "Descending";
             redrawPanel();
         });
 
         sortingDirection.addActionListener(_ -> {
-            Cogfly.SortingType sortingType = Cogfly.SortingType.values()[sortingOrder.getSelectedIndex()];
-            current = sortingType;
-            //noinspection DataFlowIssue
-            Cogfly.sortList(sortingType, sortingDirection.getSelectedItem().toString());
+            current = Cogfly.SortingType.values()[sortingOrder.getSelectedIndex()];
+            currentDirection = sortingDirection.getSelectedIndex() == 0 ? "Ascending" : "Descending";
             redrawPanel();
         });
 
@@ -271,7 +268,7 @@ public class ModPanelElement extends JPanel {
         scrollPane.getVerticalScrollBar().setUnitIncrement(Cogfly.settings.scrollingIncrement);
         String query = searchField.getText();
         if (query.isEmpty())
-            refreshButtons(Cogfly.getDisplayedMods(current, profile));
+            refreshButtons(Cogfly.sortList(current, currentDirection, profile));
         else
             filterButtons();
     }

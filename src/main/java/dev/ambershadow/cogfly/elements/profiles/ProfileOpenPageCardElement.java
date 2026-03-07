@@ -8,6 +8,7 @@ import dev.ambershadow.cogfly.util.*;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -193,11 +194,23 @@ public class ProfileOpenPageCardElement extends JPanel {
             prompt.setVisible(true);
         });
 
-        JButton refresh = new JButton("Refresh All");
+        JButton refresh = new JButton("Refresh");
         refresh.addActionListener(_ -> {
-            profile.getInstalledMods().clear();
-            profile.getInstalledMods().addAll(ModFetcher.getInstalledMods(profile.getPluginsPath()));
+            profile.refreshMods();
             ModPanelElement.redraw(profile);
+        });
+
+        JButton install = new JButton("Install Manually");
+        install.addActionListener(_ -> {
+            Utils.pickFile((path) -> {
+                try {
+                    Files.copy(path, profile.getPluginsPath().resolve(path.getFileName()));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                profile.refreshMods();
+                ModPanelElement.redraw(profile);
+            }, "*", "dll");
         });
 
         upperPanel.add(launch);
@@ -210,6 +223,7 @@ public class ProfileOpenPageCardElement extends JPanel {
         upperPanel.add(setPath);
         upperPanel.add(remove);
         upperPanel.add(refresh);
+        upperPanel.add(install);
         add(upperPanel, BorderLayout.NORTH);
         add(new ModPanelElement(profile), BorderLayout.CENTER);
     }

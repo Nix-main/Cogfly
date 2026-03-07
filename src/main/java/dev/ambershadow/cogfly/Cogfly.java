@@ -149,7 +149,8 @@ public class Cogfly {
         Utils.downloadAndExtract(packUrl, path);
     }
 
-    public static void sortList(SortingType type, String direction){
+    public static List<ModData> sortList(SortingType type, String direction, Profile profile){
+        List<ModData> mods = getDisplayedMods(type, profile);
         switch (type) {
             case NAME:
                 mods.sort(
@@ -173,12 +174,15 @@ public class Cogfly {
         if (direction.equalsIgnoreCase("descending")){
             mods = mods.reversed();
         }
+        return mods;
     }
 
     public static List<ModData> getDisplayedMods(SortingType type, Profile profile){
         if (type == SortingType.INSTALLED)
             return profile.getInstalledMods();
-        return mods;
+        List<ModData> mds = new ArrayList<>(profile.getManualMods());
+        mds.addAll(mods);
+        return mds;
     }
 
     private static void showEarlyDialogs(){

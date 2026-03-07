@@ -279,6 +279,7 @@ public class Utils {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
+            profile.refreshMods();
             ModPanelElement.redraw(profile);
             return;
         }
@@ -375,6 +376,7 @@ public class Utils {
             }
         } catch (IOException ignored){}
         mod.setEnabled(profile, enabled);
+        profile.refreshMods();
         ModPanelElement.redraw(profile);
     }
     private static ModData getModFromDependency(String dependency){
