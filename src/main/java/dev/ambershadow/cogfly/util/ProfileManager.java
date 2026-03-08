@@ -170,8 +170,7 @@ public class ProfileManager {
         try {
             URL url = URL.of(URI.create("https://thunderstore.io/api/experimental/legacyprofile/get/" + id), null);
             InputStream is = url.openStream();
-            String content = new String(
-                    is.readAllBytes());
+            String content = new String(is.readAllBytes());
             System.out.println(content);
             content = content.replace("#r2modman", "");
             ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(
@@ -201,7 +200,7 @@ public class ProfileManager {
                     buffer.write(chunk, 0, n);
                 }
                 byte[] data = buffer.toByteArray();
-                System.out.println("Read " + entry.getName() + " (" + data.length + " bytes)");
+                Cogfly.logger.info("Read {} ({} bytes)", entry.getName(), data.length);
                 if (entry.getName().equals("export.r2x"))
                     r2xContent = new String(data);
                 if (entry.getName().equals("doorstop_config.ini")){
