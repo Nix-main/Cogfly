@@ -13,6 +13,7 @@ import java.awt.datatransfer.StringSelection;
 import java.io.*;
 import java.net.URI;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
 import java.util.List;
@@ -170,7 +171,7 @@ public class Utils {
                         0
                 );
                 String path;
-                if (pointer != null && !(path = pointer.getString(0)).isEmpty())
+                if (pointer != null && !(path = pointer.getString(0, StandardCharsets.UTF_8.name())).isEmpty())
                     callback.accept(Paths.get(path));
             }
             case LINUX -> {
@@ -228,7 +229,8 @@ public class Utils {
             Process p = pb.start();
 
             try (BufferedReader reader =
-                         new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+                         new BufferedReader(new InputStreamReader(
+                                 p.getInputStream(), StandardCharsets.UTF_8))) {
 
                 String value = reader.readLine();
                 int exit = p.waitFor();
@@ -273,7 +275,18 @@ public class Utils {
         Cogfly.logger.info("Attempting to remove {} at version {} for profile {}.",
                 mod.getFullName(), mod.getVersionNumber(), profile.getName());
 
-        profile.getInstalledMods().remove(mod);
+        if (mod.isManual()){
+            try {
+                Files.delete(profile.getPluginsPath().resolve(mod.getManualFileName()));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            profile.refreshMods();
+            ModPanelElement.redraw(profile);
+            return;
+        }
+
+        profile.removeMod(mod);
 
         List<Path> toDelete = new ArrayList<>();
 
@@ -301,7 +314,6 @@ public class Utils {
             return;
         Cogfly.logger.info("Attempting to download {} at version {} for profile {}.", mod.getFullName(), mod.getVersionNumber(), profile.getName());
         profile.removeMod(mod);
-        profile.getInstalledMods().add(mod);
         if (deps) {
             for (String dep : mod.getDependencies()) {
                 if (dep.contains("BepInExPack"))
@@ -366,6 +378,7 @@ public class Utils {
             }
         } catch (IOException ignored){}
         mod.setEnabled(profile, enabled);
+        profile.refreshMods();
         ModPanelElement.redraw(profile);
     }
     private static ModData getModFromDependency(String dependency){
@@ -381,7 +394,7 @@ public class Utils {
 
     public static void copyFile(Path path){
         try {
-            copyString(Files.readString(path));
+            copyString(Files.readString(path, StandardCharsets.UTF_8));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

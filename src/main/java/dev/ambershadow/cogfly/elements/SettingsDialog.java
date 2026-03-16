@@ -37,7 +37,6 @@ public class SettingsDialog extends JDialog {
         holder.add(new AutoNameSpacingElement(this));
         holder.add(new UseRelativeTimeElement(this));
         holder.add(new PerProfileGamePathsElement(this));
-        holder.add(new LaunchWithSteamElement(this));
         holder.add(new InstalledModsOnTopElement(this));
         holder.add(new ProfileSourcesPanelElement(this));
 
@@ -51,9 +50,9 @@ public class SettingsDialog extends JDialog {
         panel.add(holder, BorderLayout.NORTH);
         add(panel);
 
-        setLocationRelativeTo(null);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         pack();
+        setLocationRelativeTo(parent);
 
         saveButton.setEnabled(false);
         addWindowListener(new WindowAdapter() {
@@ -198,7 +197,6 @@ public class SettingsDialog extends JDialog {
         Cogfly.settings.scrollingIncrement = queuedScrollIncrement;
         Cogfly.settings.useRelativeTime = queuedRelativeTime;
         Cogfly.settings.profileSpecificPaths = queuedPerProfilePaths;
-        Cogfly.settings.launchWithSteam = queuedLaunchWithSteam;
         Cogfly.settings.showInstalledModsOnTop = queuedShowInstalledModsOnTop;
 
         if (!queuedProfileSources.equals(initialProfileSources))
@@ -220,7 +218,6 @@ public class SettingsDialog extends JDialog {
         queuedScrollIncrement = Cogfly.settings.scrollingIncrement;
         queuedRelativeTime = Cogfly.settings.useRelativeTime;
         queuedPerProfilePaths = Cogfly.settings.profileSpecificPaths;
-        queuedLaunchWithSteam = Cogfly.settings.launchWithSteam;initialProfileSources = new ArrayList<>(Cogfly.settings.profileSources);
         queuedShowInstalledModsOnTop = Cogfly.settings.showInstalledModsOnTop;
         initialAutoNameSpacing = Cogfly.settings.modNameSpaces;
         initialBaseGameEnabled = Cogfly.settings.baseGameEnabled;
@@ -230,7 +227,6 @@ public class SettingsDialog extends JDialog {
         initialScrollIncrement = Cogfly.settings.scrollingIncrement;
         initialRelativeTime = Cogfly.settings.useRelativeTime;
         initialPerProfilePaths = Cogfly.settings.profileSpecificPaths;
-        initialLaunchWithSteam = Cogfly.settings.launchWithSteam;
         initialShowInstalledModsOnTop = Cogfly.settings.showInstalledModsOnTop;
     }
 }

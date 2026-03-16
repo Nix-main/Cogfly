@@ -29,7 +29,9 @@ public class ModPanelElement extends JPanel {
     private final JTextField searchField;
     private final JPanel buttonsPanel;
     private Cogfly.SortingType current;
+    private String currentDirection = "descending";
     private final JScrollPane scrollPane;
+    private final JCheckBox showInstalled;
 
 
     public ModPanelElement(Profile profile) {
@@ -51,9 +53,11 @@ public class ModPanelElement extends JPanel {
         sortingOrder.addItem("Downloads");
         sortingOrder.addItem("Date Created");
         sortingOrder.addItem("Date Updated");
-        sortingOrder.addItem("Installed");
         sortingOrder.setSelectedIndex(0);
         current = Cogfly.SortingType.values()[0];
+
+        showInstalled = new JCheckBox("Show Installed");
+        showInstalled.addActionListener(_ -> redrawPanel());
 
         JComboBox<String> sortingDirection = new JComboBox<>();
         sortingDirection.addItem("Ascending");
@@ -62,6 +66,7 @@ public class ModPanelElement extends JPanel {
 
         sortingPanel.add(sortingDirection);
         sortingPanel.add(sortingOrder);
+        sortingPanel.add(showInstalled);
 
         searchPanel.add(searchField, BorderLayout.CENTER);
         searchPanel.add(sortingPanel, BorderLayout.EAST);
@@ -76,18 +81,14 @@ public class ModPanelElement extends JPanel {
         );
 
         sortingOrder.addActionListener(_ -> {
-            Cogfly.SortingType sortingType = Cogfly.SortingType.values()[sortingOrder.getSelectedIndex()];
-            current = sortingType;
-            //noinspection DataFlowIssue
-            Cogfly.sortList(sortingType, sortingDirection.getSelectedItem().toString());
+            current = Cogfly.SortingType.values()[sortingOrder.getSelectedIndex()];
+            currentDirection = sortingDirection.getSelectedIndex() == 0 ? "Ascending" : "Descending";
             redrawPanel();
         });
 
         sortingDirection.addActionListener(_ -> {
-            Cogfly.SortingType sortingType = Cogfly.SortingType.values()[sortingOrder.getSelectedIndex()];
-            current = sortingType;
-            //noinspection DataFlowIssue
-            Cogfly.sortList(sortingType, sortingDirection.getSelectedItem().toString());
+            current = Cogfly.SortingType.values()[sortingOrder.getSelectedIndex()];
+            currentDirection = sortingDirection.getSelectedIndex() == 0 ? "Ascending" : "Descending";
             redrawPanel();
         });
 
@@ -233,7 +234,8 @@ public class ModPanelElement extends JPanel {
             openWebsite.addActionListener(_ -> Utils.openURI(mod.getWebsiteUrl()));
 
             Box buttonBox = Box.createHorizontalBox();
-            buttonBox.add(open);
+            if (mod.getPackageUrl() != null)
+                buttonBox.add(open);
             if (mod.getWebsiteUrl() != null) {
                 buttonBox.add(Box.createRigidArea(new Dimension(10, 0)));
                 buttonBox.add(openWebsite);
@@ -272,7 +274,7 @@ public class ModPanelElement extends JPanel {
     private void filterButtons() {
         String query = searchField.getText().toLowerCase();
         List<ModData> filtered = new ArrayList<>();
-        for (ModData mod : Cogfly.getDisplayedMods(current, profile)) {
+        for (ModData mod : Cogfly.getDisplayedMods(profile, showInstalled.isSelected())) {
             if (mod.getName().replaceAll(" ", "")
                     .toLowerCase().contains(query.replaceAll(" ", ""))) {
                 filtered.add(mod);
@@ -285,7 +287,7 @@ public class ModPanelElement extends JPanel {
         scrollPane.getVerticalScrollBar().setUnitIncrement(Cogfly.settings.scrollingIncrement);
         String query = searchField.getText();
         if (query.isEmpty())
-            refreshButtons(Cogfly.getDisplayedMods(current, profile));
+            refreshButtons(Cogfly.sortList(current, currentDirection, profile, showInstalled.isSelected()));
         else
             filterButtons();
     }

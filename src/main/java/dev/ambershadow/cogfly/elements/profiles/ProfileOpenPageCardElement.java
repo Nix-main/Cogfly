@@ -7,6 +7,7 @@ import dev.ambershadow.cogfly.util.*;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -84,22 +85,12 @@ public class ProfileOpenPageCardElement extends JPanel {
         exportAsId.addActionListener(_ -> {
             String id = ProfileManager.toId(profile);
             Utils.copyString(id);
-            JDialog dialog = new JDialog(FrameManager.getOrCreate().frame);
-            dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-            dialog.setTitle("Exported as code");
-            dialog.setModal(true);
-            dialog.setResizable(false);
-            dialog.setLocationRelativeTo(null);
-            dialog.setSize(500, 100);
-            JTextArea textArea = new JTextArea("Your code: " + id + " has been copied to your clipboard!");
-            textArea.setEditable(false);
-            textArea.setLineWrap(true);
-            textArea.setWrapStyleWord(true);
-            textArea.setOpaque(false);
-            textArea.setBorder(null);
-            textArea.setFocusable(true);
-            dialog.add(textArea, BorderLayout.CENTER);
-            dialog.setVisible(true);
+            JOptionPane.showMessageDialog(
+                null, 
+                "Your code: " + id + " has been copied to your clipboard!", 
+                "Copied!",
+                JOptionPane.PLAIN_MESSAGE
+            );
         });
 
         JButton exportAsFile = new JButton("Export As File");
@@ -192,6 +183,23 @@ public class ProfileOpenPageCardElement extends JPanel {
             prompt.setVisible(true);
         });
 
+        JButton refresh = new JButton("Refresh");
+        refresh.addActionListener(_ -> {
+            profile.refreshMods();
+            ModPanelElement.redraw(profile);
+        });
+
+        JButton install = new JButton("Install Manually");
+        install.addActionListener(_ -> Utils.pickFile((path) -> {
+            try {
+                Files.copy(path, profile.getPluginsPath().resolve(path.getFileName()));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            profile.refreshMods();
+            ModPanelElement.redraw(profile);
+        }, "*", "dll"));
+
         upperPanel.add(launch);
         upperPanel.add(updateAll);
         upperPanel.add(copyLogToClipboard);
@@ -201,6 +209,8 @@ public class ProfileOpenPageCardElement extends JPanel {
         upperPanel.add(changeProfileIcon);
         upperPanel.add(setPath);
         upperPanel.add(remove);
+        upperPanel.add(refresh);
+        upperPanel.add(install);
         add(upperPanel, BorderLayout.NORTH);
         add(new ModPanelElement(profile), BorderLayout.CENTER);
     }

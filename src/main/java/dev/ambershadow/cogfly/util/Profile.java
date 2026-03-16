@@ -3,6 +3,7 @@ package dev.ambershadow.cogfly.util;
 import com.google.gson.stream.JsonWriter;
 import dev.ambershadow.cogfly.Cogfly;
 import dev.ambershadow.cogfly.loader.ModData;
+import dev.ambershadow.cogfly.loader.ModFetcher;
 
 import javax.swing.*;
 import java.io.IOException;
@@ -17,7 +18,6 @@ public class Profile {
     List<ModData> installedMods = new ArrayList<>();
     private final Path path;
     private final String name;
-
     private String gamePath = Cogfly.settings.gamePath;
     private Icon icon;
     public Profile(String name, Path path) {
@@ -89,6 +89,15 @@ public class Profile {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public void refreshMods(){
+        getInstalledMods().clear();
+        getInstalledMods().addAll(ModFetcher.getInstalledMods(getPluginsPath()));
+    }
+
+    public List<ModData> getManualMods(){
+        return installedMods.stream().filter(ModData::isManual).toList();
     }
 
     public String getName() {

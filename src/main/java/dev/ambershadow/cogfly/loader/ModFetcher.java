@@ -20,6 +20,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.List;
+import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 
 public class ModFetcher {
@@ -33,27 +34,13 @@ public class ModFetcher {
         ) {
             content = new String(gzip1.readAllBytes());
         }
-        catch (UnknownHostException unknown){
-            JDialog dialog = new JDialog((Dialog)null, "No internet?");
-            dialog.setIconImage(Assets.icon.getAsImage());
-            dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-            dialog.setLocationRelativeTo(null);
-            JPanel panel = new JPanel(new BorderLayout());
-            panel.setAlignmentX(Component.CENTER_ALIGNMENT);
-            JLabel a = new JLabel("An UnknownHostException was thrown during mod discovery.");
-            JLabel b = new JLabel("Mods will not show.");
-            a.setHorizontalAlignment(SwingConstants.CENTER);
-            b.setHorizontalAlignment(SwingConstants.CENTER);
-            panel.add(a, BorderLayout.NORTH);
-            panel.add(b, BorderLayout.CENTER);
-            JButton button = new JButton("Continue");
-            button.addActionListener(_ -> dialog.dispose());
-            dialog.add(button);
-            dialog.add(panel, BorderLayout.NORTH);
-
-            dialog.setResizable(false);
-            dialog.setSize(350, 100);
-            dialog.setVisible(true);
+        catch (UnknownHostException unknown) {
+            JOptionPane.showMessageDialog(
+                null,
+                "An UnknownHostException was thrown during mod discovery.\nMods will not show",
+                "No Internet?",
+                JOptionPane.WARNING_MESSAGE
+            );
 
             return new ArrayList<>();
         }
@@ -132,6 +119,19 @@ public class ModFetcher {
                     throw new RuntimeException(e);
                 }
             }
+        }
+        try (Stream<Path> paths = Files.list(plugins)){
+            paths
+                    .filter(Files::isRegularFile)
+                    .filter(pth -> pth.getFileName().toString().endsWith(".dll")
+                            || pth.getFileName().toString().endsWith(".dll.old"))
+                    .forEach(pth -> {
+                        System.out.println(pth);
+                        installedMods.add(new ModData(pth.getFileName().toString(), !pth.getFileName().toString().endsWith(".dll.old")));
+                    });
+        }
+        catch (IOException e){
+            throw new RuntimeException(e);
         }
         return installedMods;
     }

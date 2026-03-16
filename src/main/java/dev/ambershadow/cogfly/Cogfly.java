@@ -149,7 +149,8 @@ public class Cogfly {
         Utils.downloadAndExtract(packUrl, path);
     }
 
-    public static void sortList(SortingType type, String direction){
+    public static List<ModData> sortList(SortingType type, String direction, Profile profile, boolean installedOnly){
+        List<ModData> mods = getDisplayedMods(profile, installedOnly);
         switch (type) {
             case NAME:
                 mods.sort(
@@ -167,18 +168,19 @@ public class Cogfly {
             case DATE_UPDATED:
                 mods.sort(Comparator.comparing(mod -> Instant.parse(mod.getDateModified())));
                 break;
-            case INSTALLED:
-                break;
         }
         if (direction.equalsIgnoreCase("descending")){
             mods = mods.reversed();
         }
+        return mods;
     }
 
-    public static List<ModData> getDisplayedMods(SortingType type, Profile profile){
-        if (type == SortingType.INSTALLED)
+    public static List<ModData> getDisplayedMods(Profile profile, boolean installedOnly){
+        if (installedOnly)
             return profile.getInstalledMods();
-        return mods;
+        List<ModData> mds = new ArrayList<>(profile.getManualMods());
+        mds.addAll(mods);
+        return mds;
     }
 
     private static void showEarlyDialogs(){
@@ -188,10 +190,11 @@ public class Cogfly {
             logger.info("No stored profile save path! Prompting:");
             JDialog prompt = new JDialog(FrameManager.getOrCreate().frame, "Profile Save Path", true);
             prompt.setLayout(new BorderLayout());
-            prompt.setLocationRelativeTo(null);
             prompt.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
             prompt.setResizable(false);
             prompt.setPreferredSize(new Dimension(450, 160));
+            prompt.pack();
+            prompt.setLocationRelativeTo(FrameManager.getOrCreate().frame);
 
             JPanel texts = new JPanel(new BorderLayout());
             JLabel first = new JLabel("You don't have a path on file for saving profiles. ");
@@ -235,6 +238,8 @@ public class Cogfly {
             prompt.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
             prompt.setResizable(false);
             prompt.setPreferredSize(new Dimension(450, 140));
+            prompt.pack();
+            prompt.setLocationRelativeTo(FrameManager.getOrCreate().frame);
 
             JPanel texts = new JPanel(new BorderLayout());
             JLabel first = new JLabel("You don't have a path on file for your silksong installation. ");
@@ -363,7 +368,7 @@ public class Cogfly {
             }
             builder.command(cmds);
             logger.info("Launch command: {}", cmds);
-            if (settings.launchWithSteam) {
+            /*if (settings.launchWithSteam) {
                 logger.info("Launching with Steam Client");
                 if (Files.exists(game.resolve("steam_appid.txt")))
                     try {
@@ -379,7 +384,7 @@ public class Cogfly {
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
-            }
+            }*/
             try {
                 builder.start();
             } catch (IOException e) {
@@ -393,6 +398,5 @@ public class Cogfly {
         DOWNLOADS,
         DATE_CREATED,
         DATE_UPDATED,
-        INSTALLED
     }
 }
