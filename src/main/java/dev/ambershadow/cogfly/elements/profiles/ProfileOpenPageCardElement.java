@@ -85,22 +85,12 @@ public class ProfileOpenPageCardElement extends JPanel {
         exportAsId.addActionListener(_ -> {
             String id = ProfileManager.toId(profile);
             Utils.copyString(id);
-            JDialog dialog = new JDialog(FrameManager.getOrCreate().frame);
-            dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-            dialog.setTitle("Exported as code");
-            dialog.setModal(true);
-            dialog.setResizable(false);
-            dialog.setLocationRelativeTo(null);
-            dialog.setSize(500, 100);
-            JTextArea textArea = new JTextArea("Your code: " + id + " has been copied to your clipboard!");
-            textArea.setEditable(false);
-            textArea.setLineWrap(true);
-            textArea.setWrapStyleWord(true);
-            textArea.setOpaque(false);
-            textArea.setBorder(null);
-            textArea.setFocusable(true);
-            dialog.add(textArea, BorderLayout.CENTER);
-            dialog.setVisible(true);
+            JOptionPane.showMessageDialog(
+                null, 
+                "Your code: " + id + " has been copied to your clipboard!", 
+                "Copied!",
+                JOptionPane.PLAIN_MESSAGE
+            );
         });
 
         JButton exportAsFile = new JButton("Export As File");

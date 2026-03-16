@@ -190,10 +190,11 @@ public class Cogfly {
             logger.info("No stored profile save path! Prompting:");
             JDialog prompt = new JDialog(FrameManager.getOrCreate().frame, "Profile Save Path", true);
             prompt.setLayout(new BorderLayout());
-            prompt.setLocationRelativeTo(null);
             prompt.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
             prompt.setResizable(false);
             prompt.setPreferredSize(new Dimension(450, 160));
+            prompt.pack();
+            prompt.setLocationRelativeTo(FrameManager.getOrCreate().frame);
 
             JPanel texts = new JPanel(new BorderLayout());
             JLabel first = new JLabel("You don't have a path on file for saving profiles. ");
@@ -237,6 +238,8 @@ public class Cogfly {
             prompt.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
             prompt.setResizable(false);
             prompt.setPreferredSize(new Dimension(450, 140));
+            prompt.pack();
+            prompt.setLocationRelativeTo(FrameManager.getOrCreate().frame);
 
             JPanel texts = new JPanel(new BorderLayout());
             JLabel first = new JLabel("You don't have a path on file for your silksong installation. ");
