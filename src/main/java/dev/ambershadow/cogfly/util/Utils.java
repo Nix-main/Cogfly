@@ -87,7 +87,7 @@ public class Utils {
             }
             Cogfly.logger.info("Opened url: " + uriString);
         } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
     public static void openSavePath(){
