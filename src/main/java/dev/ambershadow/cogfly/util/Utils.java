@@ -68,12 +68,26 @@ public class Utils {
     }
 
     public static void openURI(URI uri){
-        if (!(Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)))
-            return;
+        String uriString = uri.toString();
+        Runtime rt = Runtime.getRuntime();
         try {
-            Desktop.getDesktop().browse(uri);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            switch (OperatingSystem.current()) {
+                case WINDOWS -> {
+                    String[] cmd = {"start", uriString};
+                    rt.exec(cmd).waitFor();
+                }
+                case MAC -> {
+                    String[] cmd = {"open", uriString};
+                    rt.exec(cmd).waitFor();
+                }
+                case LINUX -> {
+                    String[] cmd = {"xdg-open", uriString};
+                    rt.exec(cmd).waitFor();
+                }
+            }
+            Cogfly.logger.info("Opened url: " + uriString);
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
         }
     }
     public static void openSavePath(){
