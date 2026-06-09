@@ -145,7 +145,6 @@ public class ModPanelElement extends JPanel {
                 name = Cogfly.settings.modNameSpaces ? name.replaceAll("(?<=[a-z])(?=[A-Z])", " ") : name;
                 toggleButton = new JToggleButton("▼ " + name);
             }
-
             toggleButton.setHorizontalAlignment(SwingConstants.LEFT);
             toggleButton.setAlignmentX(Component.LEFT_ALIGNMENT);
             toggleButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, toggleButton.getPreferredSize().height));
@@ -173,8 +172,9 @@ public class ModPanelElement extends JPanel {
             rowPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
             modPanel.add(rowPanel);
 
+            JPanel holderPanel = new JPanel();
+            holderPanel.setBorder(BorderFactory.createEmptyBorder(2, 10, 2, 10));
             JPanel infoPanel = new JPanel();
-            infoPanel.setBorder(BorderFactory.createEmptyBorder(2, 10, 2, 10));
             infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
             infoPanel.add(new JLabel("Description: " + mod.getDescription()));
             infoPanel.add(new JLabel("Author: " + mod.getAuthor()));
@@ -229,13 +229,22 @@ public class ModPanelElement extends JPanel {
             buttonBox.setAlignmentX(Component.LEFT_ALIGNMENT);
 
             infoPanel.add(buttonBox);
-
-            infoPanel.setVisible(false);
             infoPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-            modPanel.add(infoPanel);
-
+            holderPanel.setVisible(false);
+            holderPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+            holderPanel.add(infoPanel, BorderLayout.WEST);
+            modPanel.add(holderPanel);
+            JLabel iconLabel = new JLabel();
             toggleButton.addActionListener(_ -> {
-                infoPanel.setVisible(toggleButton.isSelected());
+                if (toggleButton.isSelected()){
+                    if (mod.getIconBytes() != null){
+                        iconLabel.setAlignmentX(Component.RIGHT_ALIGNMENT);
+                        iconLabel.setIcon(mod.getIcon());
+                        holderPanel.add(iconLabel, BorderLayout.EAST);
+                    }
+                } else
+                    holderPanel.remove(iconLabel);
+                holderPanel.setVisible(toggleButton.isSelected());
                 if (toggleButton.isSelected()) {
                     toggleButton.setText(toggleButton.getText().replace('▼', '▲'));
                 } else {
