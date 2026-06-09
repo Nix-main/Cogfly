@@ -18,6 +18,7 @@ import java.nio.file.*;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -31,11 +32,20 @@ public class Utils {
             Map.entry("jpg", "public.image"),
             Map.entry("jpeg", "public.image"),
             Map.entry("gif", "public.image"),
-
             Map.entry("app", "com.apple.application-bundle"),
-
             Map.entry("sh", "public.unix-executable"),
             Map.entry("bin", "public.unix-executable")
+    );
+
+    private static final Map<String, String> EXT_TO_MIME = Map.ofEntries(
+            Map.entry("linux_executable", "application/x-executable"), // not a real extension but a filler to use the MIME type
+            Map.entry("exe", "application/x-msdownload"),
+            Map.entry("sh",  "application/x-sh"),
+            Map.entry("bin", "application/octet-stream"),
+            Map.entry("png", "image/png"),
+            Map.entry("jpg", "image/jpeg"),
+            Map.entry("jpeg","image/jpeg"),
+            Map.entry("gif", "image/gif")
     );
 
     public static Path getSavePath() {
@@ -176,23 +186,27 @@ public class Utils {
             }
             case LINUX -> {
                 String patterns = Arrays.stream(extensions)
-                        .map(ext -> name + "." + ext)
+                        .flatMap(ext -> {
+                            String mime = EXT_TO_MIME.get(ext);
+                            return mime != null
+                                    ? Stream.of("*." + ext, mime)
+                                    : Stream.of("*." + ext);
+                        })
+                        .distinct()
                         .collect(Collectors.joining(" "));
-                List<String> zenityCmd = new ArrayList<>();
-                zenityCmd.add("zenity");
-                zenityCmd.add("--file-selection");
-                zenityCmd.add("--file-filter=" + patterns + "| " + patterns);
-                zenityCmd.add("--file-filter=All files | *");
-                Optional<Path> path = readValue(new ProcessBuilder(zenityCmd));
+                Optional<Path> path = readValue(new ProcessBuilder(List.of(
+                        "zenity",
+                        "--file-selection",
+                        "--file-filter=" + name + " | " + patterns,
+                        "--file-filter=All files | *"
+                )));
                 if (path.isEmpty()) {
-                    List<String> kdialogCmd = List.of(
+                    path = readValue(new ProcessBuilder(List.of(
                             "kdialog",
                             "--getopenfilename",
                             ".",
-                            patterns + "|" + name + "files\n*|All files"
-                    );
-
-                    path = readValue(new ProcessBuilder(kdialogCmd));
+                            patterns + "|" + name + " files\n*|All files"
+                    )));
                 }
 
                 if (path.isEmpty()) {
@@ -308,25 +322,54 @@ public class Utils {
     public static void downloadMod(ModData mod, Profile profile, boolean deps){
         downloadMod(mod, profile, deps, true);
     }
+    public static boolean isDownloading() {
+        return !currentDownloads.isEmpty();
+    }
 
+    private static final Set<CompletableFuture<Void>> currentDownloads =
+            ConcurrentHashMap.newKeySet();
+    private static final Set<String> activeDownloads = ConcurrentHashMap.newKeySet();
     public static void downloadMod(ModData mod, Profile profile, boolean deps, boolean enabled){
-        if (mod.isInstalled(profile) && profile.getInstalledVersion(mod).equals(mod.getVersionNumber()))
-            return;
-        Cogfly.logger.info("Attempting to download {} at version {} for profile {}.", mod.getFullName(), mod.getVersionNumber(), profile.getName());
-        profile.removeMod(mod);
-        if (deps) {
-            for (String dep : mod.getDependencies()) {
-                if (dep.contains("BepInExPack"))
-                    continue;
-                ModData m = getModFromDependency(dep);
-                if (m != null && !m.isOutdated(profile)) {
-                    CompletableFuture.runAsync(() -> downloadMod(m, profile, true));
-                }
+        CompletableFuture<Void> download = CompletableFuture.runAsync(() -> {
+            String key = profile.getName() + ":" + mod.getFullName();
+            if (!activeDownloads.add(key)) {
+                return;
             }
-        }
-        Path bepinexRoot = profile.getBepInExPath();
+            try(InputStream is = mod.getDownloadUrl().openStream()) {
+                if (mod.isInstalled(profile))
+                    return;
+                Cogfly.logger.info("Attempting to download {} at version {} for profile {}.", mod.getFullName(), mod.getVersionNumber(), profile.getName());
+                profile.removeMod(mod);
+                if (deps) {
+                    for (String dep : mod.getDependencies()) {
+                        if (dep.contains("BepInExPack"))
+                            continue;
+                        ModData m = getModFromDependency(dep);
+                        if (m != null && !m.isOutdated(profile)) {
+                            downloadMod(m, profile, true);
+                        }
+                    }
+                }
+                downloadModZipStream(is, mod.getFullName(), profile);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            finally {
+                activeDownloads.remove(key);
+            }
+            mod.setEnabled(profile, enabled);
+            SwingUtilities.invokeLater(() -> {
+                profile.refreshMods();
+                ModPanelElement.redraw(profile);
+            });
+        });
+        currentDownloads.add(download);
+        download.whenComplete((_, _) -> currentDownloads.remove(download));
+    }
 
-        try (ZipInputStream zis = new ZipInputStream(mod.getDownloadUrl().openStream())) {
+    public static void downloadModZipStream(InputStream stream, String fullName, Profile profile){
+        Path bepinexRoot = profile.getBepInExPath();
+        try (ZipInputStream zis = new ZipInputStream(stream)) {
             ZipEntry entry;
 
             while ((entry = zis.getNextEntry()) != null) {
@@ -346,14 +389,15 @@ public class Utils {
 
                     switch (root) {
                         case "monomod", "patchers", "plugins", "core" -> {
-                            targetBase = bepinexRoot.resolve(root).resolve(mod.getFullName());
+                            targetBase = bepinexRoot.resolve(root).resolve(fullName);
                             if (zipPath.getNameCount() > 1) {
                                 relativeInsideMod = zipPath.subpath(1, zipPath.getNameCount());
                             } else {
                                 continue;
-                            }                        }
+                            }
+                        }
                         default -> {
-                            targetBase = bepinexRoot.resolve("plugins").resolve(mod.getFullName());
+                            targetBase = bepinexRoot.resolve("plugins").resolve(fullName);
                             relativeInsideMod = zipPath;
                         }
                     }
@@ -373,14 +417,11 @@ public class Utils {
                         zis.transferTo(os);
                     }
                 }
-
                 zis.closeEntry();
             }
         } catch (IOException ignored){}
-        mod.setEnabled(profile, enabled);
-        profile.refreshMods();
-        ModPanelElement.redraw(profile);
     }
+
     private static ModData getModFromDependency(String dependency){
         for (ModData mod : Cogfly.mods) {
             String[] split = dependency.split("-");
