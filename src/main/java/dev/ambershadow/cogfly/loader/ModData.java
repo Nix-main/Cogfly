@@ -6,12 +6,18 @@ import com.google.gson.JsonObject;
 import dev.ambershadow.cogfly.Cogfly;
 import dev.ambershadow.cogfly.util.Profile;
 
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
@@ -101,6 +107,7 @@ public class ModData {
     private final String fullName;
     private final String author;
     private URL downloadUrl;
+    private URL iconUrl;
     private final List<String> dependencies;
     private final String versionNumber;
     private final String description;
@@ -109,7 +116,8 @@ public class ModData {
     private int totalDownloads;
     private final URI packageUrl;
     private final URI websiteUrl;
-
+    private byte[] iconBytes;
+    private ImageIcon cachedIcon;
     private ModData(JsonObject parentObject, JsonObject version){
         rawObj = parentObject;
         name = parentObject.get("name").getAsString();
@@ -118,6 +126,10 @@ public class ModData {
         dependencies = new ArrayList<>();
         totalDownloads = 0;
         dateCreated = parentObject.get("date_created").getAsString();
+        try {
+            iconUrl = URL.of(URI.create(version.get("icon").getAsString()), null);
+        } catch (MalformedURLException ignored){}
+        // thunderstore URLs won't be malformed
         try {
             downloadUrl = URL.of(URI.create(version.get("download_url").getAsString()), null);
         } catch (MalformedURLException ignored){}
@@ -135,8 +147,30 @@ public class ModData {
         versionNumber = version.get("version_number").getAsString();
         description = version.get("description").getAsString();
 
-        parentObject.get("versions").getAsJsonArray()
-        .forEach(v -> totalDownloads += v.getAsJsonObject().get("downloads").getAsInt());
+        parentObject.get("versions").getAsJsonArray().forEach(v -> totalDownloads += v.getAsJsonObject().get("downloads").getAsInt());
+
+        try {
+            Files.createDirectories(Paths.get(Cogfly.localDataPath).resolve("icons"));
+            Path path = Paths.get(Cogfly.localDataPath).resolve("icons").resolve(getFullName() + ".png");
+            if (Files.exists(path)){
+                iconBytes = Files.readAllBytes(path);
+            }
+            else {
+                BufferedImage image = ImageIO.read(iconUrl);
+                Image scaled = image.getScaledInstance(128, 128, Image.SCALE_SMOOTH);
+                ByteArrayOutputStream os = new ByteArrayOutputStream();
+                BufferedImage resized = new BufferedImage(128, 128, BufferedImage.TYPE_INT_ARGB);
+                Graphics2D g2d = resized.createGraphics();
+                g2d.drawImage(scaled, 0, 0, null);
+                g2d.dispose();
+                ImageIO.write(resized, "png", os);
+                byte[] bytes = os.toByteArray();
+                Files.write(path, bytes);
+                iconBytes = bytes;
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
     public ModData(JsonObject parentObject){
         JsonArray versions = parentObject.get("versions").getAsJsonArray();
@@ -161,6 +195,7 @@ public class ModData {
         dateModified = "2000-01-01T00:00:00Z";
         packageUrl = null;
         websiteUrl = null;
+        iconUrl = null;
         this.enabled = enabled;
     }
 
@@ -202,6 +237,18 @@ public class ModData {
     }
     public URI getWebsiteUrl(){
         return websiteUrl;
+    }
+    public URL getIconUrl(){
+        return iconUrl;
+    }
+    public ImageIcon getIcon() {
+        if (cachedIcon == null && iconBytes != null) {
+            cachedIcon = new ImageIcon(iconBytes);
+        }
+        return cachedIcon;
+    }
+    public byte[] getIconBytes(){
+        return iconBytes;
     }
 
     public boolean isInstalled(Profile profile){
