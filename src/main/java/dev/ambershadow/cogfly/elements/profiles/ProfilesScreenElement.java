@@ -16,7 +16,14 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class ProfilesScreenElement extends JPanel implements ReloadablePage {
-    public static void promptCreation(Runnable callback){
+
+    public static final Icon icon = UIManager.getIcon("OptionPane.informationIcon");
+
+    private boolean refreshQueued = false;
+    public void queueRefresh(){
+        refreshQueued = true;
+    }
+    public static void createPrompt(Runnable callback){
         JDialog prompt = new JDialog(FrameManager.getOrCreate().frame);
         prompt.setModal(true);
         prompt.setSize(new Dimension(300, 150));
@@ -199,7 +206,7 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
 
 
         JButton createProfile = new JButton("Create Profile");
-        createProfile.addActionListener(_ -> promptCreation(() -> {}));
+        createProfile.addActionListener(_ -> createPrompt(() -> {}));
 
         upperPanel.add(createProfile);
         upperPanel.add(launchVanilla);
@@ -228,10 +235,10 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
         JPanel rowPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 16, 16));
 
         for (int i = 1; i <= totalProfiles; i++) {
-            Icon icon = UIManager.getIcon("OptionPane.informationIcon");
+            Icon icon = ProfilesScreenElement.icon;
             if (profiles.get(i-1).getIcon() != null)
                 icon = profiles.get(i-1).getIcon();
-            rowPanel.add(new ProfileCardElement(profiles.get(i-1), icon));
+            rowPanel.add(new ProfileCardElement(profiles.get(i-1), icon, this));
 
             if (i % maxPerRow == 0) {
                 parentPanel.add(rowPanel);
@@ -247,7 +254,16 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
 
     @Override
     public void reload() {
+        if (ProfileManager.profiles.stream().anyMatch(profile -> !Files.exists(profile.getPath()))) {
+            ProfileManager.loadProfiles();
+            JOptionPane.showMessageDialog(FrameManager.getOrCreate().frame, "One of your profiles wasn't found on the system, so they're being reloaded. If you changed or deleted a profile in your file system while Cogfly is open, note that this is dangerous behavior.");
+            refreshQueued = true;
+        }
         pane.getVerticalScrollBar().setUnitIncrement(Cogfly.settings.scrollingIncrement);
-        drawProfiles();
+        if (refreshQueued) {
+            drawProfiles();
+            refreshQueued = false;
+        }
+        // speeds things up a ton to only refresh when needed
     }
 }

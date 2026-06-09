@@ -1,5 +1,8 @@
 package dev.ambershadow.cogfly.elements.profiles;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import dev.ambershadow.cogfly.Cogfly;
 import dev.ambershadow.cogfly.elements.ModPanelElement;
 import dev.ambershadow.cogfly.loader.ModData;
@@ -7,12 +10,16 @@ import dev.ambershadow.cogfly.util.*;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 public class ProfileOpenPageCardElement extends JPanel {
 
@@ -20,8 +27,9 @@ public class ProfileOpenPageCardElement extends JPanel {
     private final JButton updateAll;
     private final JButton remove;
     private final JButton setPath;
-    public ProfileOpenPageCardElement(Profile profile) {
+    public ProfileOpenPageCardElement(Profile profile, ProfilesScreenElement screen) {
         super(new BorderLayout());
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         this.profile = profile;
         JPanel upperPanel = new JPanel();
         upperPanel.setPreferredSize(new Dimension(getWidth(), 100));
@@ -111,7 +119,7 @@ public class ProfileOpenPageCardElement extends JPanel {
 
         remove = new JButton("Remove Profile");
         remove.addActionListener(_ -> {
-            int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this profile?",
+            int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this profile? This will delete this folder: " + profile.getPath(),
                     "Confirm Profile Deletion", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
             if (confirm == JOptionPane.YES_OPTION) {
                 ProfileManager.removeProfile(profile);
@@ -119,6 +127,7 @@ public class ProfileOpenPageCardElement extends JPanel {
                         FrameManager.CogflyPage.PROFILES,
                         FrameManager.getOrCreate().profilesPageButton
                 );
+                screen.queueRefresh();
             }
         });
         if (profile.getPath().equals(Paths.get(Cogfly.settings.gamePath))){
@@ -142,10 +151,12 @@ public class ProfileOpenPageCardElement extends JPanel {
             customIconButton.addActionListener(_ -> Utils.pickFile((path) -> {
                 ProfileManager.changeIcon(profile, path.toString());
                 prompt.dispose();
+                screen.queueRefresh();
             }, "*", "png", "jpg", "jpeg", "gif"));
             defaultIconButton.addActionListener(_ -> {
                 ProfileManager.changeIcon(profile, "");
                 prompt.dispose();
+                screen.queueRefresh();
             });
 
             customIconButton.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -157,7 +168,7 @@ public class ProfileOpenPageCardElement extends JPanel {
             prompt.setVisible(true);
         });
 
-        setPath = new JButton("Set Per-Profile Game Path");
+        setPath = new JButton("Set Custom Game Path");
         setPath.addActionListener(_ -> {
             JDialog prompt = new JDialog(FrameManager.getOrCreate().frame);
             prompt.setModal(true);
@@ -201,13 +212,42 @@ public class ProfileOpenPageCardElement extends JPanel {
 
         JButton install = new JButton("Install Manually");
         install.addActionListener(_ -> Utils.pickFile((path) -> {
-            try {
-                Files.copy(path, profile.getPluginsPath().resolve(path.getFileName()));
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            profile.refreshMods();
-            ModPanelElement.redraw(profile);
+            CompletableFuture.runAsync(() -> {
+                try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(path))) {
+                    String fullName = "";
+                    ZipEntry entry;
+
+                    while ((entry = zis.getNextEntry()) != null) {
+                        if (entry.getName().endsWith("manifest.json")) {
+
+                            ByteArrayOutputStream os = new ByteArrayOutputStream();
+                            byte[] buffer = new byte[4096];
+                            int len;
+                            while ((len = zis.read(buffer)) > 0) {
+                                os.write(buffer, 0, len);
+                            }
+                            String content = os.toString(StandardCharsets.UTF_8);
+                            JsonObject object = JsonParser.parseString(content).getAsJsonObject();
+                            JsonElement element = object.get("FullName");
+                            if (element != null && !element.isJsonNull()) {
+                                fullName = element.getAsString();
+                            }
+                            zis.closeEntry();
+                            break;
+                        }
+                        zis.closeEntry();
+                    }
+                    if (!fullName.isEmpty()) {
+                        Utils.downloadModZipStream(Files.newInputStream(path), fullName, profile);
+                    } else {
+                        Files.copy(path, profile.getPluginsPath().resolve(path.getFileName()));
+                    }
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                profile.refreshMods();
+                ModPanelElement.redraw(profile);
+            });
         }, "*", "dll"));
 
         upperPanel.add(launch);
@@ -221,8 +261,13 @@ public class ProfileOpenPageCardElement extends JPanel {
         upperPanel.add(remove);
         upperPanel.add(refresh);
         upperPanel.add(install);
-        add(upperPanel, BorderLayout.NORTH);
-        add(new ModPanelElement(profile), BorderLayout.CENTER);
+
+        JPanel centerPanel = new JPanel();
+        add(upperPanel);
+        add(Box.createVerticalGlue());
+        add(centerPanel);
+        add(Box.createVerticalGlue());
+        add(new ModPanelElement(profile));
     }
 
     public void reload(){
