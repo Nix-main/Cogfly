@@ -138,6 +138,7 @@ jobs:
           cp ./Cogfly.desktop output/appimage/Cogfly-Linux_amd64/
           cat > output/appimage/Cogfly-Linux_amd64/AppRun << 'EOF'
           #!/bin/sh
+          export _JAVA_AWT_WM_NONREPARENTING=1
           HERE="$(dirname "$(readlink -f "$0")")"
           exec "$HERE/bin/Cogfly-Linux_amd64" "$@"
           EOF
