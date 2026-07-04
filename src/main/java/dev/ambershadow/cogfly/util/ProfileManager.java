@@ -122,38 +122,43 @@ public class ProfileManager {
             for (File file : files) {
                 if (!file.isDirectory())
                     continue;
-                String[] extensions = {"png", "jpeg", "jpg", "gif"};
-                ImageIcon icon = null;
-                for (String extension : extensions) {
-                    Path path2 = file.toPath().resolve("icon." + extension);
-                    if (Files.exists(path2)){
-                        icon = new ImageIcon(path2.toString());
-                        break;
-                    }
-                }
-                Path data = file.toPath().resolve("cogfly_data.json");
-                String gamePath = "";
-                if (Files.exists(data)){
-                    try(JsonReader reader = new JsonReader(Files.newBufferedReader(data))) {
-                        reader.beginObject();
-                        if (reader.nextName().equals("gamePath")) {
-                            gamePath = reader.nextString();
-                        }
-                        reader.endObject();
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-                Profile profile = new Profile(file.getName(), Paths.get(file.getAbsolutePath()), icon);
-                if (!gamePath.isEmpty())
-                    profile.setGamePath(Paths.get(gamePath).toString());
-                Cogfly.logger.info("Read path {} for profile {}.", gamePath, profile.getName());
+                Profile profile = loadProfile(file);
                 profile.installedMods = ModFetcher.getInstalledMods(profile.getPluginsPath());
                 profiles.add(profile);
             }
         }
         baseGame = new Profile("Base Game", Paths.get(Cogfly.settings.gamePath), Assets.silksongIcon.getAsIcon());
         baseGame.installedMods = ModFetcher.getInstalledMods(baseGame.getPluginsPath());
+    }
+
+    public static Profile loadProfile(File file){
+        String[] extensions = {"png", "jpeg", "jpg", "gif"};
+        ImageIcon icon = null;
+        for (String extension : extensions) {
+            Path path2 = file.toPath().resolve("icon." + extension);
+            if (Files.exists(path2)){
+                icon = new ImageIcon(path2.toString());
+                break;
+            }
+        }
+        Path data = file.toPath().resolve("cogfly_data.json");
+        String gamePath = "";
+        if (Files.exists(data)){
+            try(JsonReader reader = new JsonReader(Files.newBufferedReader(data))) {
+                reader.beginObject();
+                if (reader.nextName().equals("gamePath")) {
+                    gamePath = reader.nextString();
+                }
+                reader.endObject();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        Profile profile = new Profile(file.getName(), Paths.get(file.getAbsolutePath()), icon);
+        if (!gamePath.isEmpty())
+            profile.setGamePath(Paths.get(gamePath).toString());
+        Cogfly.logger.info("Read path {} for profile {}.", gamePath, profile.getName());
+        return profile;
     }
 
     public static void fromFile(Path path, BiConsumer<Profile, ModData[]> outdated){

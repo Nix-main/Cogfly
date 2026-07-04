@@ -63,15 +63,7 @@ public class Cogfly {
 
     public static WinFolderPicker FOLDER_PICKER;
     public static WinTinyFileDialogs FILE_DIALOGS;
-    public static @SuppressWarnings("unused") void main(String[] args) {
-        if (args.length > 0){
-            try {
-                Files.write(Paths.get("C:\\Users\\nicho\\Downloads\\args.txt"), Collections.singleton(String.join("", args)), Charset.defaultCharset());
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            return;
-        }
+    public static @SuppressWarnings("unused") void main(String[] args) throws IOException {
         AppDirs dirs = AppDirsFactory.getInstance();
         localDataPath = dirs.getUserDataDir("Cogfly", null, "");
         roamingDataPath = dirs.getUserDataDir("Cogfly", null, "", true);
@@ -89,14 +81,35 @@ public class Cogfly {
         //noinspection ResultOfMethodCallIgnored
         dataJson.getParentFile().mkdirs();
         if (!dataJson.exists()) {
-            try {
-                //noinspection ResultOfMethodCallIgnored
-                dataJson.createNewFile();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            //noinspection ResultOfMethodCallIgnored
+            dataJson.createNewFile();
         }
         settings = Settings.load(dataJson);
+        if (args.length > 0){
+            String arg = args[0].replace("cogfly://", "");
+            if (arg.toLowerCase().startsWith("launch/")){
+                String name = arg.substring(7);
+                final String[] profile = new String[]{null};
+                List<Path> paths = new ArrayList<>();
+                paths.add(Path.of(settings.profileSavePath));
+                paths.addAll(settings.profileSources.stream().map(Path::of).toList());
+                System.out.println(name);
+                for (Path profiles : paths) {
+                    try(Stream<Path> stream = Files.list(profiles)){
+                        stream.filter(path -> Files.isDirectory(path) && path.getFileName().toString().equalsIgnoreCase(name))
+                                .findFirst()
+                                .ifPresent(path -> profile[0] = path.toAbsolutePath().toString());
+                    }
+                }
+                if (profile[0] != null){
+                    Profile f = ProfileManager.loadProfile(new File(profile[0]));
+                    launchGameAsync(true, f.getPath().toString(), f.getGamePath());
+                } else {
+                    JOptionPane.showMessageDialog(null, "This profile does not exist.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+            return;
+        }
         packUrl = Cogfly.getResource("/packs/BepInExPack.zip");
         packUrlNoConsole = Cogfly.getResource("/packs/BepInExPack_NoConsole.zip");
         logger.info("Loaded settings");
@@ -136,7 +149,7 @@ public class Cogfly {
                 } else {
                     registerWinKey(exe, "Software\\Classes\\cogfly");
                 }
-            } catch (IOException | UnsatisfiedLinkError | URISyntaxException e) {
+            } catch (UnsatisfiedLinkError | URISyntaxException e) {
                 throw new RuntimeException(e);
             }
         }
