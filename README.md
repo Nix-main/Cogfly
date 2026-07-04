@@ -61,6 +61,7 @@ Anything not listed here was very likely done by Nix herself.
       - Profile icon switching
       - Show installed mods on top setting
       - Bug fixes
+      - Hover Color Change & Profile Loading fixes
     - [jakobhellermann](https://github.com/jakobhellermann)
       - Fix game startup on macOS when arch or sh are shadowed
       - Improved error showcasing
