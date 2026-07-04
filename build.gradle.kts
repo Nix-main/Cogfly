@@ -4,10 +4,16 @@ plugins {
 }
 
 group = "dev.ambershadow"
-version = "1.1.2"
+version = "1.2"
 
 repositories {
     mavenCentral()
+}
+
+sourceSets {
+    main {
+        resources.srcDir(layout.buildDirectory.dir("native+"))
+    }
 }
 
 dependencies {
@@ -21,6 +27,38 @@ dependencies {
     implementation("org.yaml:snakeyaml:2.2")
 }
 
+val compileWinFolderPicker by tasks.registering(Exec::class) {
+    workingDir = projectDir
+    commandLine(
+        "g++",
+        "-shared",
+        "-o",
+        "${layout.buildDirectory.get()}/native/winfolderpicker.dll",
+        "libs/folderpicker.cpp",
+        "-lole32",
+        "-luuid"
+    )
+}
+
+val compileTinyFileDialogs by tasks.registering(Exec::class) {
+    workingDir = projectDir
+    commandLine(
+        "gcc",
+        "-shared",
+        "-o",
+        "${layout.buildDirectory.get()}/native/wintinyfiledialogs.dll",
+        "libs/tinyfiledialogs.c",
+        "-lole32",
+        "-lcomdlg32",
+        "-lshell32",
+        "-luuid"
+    )
+}
+
+val compileNative by tasks.registering {
+    dependsOn(compileWinFolderPicker, compileTinyFileDialogs)
+}
+
 tasks.withType<JavaCompile>().configureEach {
     options.compilerArgs.add("--enable-preview")
 }
@@ -31,6 +69,10 @@ tasks.withType<Test>().configureEach {
 
 tasks.withType<JavaExec>().configureEach {
     jvmArgs("--enable-preview")
+}
+
+tasks.processResources {
+    dependsOn(compileNative)
 }
 
 tasks.shadowJar {

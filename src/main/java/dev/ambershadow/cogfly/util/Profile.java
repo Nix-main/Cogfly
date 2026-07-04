@@ -77,7 +77,7 @@ public class Profile {
 
     public void setGamePathWithoutSaving(String gamePath){
         this.gamePath = gamePath;
-        CompletableFuture.runAsync(() -> Cogfly.downloadBepInExNoConsole(Paths.get(gamePath)));
+        CompletableFuture.runAsync(() -> Cogfly.downloadDoorstop(Paths.get(Cogfly.settings.gamePath)));
     }
     public void setGamePath(String gamePath){
         setGamePathWithoutSaving(gamePath);

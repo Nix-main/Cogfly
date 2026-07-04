@@ -117,7 +117,7 @@ public class ProfileOpenPageCardElement extends JPanel {
                         FrameManager.CogflyPage.PROFILES,
                         FrameManager.getOrCreate().profilesPageButton
                 );
-                screen.queueRefresh();
+                ProfilesScreenElement.queueRefresh();
             }
         });
         if (profile.getPath().equals(Paths.get(Cogfly.settings.gamePath))){
@@ -141,12 +141,12 @@ public class ProfileOpenPageCardElement extends JPanel {
             customIconButton.addActionListener(_ -> Utils.pickFile((path) -> {
                 ProfileManager.changeIcon(profile, path.toString());
                 prompt.dispose();
-                screen.queueRefresh();
+                ProfilesScreenElement.queueRefresh();
             }, "*", "png", "jpg", "jpeg", "gif"));
             defaultIconButton.addActionListener(_ -> {
                 ProfileManager.changeIcon(profile, "");
                 prompt.dispose();
-                screen.queueRefresh();
+                ProfilesScreenElement.queueRefresh();
             });
 
             customIconButton.setAlignmentX(Component.CENTER_ALIGNMENT);

@@ -5,6 +5,7 @@ import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import dev.ambershadow.cogfly.Cogfly;
 import dev.ambershadow.cogfly.asset.Assets;
+import dev.ambershadow.cogfly.elements.profiles.ProfilesScreenElement;
 import dev.ambershadow.cogfly.loader.ModData;
 import dev.ambershadow.cogfly.loader.ModFetcher;
 import org.yaml.snakeyaml.DumperOptions;
@@ -55,6 +56,8 @@ public class ProfileManager {
             // ignore. No icon was specified.
         }
         profiles.add(prof);
+        ProfilesScreenElement.queueRefresh();
+        FrameManager.getOrCreate().getCurrentPage().reload();
     }
     private static void deleteFolder(Path path){
         try(Stream<Path> stream = Files.walk(path)) {
@@ -75,6 +78,8 @@ public class ProfileManager {
         if (profile == null)
             return;
         profiles.remove(profile);
+        ProfilesScreenElement.queueRefresh();
+        FrameManager.getOrCreate().getCurrentPage().reload();
         deleteFolder(profile.getPath());
     }
 

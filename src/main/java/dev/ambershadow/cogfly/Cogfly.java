@@ -33,6 +33,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.zip.ZipInputStream;
 
 public class Cogfly {
 
@@ -57,12 +58,13 @@ public class Cogfly {
     public static String roamingDataPath;
     public static File dataJson;
     public static Settings settings;
-    public static URL packUrl;
+    private static URL packUrl;
     public static String latestPackVer;
-    public static URL packUrlNoConsole;
-
     public static WinFolderPicker FOLDER_PICKER;
     public static WinTinyFileDialogs FILE_DIALOGS;
+    public static Path doorstop;
+    public static Path pack;
+    private static String oldPackVersion;
     public static @SuppressWarnings("unused") void main(String[] args) throws IOException {
         AppDirs dirs = AppDirsFactory.getInstance();
         localDataPath = dirs.getUserDataDir("Cogfly", null, "");
@@ -110,8 +112,6 @@ public class Cogfly {
             }
             return;
         }
-        packUrl = Cogfly.getResource("/packs/BepInExPack.zip");
-        packUrlNoConsole = Cogfly.getResource("/packs/BepInExPack_NoConsole.zip");
         logger.info("Loaded settings");
         if (Utils.OperatingSystem.current() == Utils.OperatingSystem.WINDOWS){
             try {
@@ -154,21 +154,26 @@ public class Cogfly {
             }
         }
         long start = System.currentTimeMillis();
-        CompletableFuture.runAsync(() -> downloadBepInExNoConsole(Paths.get(settings.gamePath)));
         List<JsonObject> m = ModFetcher.getAllMods();
         List<ModData> data = new ArrayList<>();
-        m.forEach(object -> {
-            if (object.get("full_name").getAsString().equals("BepInEx-BepInExPack_Silksong")){
-                latestPackVer = object.get("versions").getAsJsonArray().get(0).getAsJsonObject().get("version_number").getAsString();
+        for (JsonObject object : m) {
+            if (object.get("full_name").getAsString().equals("silksong_modding-BepInExPack_Silksong")) {
+                JsonObject version = object.get("versions").getAsJsonArray().get(0).getAsJsonObject();
+                packUrl = URL.of(URI.create(version.get("download_url").getAsString()), null);
+                latestPackVer =  version.get("version_number").getAsString();
             }
             if (object.get("is_deprecated").getAsBoolean())
-                return;
+                continue;
             if (object.get("has_nsfw_content").getAsBoolean())
-                return;
+                continue;
             if (excludedMods.contains(object.get("full_name").getAsString()))
-                return;
+                continue;
             data.add(new ModData(object));
-        });
+        }
+        downloadPack(latestPackVer);
+        downloadDoorstop(Paths.get(settings.gamePath));
+        if (settings.baseGameEnabled)
+            Cogfly.downloadBepInEx(Path.of(settings.gamePath));
         data.sort(
                 Comparator.comparing(
                         o -> o.getName().toLowerCase(),
@@ -185,19 +190,75 @@ public class Cogfly {
         showEarlyDialogs();
     }
 
-    public static void downloadBepInExNoConsole(Path path){
-        Path bepindll = path.resolve("BepInEx/core/BepInEx.dll");
-        if (Files.exists(bepindll))
+    private static void downloadPack(String version) throws IOException {
+        oldPackVersion = "-1";
+        Path ver = Path.of(localDataPath).resolve("pack_version.txt");
+        if (Files.exists(ver)){
+            oldPackVersion = Files.readString(ver);
+        }
+        Cogfly.pack = Path.of(localDataPath).resolve("BepInExPack");
+        doorstop = Path.of(localDataPath).resolve("doorstop");
+        if (version.equals(oldPackVersion))
             return;
-        if (!Files.exists(path))
-            return;
-        Utils.downloadAndExtract(packUrlNoConsole, path);
+        Path pack = Path.of(localDataPath).resolve("bex_pack");
+        Utils.downloadAndExtract(packUrl, pack);
+        Utils.deleteFolder(Cogfly.pack);
+        Files.move(pack.resolve("BepInExPack"), Cogfly.pack);
+        Utils.deleteFolder(pack);
+        Utils.deleteFolder(doorstop);
+        Files.createDirectory(doorstop);
+        Files.delete(Cogfly.pack.resolve("changelog.txt"));
+        try (Stream<Path> files = Files.list(Cogfly.pack)) {
+            files.forEach(file -> {
+                if (!Files.isDirectory(file)) {
+                    try {
+                        Files.move(file, doorstop.resolve(file.getFileName()));
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            });
+        }
+        Files.write(ver, version.getBytes());
+    }
+
+    public static void downloadDoorstop(Path path){
+        try(Stream<Path> files = Files.list(doorstop)) {
+            for (Path file : files.toList()) {
+                if (!latestPackVer.equals(oldPackVersion)) {
+                    Files.deleteIfExists(path.resolve(file.getFileName()));
+                }
+                else if (Files.exists(path.resolve(file.getFileName())))
+                    continue;
+                Files.copy(file, path.resolve(file.getFileName()));
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
     public static void downloadBepInEx(Path path){
         Path bepindll = path.resolve("BepInEx/core/BepInEx.dll");
         if (Files.exists(bepindll))
             return;
-        Utils.downloadAndExtract(packUrl, path);
+        logger.info("{}", path);
+        try(Stream<Path> files = Files.walk(pack.resolve("BepInEx"))) {
+            for (Path file : files.toList()) {
+                Path relative = pack.resolve("BepInEx").relativize(file);
+                Path newF = path.resolve("BepInEx").resolve(relative);
+                if (!latestPackVer.equals(oldPackVersion) && !Files.isDirectory(file)) {
+                    Files.deleteIfExists(newF);
+                }
+                if (Files.exists(newF))
+                    continue;
+                if (Files.isDirectory(file)) {
+                    Files.createDirectories(newF);
+                    continue;
+                }
+                Files.copy(file, newF);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static List<ModData> sortList(SortingType type, String direction, Profile profile, boolean installedOnly){

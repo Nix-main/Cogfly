@@ -19,8 +19,8 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
 
     public static final Icon icon = UIManager.getIcon("OptionPane.informationIcon");
 
-    private boolean refreshQueued = false;
-    public void queueRefresh(){
+    private static boolean refreshQueued = false;
+    public static void queueRefresh(){
         refreshQueued = true;
     }
     public static void createPrompt(Runnable callback){
@@ -261,6 +261,7 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
         }
         pane.getVerticalScrollBar().setUnitIncrement(Cogfly.settings.scrollingIncrement);
         if (refreshQueued) {
+            Cogfly.logger.info("Redrawing profiles...");
             drawProfiles();
             refreshQueued = false;
         }

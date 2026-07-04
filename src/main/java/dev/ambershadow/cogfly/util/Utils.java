@@ -450,7 +450,9 @@ public class Utils {
         Cogfly.launchGameAsync(true, profile.getBepInExPath().toString(), profile.getGamePath());
     }
 
-    private static void deleteFolder(Path folder){
+    public static void deleteFolder(Path folder){
+        if (!Files.exists(folder))
+            return;
         try(Stream<Path> walk = Files.walk(folder)) {
             walk.sorted(Comparator.reverseOrder())
                     .forEach(p -> {

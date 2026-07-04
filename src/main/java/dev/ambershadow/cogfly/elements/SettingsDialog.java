@@ -14,6 +14,7 @@ import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -203,7 +204,9 @@ public class SettingsDialog extends JDialog {
             ProfileManager.loadProfiles();
         ProfileManager.baseGame = new Profile("Base Game", Paths.get(Cogfly.settings.gamePath), Assets.silksongIcon.getAsIcon());
         if (!queuedGamePath.equals(initialGamePath))
-            Cogfly.downloadBepInEx(Paths.get(queuedGamePath));
+            Cogfly.downloadDoorstop(Paths.get(queuedGamePath));
+        if (queuedBaseGameBool)
+            Cogfly.downloadBepInEx(Path.of(queuedGamePath));
         Cogfly.settings.save();
     }
 
