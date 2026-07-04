@@ -151,7 +151,6 @@ jobs:
             --dest output/appimage \
             --verbose 
           cp ./icons/icon.png output/appimage/Cogfly-Linux_amd64/
-          cp ../desktop/Cogfly.desktop output/appimage/Cogfly-Linux_amd64/
           cat > output/appimage/Cogfly-Linux_amd64/AppRun << 'EOF'
           #!/bin/sh
           export _JAVA_AWT_WM_NONREPARENTING=1
