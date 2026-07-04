@@ -6,16 +6,7 @@
 A cross-platform mod manager for [Hollow Knight: Silksong](https://hollowknightsilksong.com/). Currently only supports English.
 
 ## Usage
-- Download the latest version [here](https://github.com/nix-main/Cogfly/releases/latest)
-  - Pick your installation based on operating system and architecture
-    - Windows: MSI or EXE (does not matter, both are **installers**, running them will not open the app)
-    - Linux:
-      - deb (debian or debian-based)
-      - rpm (Fedora/Redhat)
-      - AppImage (everything else)
-    - MacOS:
-      - aarch64 (Silicon)
-      - amd64 (Intel)
+- Download the latest version [here](https://ambershadow.dev/cogfly/download)
 - Select game path if not automatically found
   - Linux users will need to change their file type to "All Files" in the file dialog
   - Xbox Games users will need to change their file type to "All Files" in the file dialog if the game is not automatically found
@@ -43,9 +34,21 @@ Bug reports can be submitted here:
 https://github.com/nix-main/Cogfly/issues   
 Please submit actual information about the bug experienced. Please also submit your log file. There is an "Open Logs Folder" button on the info page.
 
+## Building
+The latest CI build can be retreived from https://ambershadow.dev/cogfly/download-ci/ but for those that want to build manually, it's very simple.
+
+Windows:
+`.\gradlew.bat clean shadowJar`
+
+Unix/OSX
+`./gradlew clean shadowJar`
+
+The output will be in /build/libs
 
 <details>
 <summary><h3>Credits</h3></summary>
+
+Anything not listed here was very likely done by Nix herself.
 
 - Art
     - [Jngo](https://github.com/jngo102) - Main icon on the info page
@@ -53,5 +56,13 @@ Please submit actual information about the bug experienced. Please also submit y
     - [Hien Ngo](https://github.com/hien-ngo29) 
       - RPM build in the workflow
       - Nicer info page icons
-    - [FabBeyond](https://github.com/FabBeyond) - Profile icon switching
+      - Fix dialog positions
+    - [FabBeyond](https://github.com/FabBeyond) 
+      - Profile icon switching
+      - Show installed mods on top setting
+      - Bug fixes
+      - Hover Color Change & Profile Loading fixes
+    - [jakobhellermann](https://github.com/jakobhellermann)
+      - Fix game startup on macOS when arch or sh are shadowed
+      - Improved error showcasing
 </details>

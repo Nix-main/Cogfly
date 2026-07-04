@@ -80,6 +80,9 @@ public class ProfileCardElement extends JPanel {
                     return;
                 }
                 JPanel pages = FrameManager.getOrCreate().getPagePanel();
+                ProfileOpenPageCardElement panel = new ProfileOpenPageCardElement(profile);
+                panel.setName(profile.getName());
+                FrameManager.getOrCreate().getPagePanel().add(panel, profile.getName());
                 panel.reload();
                 ((CardLayout)pages.getLayout()).show(pages, profile.getName());
                 SelectedPageButtonElement button = FrameManager.getOrCreate().getCurrentPageButton();
@@ -94,16 +97,20 @@ public class ProfileCardElement extends JPanel {
             c.addMouseListener(mouseHandler);
         }
 
-        Timer colorUpdate = new Timer(100, _ -> {
-            normal = UIManager.getColor("Button.background").darker();
-            hover = UIManager.getColor("Button.pressedBackground");
-            if (lastLaf != UIManager.getLookAndFeel()) {
-                lastLaf = UIManager.getLookAndFeel();
-                setBackground(normal);
+        updateColors();
+
+        UIManager.addPropertyChangeListener(e -> {
+            if ("lookAndFeel".equals(e.getPropertyName())) {
+                SwingUtilities.invokeLater(this::updateColors);
             }
-            hover = FlatLaf.isLafDark() ? hover.brighter() : hover.darker();
         });
-        colorUpdate.start();
         HoverLerp.install(this, () -> normal, () -> hover);
+    }
+
+    void updateColors() {
+        normal = UIManager.getColor("Button.background").darker();
+        Color base = UIManager.getColor("Button.pressedBackground");
+        hover = FlatLaf.isLafDark() ? base.brighter() : base.darker();
+        setBackground(normal);
     }
 }

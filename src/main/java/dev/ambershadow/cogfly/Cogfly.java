@@ -14,23 +14,24 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.ConnectException;
 import java.net.URI;
 import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Cogfly {
 
@@ -43,7 +44,7 @@ public class Cogfly {
     }
 
     public static Logger logger;
-    public static List<String> excludedMods = new ArrayList<>() {
+    public static List<String> excludedMods = new ArrayList<>(){
         {
             add("ebkr-r2modman");
             add("BepInEx-BepInExPack_Silksong");
@@ -61,7 +62,6 @@ public class Cogfly {
 
     public static WinFolderPicker FOLDER_PICKER;
     public static WinTinyFileDialogs FILE_DIALOGS;
-
     public static @SuppressWarnings("unused") void main(String[] args) {
         AppDirs dirs = AppDirsFactory.getInstance();
         localDataPath = dirs.getUserDataDir("Cogfly", null, "");
@@ -77,12 +77,12 @@ public class Cogfly {
             Utils.throwNonFatalError(throwable);
         });
 
-        if (Utils.OperatingSystem.current() == Utils.OperatingSystem.WINDOWS) {
+        if (Utils.OperatingSystem.current() == Utils.OperatingSystem.WINDOWS){
             try {
                 FOLDER_PICKER =
                         Native.load(Native.extractFromResourcePath("winfolderpicker").getAbsolutePath(),
                                 WinFolderPicker.class
-                        );
+                                );
                 FILE_DIALOGS =
                         Native.load(Native.extractFromResourcePath("wintinyfiledialogs").getAbsolutePath(),
                                 WinTinyFileDialogs.class
@@ -110,9 +110,8 @@ public class Cogfly {
         CompletableFuture.runAsync(() -> downloadBepInExNoConsole(Paths.get(settings.gamePath)));
         List<JsonObject> m = ModFetcher.getAllMods();
         List<ModData> data = new ArrayList<>();
-        List<JsonObject> cleaned = new ArrayList<>();
         m.forEach(object -> {
-            if (object.get("full_name").getAsString().equals("BepInEx-BepInExPack_Silksong")) {
+            if (object.get("full_name").getAsString().equals("BepInEx-BepInExPack_Silksong")){
                 latestPackVer = object.get("versions").getAsJsonArray().get(0).getAsJsonObject().get("version_number").getAsString();
             }
             if (object.get("is_deprecated").getAsBoolean())
@@ -121,35 +120,8 @@ public class Cogfly {
                 return;
             if (excludedMods.contains(object.get("full_name").getAsString()))
                 return;
-            cleaned.add(object);
+            data.add(new ModData(object));
         });
-        CompletableFuture.runAsync(() -> {
-            Path dir = Paths.get(localDataPath).resolve("icons");
-            long count = 0;
-            if (!Files.exists(dir)) {
-                SwingUtilities.invokeLater(() -> {
-                    JOptionPane.showMessageDialog(
-                            null,
-                            "Not all mod icons could be found, more are likely still downloading. This launch may take some time."
-                    );
-                });
-            } else {
-                try (var stream = Files.list(dir)) {
-                    count = stream.count();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-                if (count < cleaned.size()) {
-                    SwingUtilities.invokeLater(() -> {
-                        JOptionPane.showMessageDialog(
-                                null,
-                                "Not all mod icons could be found, more are likely still downloading. This launch may take some time."
-                        );
-                    });
-                }
-            }
-        });
-        cleaned.forEach(object -> data.add(new ModData(object)));
         data.sort(
                 Comparator.comparing(
                         o -> o.getName().toLowerCase(),
@@ -166,7 +138,7 @@ public class Cogfly {
         showEarlyDialogs();
     }
 
-    public static void downloadBepInExNoConsole(Path path) {
+    public static void downloadBepInExNoConsole(Path path){
         Path bepindll = path.resolve("BepInEx/core/BepInEx.dll");
         if (Files.exists(bepindll))
             return;
@@ -174,15 +146,14 @@ public class Cogfly {
             return;
         Utils.downloadAndExtract(packUrlNoConsole, path);
     }
-
-    public static void downloadBepInEx(Path path) {
+    public static void downloadBepInEx(Path path){
         Path bepindll = path.resolve("BepInEx/core/BepInEx.dll");
         if (Files.exists(bepindll))
             return;
         Utils.downloadAndExtract(packUrl, path);
     }
 
-    public static List<ModData> sortList(SortingType type, String direction, Profile profile, boolean installedOnly) {
+    public static List<ModData> sortList(SortingType type, String direction, Profile profile, boolean installedOnly){
         List<ModData> mods = getDisplayedMods(profile, installedOnly);
         switch (type) {
             case NAME:
@@ -202,13 +173,13 @@ public class Cogfly {
                 mods.sort(Comparator.comparing(mod -> Instant.parse(mod.getDateModified())));
                 break;
         }
-        if (direction.equalsIgnoreCase("descending")) {
+        if (direction.equalsIgnoreCase("descending")){
             mods = mods.reversed();
         }
         return mods;
     }
 
-    public static List<ModData> getDisplayedMods(Profile profile, boolean installedOnly) {
+    public static List<ModData> getDisplayedMods(Profile profile, boolean installedOnly){
         if (installedOnly)
             return profile.getInstalledMods();
         List<ModData> mds = new ArrayList<>(profile.getManualMods());
@@ -216,17 +187,18 @@ public class Cogfly {
         return mds;
     }
 
-    private static void showEarlyDialogs() {
+    private static void showEarlyDialogs(){
         if (settings.getData() != null && settings.getData().has("profileSavePath")) {
             Cogfly.settings.profileSavePath = settings.getData().get("profileSavePath").getAsString();
         } else {
             logger.info("No stored profile save path! Prompting:");
             JDialog prompt = new JDialog(FrameManager.getOrCreate().frame, "Profile Save Path", true);
             prompt.setLayout(new BorderLayout());
-            prompt.setLocationRelativeTo(null);
             prompt.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
             prompt.setResizable(false);
             prompt.setPreferredSize(new Dimension(450, 160));
+            prompt.pack();
+            prompt.setLocationRelativeTo(FrameManager.getOrCreate().frame);
 
             JPanel texts = new JPanel(new BorderLayout());
             JLabel first = new JLabel("You don't have a path on file for saving profiles. ");
@@ -270,6 +242,8 @@ public class Cogfly {
             prompt.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
             prompt.setResizable(false);
             prompt.setPreferredSize(new Dimension(450, 140));
+            prompt.pack();
+            prompt.setLocationRelativeTo(FrameManager.getOrCreate().frame);
 
             JPanel texts = new JPanel(new BorderLayout());
             JLabel first = new JLabel("You don't have a path on file for your silksong installation. ");
@@ -308,7 +282,7 @@ public class Cogfly {
         }
 
 
-        if (ProfileManager.profiles.isEmpty() && !settings.baseGameEnabled) {
+        if (ProfileManager.profiles.isEmpty() && !settings.baseGameEnabled){
             int confirm = JOptionPane.showConfirmDialog(FrameManager.getOrCreate().frame,
                     "You don't have any profiles! Are you ready to create one?",
                     "Profile Onboarding",
@@ -328,8 +302,8 @@ public class Cogfly {
             }
         }
 
-        String latestVer = ((Supplier<String>) () -> {
-            try (HttpClient client = HttpClient.newHttpClient()) {
+        String latestVer = ((Supplier<String>)() -> {
+            try (HttpClient client = HttpClient.newHttpClient()){
                 HttpRequest request = HttpRequest.newBuilder()
                         .GET()
                         .uri(URI.create("https://api.github.com/repos/nix-main/Cogfly/releases"))
@@ -368,7 +342,33 @@ public class Cogfly {
     }
 
 
-    public static void launchGameAsync(boolean enabled, String path, String gamePath) {
+    private static void showLaunchError(String details) {
+        String[] lines = details.split("\n");
+        Path logFile = Paths.get(localDataPath).resolve("logs/launch-error.log");
+        boolean truncated = lines.length > 20;
+        if (truncated) {
+            try {
+                Files.writeString(logFile, details);
+            } catch (IOException e) {
+                logger.error("Failed to write launch error log", e);
+            }
+        }
+        String message = truncated
+                ? "%s\n... (%d lines total)".formatted(String.join("\n", Arrays.copyOf(lines, 20)), lines.length)
+                : details;
+        SwingUtilities.invokeLater(() -> {
+            if (!truncated) {
+                JOptionPane.showMessageDialog(null, message, "Game Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            int choice = JOptionPane.showOptionDialog(null, message, "Game Error",
+                    JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE, null,
+                    new Object[]{"Open Log", "OK"}, "OK");
+            if (choice == 0) Utils.openPath(logFile.getParent());
+        });
+    }
+
+    public static void launchGameAsync(boolean enabled, String path, String gamePath){
         CompletableFuture.runAsync(() -> {
             logger.info("Launching game. OS: {}, Path: {}", Utils.OperatingSystem.current(), path);
             ProcessBuilder builder = new ProcessBuilder();
@@ -419,10 +419,39 @@ public class Cogfly {
                     }
             }*/
             try {
-                builder.start();
-            } catch (IOException e) {
+                Process process = builder.start();
+                CompletableFuture<String> stdoutFuture = CompletableFuture.supplyAsync(() -> {
+                    try { return new String(process.getInputStream().readAllBytes()); }
+                    catch (IOException e) { return ""; }
+                });
+                CompletableFuture<String> stderrFuture = CompletableFuture.supplyAsync(() -> {
+                    try { return new String(process.getErrorStream().readAllBytes()); }
+                    catch (IOException e) { return ""; }
+                });
+                int exitCode = process.waitFor();
+                String stdout = stdoutFuture.join();
+                String stderr = stderrFuture.join();
+                if (exitCode != 0) {
+                    String details = Stream.of(
+                            stdout.isBlank() ? null : "stdout: " + stdout.trim(),
+                            stderr.isBlank() ? null : "stderr: " + stderr.trim()
+                    ).filter(Objects::nonNull).collect(Collectors.joining("\n"));
+                    if (details.isBlank()) details = "Process exited with code " + exitCode;
+                    logger.warn("Game process exited with code {}\n{}", exitCode, details);
+                    showLaunchError(details);
+                }
+            } catch (IOException | InterruptedException e) {
                 throw new RuntimeException(e);
             }
+        }).exceptionally(e -> {
+            logger.error("Failed to launch game", e);
+            SwingUtilities.invokeLater(() ->
+                JOptionPane.showMessageDialog(null,
+                    "Failed to launch game: " + e.getCause().getMessage(),
+                    "Game Error",
+                    JOptionPane.ERROR_MESSAGE)
+            );
+            return null;
         });
     }
     public enum SortingType {
