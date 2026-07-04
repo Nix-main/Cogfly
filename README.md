@@ -35,7 +35,7 @@ https://github.com/nix-main/Cogfly/issues
 Please submit actual information about the bug experienced. Please also submit your log file. There is an "Open Logs Folder" button on the info page.
 
 ## Building
-The latest CI build can be retreived from https://ambershadow.dev/cogfly/download-ci/ but for those that want to build manually, it's very simple.
+The latest CI build can be retreived from the workflow but for those that want to build manually, it's very simple.
 
 Windows:
 `.\gradlew.bat clean shadowJar`
