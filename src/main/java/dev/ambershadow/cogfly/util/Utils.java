@@ -340,14 +340,13 @@ public class Utils {
                     return;
                 Cogfly.logger.info("Attempting to download {} at version {} for profile {}.", mod.getFullName(), mod.getVersionNumber(), profile.getName());
                 profile.removeMod(mod);
-                if (deps) {
-                    for (String dep : mod.getDependencies()) {
-                        if (dep.contains("BepInExPack"))
-                            continue;
-                        ModData m = getModFromDependency(dep);
-                        if (m != null && !m.isOutdated(profile)) {
+                for (String dep : mod.getDependencies()) {
+                    if (dep.contains("BepInExPack"))
+                        continue;
+                    ModData m = getModFromDependency(dep);
+                    if (m != null) {
+                        if (!m.isInstalled(profile) || (deps && m.isOutdated(profile))) // install new dependencies when updating a mod
                             downloadMod(m, profile, true);
-                        }
                     }
                 }
                 downloadModZipStream(is, mod.getFullName(), profile);
