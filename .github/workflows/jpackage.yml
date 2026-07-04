@@ -46,12 +46,14 @@ jobs:
           jpackage \
               --input build/libs \
               --main-jar Cogfly-1.1.2.jar \
+              --main-class dev.ambershadow.cogfly.Cogfly \
               --name "Cogfly_intel" \
               --type dmg \
               --vendor "Ambershadow" \
               --icon ./icons/icon.icns \
               --app-version 1.1.2 \
-              --dest output/${{ runner.os }}-${{ matrix.arch }}
+              --dest output/${{ runner.os }}-${{ matrix.arch }} \
+              --verbose
 
       - name: Build macOS aarch64 dmg
         if: runner.os == 'macOS' && matrix.arch == 'aarch64'
@@ -59,12 +61,14 @@ jobs:
           jpackage \
               --input build/libs \
               --main-jar Cogfly-1.1.2.jar \
+              --main-class dev.ambershadow.cogfly.Cogfly \
               --name "Cogfly_silicon" \
               --type dmg \
               --vendor "Ambershadow" \
               --icon ./icons/icon.icns \
               --app-version 1.1.2 \
-              --dest output/${{ runner.os }}-${{ matrix.arch }}
+              --dest output/${{ runner.os }}-${{ matrix.arch }} \
+              --verbose
 
       - name: Build MSI
         if: runner.os == 'Windows' && matrix.arch == 'amd64'
@@ -72,6 +76,7 @@ jobs:
           jpackage `
             --input build/libs `
             --main-jar Cogfly-1.1.2.jar `
+            --main-class dev.ambershadow.cogfly.Cogfly `
             --name Cogfly `
             --type msi `
             --vendor "Ambershadow" `
@@ -79,13 +84,15 @@ jobs:
             --app-version 1.1.2 `
             --dest output/${{ runner.os }}-${{ matrix.arch }} `
             --win-menu `
-            --win-shortcut
+            --win-shortcut `
+            --verbose
       - name: Build EXE
         if: runner.os == 'Windows' && matrix.arch == 'amd64'
         run: |
           jpackage `
             --input build/libs `
             --main-jar Cogfly-1.1.2.jar `
+            --main-class dev.ambershadow.cogfly.Cogfly `
             --name Cogfly `
             --type exe `
             --vendor "Ambershadow" `
@@ -93,7 +100,8 @@ jobs:
             --app-version 1.1.2 `
             --dest output/${{ runner.os }}-${{ matrix.arch }} `
             --win-menu `
-            --win-shortcut
+            --win-shortcut `
+            --verbose
 
       - name: Build DEB
         if: runner.os == 'Linux' && matrix.arch == 'amd64'
@@ -101,12 +109,14 @@ jobs:
           jpackage \
             --input build/libs \
             --main-jar Cogfly-1.1.2.jar \
+            --main-class dev.ambershadow.cogfly.Cogfly \
             --name Cogfly \
             --type deb \
             --vendor "Ambershadow" \
             --icon ./icons/icon.png \
             --app-version 1.1.2 \
             --dest output/${{ runner.os }}-${{ matrix.arch }} \
+            --verbose
 
       - name: Build RPM
         if: runner.os == 'Linux' && matrix.arch == 'amd64'
@@ -114,12 +124,14 @@ jobs:
           jpackage \
             --input build/libs \
             --main-jar Cogfly-1.1.2.jar \
+            --main-class dev.ambershadow.cogfly.Cogfly \
             --name Cogfly \
             --type rpm \
             --vendor "Ambershadow" \
             --icon ./icons/icon.png \
             --app-version 1.1.2 \
             --dest output/${{ runner.os }}-${{ matrix.arch }} \
+            --verbose
 
       - name: Build APPIMAGE
         if: runner.os == 'Linux' && matrix.arch == 'amd64'
@@ -128,12 +140,14 @@ jobs:
           jpackage \
             --input build/libs \
             --main-jar Cogfly-1.1.2.jar \
+            --main-class dev.ambershadow.cogfly.Cogfly \
             --name Cogfly-Linux_amd64 \
             --type app-image \
             --vendor "Ambershadow" \
             --icon ./icons/icon.png \
             --app-version 1.1.2 \
-            --dest output/appimage
+            --dest output/appimage \
+            --verbose 
           cp ./icons/icon.png output/appimage/Cogfly-Linux_amd64/
           cp ./Cogfly.desktop output/appimage/Cogfly-Linux_amd64/
           cat > output/appimage/Cogfly-Linux_amd64/AppRun << 'EOF'

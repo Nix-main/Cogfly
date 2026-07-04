@@ -4,3 +4,4 @@ Exec=Cogfly
 Icon=icon
 Type=Application
 Categories=Utility;
+MimeType=x-scheme-handler/cogfly;

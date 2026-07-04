@@ -3,6 +3,8 @@ package dev.ambershadow.cogfly;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.jna.Native;
+import com.sun.jna.platform.win32.Advapi32Util;
+import com.sun.jna.platform.win32.WinReg;
 import dev.ambershadow.cogfly.elements.profiles.ProfilesScreenElement;
 import dev.ambershadow.cogfly.loader.ModData;
 import dev.ambershadow.cogfly.loader.ModFetcher;
@@ -17,17 +19,16 @@ import java.awt.*;
 import java.io.*;
 import java.net.ConnectException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.Charset;
 import java.nio.file.*;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
+import java.util.*;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -63,6 +64,14 @@ public class Cogfly {
     public static WinFolderPicker FOLDER_PICKER;
     public static WinTinyFileDialogs FILE_DIALOGS;
     public static @SuppressWarnings("unused") void main(String[] args) {
+        if (args.length > 0){
+            try {
+                Files.write(Paths.get("C:\\Users\\nicho\\Downloads\\args.txt"), Collections.singleton(String.join("", args)), Charset.defaultCharset());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            return;
+        }
         AppDirs dirs = AppDirsFactory.getInstance();
         localDataPath = dirs.getUserDataDir("Cogfly", null, "");
         roamingDataPath = dirs.getUserDataDir("Cogfly", null, "", true);
@@ -76,21 +85,6 @@ public class Cogfly {
             logger.error("Uncaught exception in thread {}", thread.getName(), throwable);
             Utils.throwNonFatalError(throwable);
         });
-
-        if (Utils.OperatingSystem.current() == Utils.OperatingSystem.WINDOWS){
-            try {
-                FOLDER_PICKER =
-                        Native.load(Native.extractFromResourcePath("winfolderpicker").getAbsolutePath(),
-                                WinFolderPicker.class
-                                );
-                FILE_DIALOGS =
-                        Native.load(Native.extractFromResourcePath("wintinyfiledialogs").getAbsolutePath(),
-                                WinTinyFileDialogs.class
-                        );
-            } catch (IOException | UnsatisfiedLinkError e) {
-                throw new RuntimeException(e);
-            }
-        }
         dataJson = new File(localDataPath + "/settings.json");
         //noinspection ResultOfMethodCallIgnored
         dataJson.getParentFile().mkdirs();
@@ -106,6 +100,46 @@ public class Cogfly {
         packUrl = Cogfly.getResource("/packs/BepInExPack.zip");
         packUrlNoConsole = Cogfly.getResource("/packs/BepInExPack_NoConsole.zip");
         logger.info("Loaded settings");
+        if (Utils.OperatingSystem.current() == Utils.OperatingSystem.WINDOWS){
+            try {
+                FOLDER_PICKER =
+                        Native.load(Native.extractFromResourcePath("winfolderpicker").getAbsolutePath(),
+                                WinFolderPicker.class
+                                );
+                FILE_DIALOGS =
+                        Native.load(Native.extractFromResourcePath("wintinyfiledialogs").getAbsolutePath(),
+                                WinTinyFileDialogs.class
+                        );
+
+                String commandKey = "Software\\Classes\\cogfly\\shell\\open\\command";
+                Path exe = Paths.get(
+                                Cogfly.class.getProtectionDomain()
+                                        .getCodeSource()
+                                        .getLocation()
+                                        .toURI())
+                        .getParent()
+                        .getParent()
+                        .resolve("Cogfly.exe");
+                if (Advapi32Util.registryValueExists(
+                        WinReg.HKEY_CURRENT_USER,
+                        commandKey,
+                        "")) {
+
+                    String command = Advapi32Util.registryGetStringValue(
+                            WinReg.HKEY_CURRENT_USER,
+                            commandKey,
+                            "");
+
+                    if (!command.equals("\"" + exe + "\" \"%1\"")) {
+                        registerWinKey(exe, "Software\\Classes\\cogfly");
+                    }
+                } else {
+                    registerWinKey(exe, "Software\\Classes\\cogfly");
+                }
+            } catch (IOException | UnsatisfiedLinkError | URISyntaxException e) {
+                throw new RuntimeException(e);
+            }
+        }
         long start = System.currentTimeMillis();
         CompletableFuture.runAsync(() -> downloadBepInExNoConsole(Paths.get(settings.gamePath)));
         List<JsonObject> m = ModFetcher.getAllMods();
@@ -454,6 +488,30 @@ public class Cogfly {
             return null;
         });
     }
+
+    private static void registerWinKey(Path exe, String key) {
+        Advapi32Util.registryCreateKey(WinReg.HKEY_CURRENT_USER, key);
+        Advapi32Util.registrySetStringValue(
+                WinReg.HKEY_CURRENT_USER,
+                key,
+                "",
+                "URL:Cogfly Protocol");
+        Advapi32Util.registrySetStringValue(
+                WinReg.HKEY_CURRENT_USER,
+                key,
+                "URL Protocol",
+                "");
+        Advapi32Util.registryCreateKey(
+                WinReg.HKEY_CURRENT_USER,
+                key + "\\shell\\open\\command");
+        Advapi32Util.registrySetStringValue(
+                WinReg.HKEY_CURRENT_USER,
+                key + "\\shell\\open\\command",
+                "",
+                "\"" + exe + "\" \"%1\""
+        );
+    }
+
     public enum SortingType {
         NAME,
         DOWNLOADS,
