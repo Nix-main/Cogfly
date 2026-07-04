@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=Cogfly
-Exec=Cogfly
+Exec=/opt/cogfly/bin/Cogfly %u
 Icon=icon
 Type=Application
 Categories=Utility;

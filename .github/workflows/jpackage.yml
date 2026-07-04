@@ -116,6 +116,7 @@ jobs:
             --icon ./icons/icon.png \
             --app-version 1.1.2 \
             --dest output/${{ runner.os }}-${{ matrix.arch }} \
+            --resource-dir desktop \
             --verbose
 
       - name: Build RPM
@@ -131,6 +132,7 @@ jobs:
             --icon ./icons/icon.png \
             --app-version 1.1.2 \
             --dest output/${{ runner.os }}-${{ matrix.arch }} \
+            --resource-dir desktop \
             --verbose
 
       - name: Build APPIMAGE
@@ -149,7 +151,7 @@ jobs:
             --dest output/appimage \
             --verbose 
           cp ./icons/icon.png output/appimage/Cogfly-Linux_amd64/
-          cp ./Cogfly.desktop output/appimage/Cogfly-Linux_amd64/
+          cp ../desktop/Cogfly.desktop output/appimage/Cogfly-Linux_amd64/
           cat > output/appimage/Cogfly-Linux_amd64/AppRun << 'EOF'
           #!/bin/sh
           export _JAVA_AWT_WM_NONREPARENTING=1
