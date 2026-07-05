@@ -12,7 +12,7 @@ repositories {
 
 sourceSets {
     main {
-        resources.srcDir(layout.buildDirectory.dir("native+"))
+        resources.srcDir(layout.buildDirectory.dir("native"))
     }
 }
 
