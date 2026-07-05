@@ -20,7 +20,7 @@ public class ProfileCardElement extends JPanel {
     public ProfileCardElement(Profile profile, Icon icon, ProfilesScreenElement screen) {
         setPreferredSize(new Dimension(200, 160));
         setLayout(new BorderLayout(8, 8));
-        ProfileOpenPageCardElement panel = new ProfileOpenPageCardElement(profile, screen);
+        ProfileOpenPageCardElement panel = new ProfileOpenPageCardElement(profile);
         panel.setName(profile.getName());
         FrameManager.getOrCreate().getPagePanel().add(panel, profile.getName());
 
@@ -79,7 +79,7 @@ public class ProfileCardElement extends JPanel {
                     return;
                 }
                 JPanel pages = FrameManager.getOrCreate().getPagePanel();
-                ProfileOpenPageCardElement panel = new ProfileOpenPageCardElement(profile, screen);
+                ProfileOpenPageCardElement panel = new ProfileOpenPageCardElement(profile);
                 panel.setName(profile.getName());
                 FrameManager.getOrCreate().getPagePanel().add(panel, profile.getName());
                 panel.reload();

@@ -1,6 +1,7 @@
 package dev.ambershadow.cogfly.elements;
 
 import dev.ambershadow.cogfly.Cogfly;
+import dev.ambershadow.cogfly.elements.profiles.ProfileOpenPageCardElement;
 import dev.ambershadow.cogfly.loader.ModData;
 import dev.ambershadow.cogfly.util.Profile;
 import dev.ambershadow.cogfly.util.Utils;
@@ -25,6 +26,11 @@ public class ModPanelElement extends JPanel {
         if (panels.containsKey(profile))
             panels.get(profile).redrawPanel();
     }
+
+    public static void setProgressBar(Profile profile) {
+        if (panels.containsKey(profile))
+            panels.get(profile).setProgressBar();
+    }
     private final Profile profile;
     private final JTextField searchField;
     private final JPanel buttonsPanel;
@@ -33,10 +39,11 @@ public class ModPanelElement extends JPanel {
     private final JScrollPane scrollPane;
     private final JCheckBox showInstalled;
 
-
-    public ModPanelElement(Profile profile) {
+    private final ProfileOpenPageCardElement card;
+    public ModPanelElement(Profile profile, ProfileOpenPageCardElement card) {
         super(new BorderLayout());
         this.profile = profile;
+        this.card = card;
         panels.put(profile, this);
         setBorder(BorderFactory.createEmptyBorder());
         setPreferredSize(new Dimension(1100, 525));
@@ -293,12 +300,17 @@ public class ModPanelElement extends JPanel {
     }
 
     private void redrawPanel(){
+        setProgressBar();
         scrollPane.getVerticalScrollBar().setUnitIncrement(Cogfly.settings.scrollingIncrement);
         String query = searchField.getText();
         if (query.isEmpty())
             refreshButtons(Cogfly.sortList(current, currentDirection, profile, showInstalled.isSelected()));
         else
             filterButtons();
+    }
+
+    private void setProgressBar(){
+        card.setBar(Utils.isDownloading(profile));
     }
 
 

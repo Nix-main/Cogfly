@@ -27,7 +27,11 @@ public class ProfileOpenPageCardElement extends JPanel {
     private final JButton updateAll;
     private final JButton remove;
     private final JButton setPath;
-    public ProfileOpenPageCardElement(Profile profile, ProfilesScreenElement screen) {
+    private final JProgressBar progressBar;
+    public void setBar(boolean val){
+        progressBar.setVisible(val);
+    }
+    public ProfileOpenPageCardElement(Profile profile) {
         super(new BorderLayout());
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         this.profile = profile;
@@ -253,11 +257,16 @@ public class ProfileOpenPageCardElement extends JPanel {
         upperPanel.add(install);
 
         JPanel centerPanel = new JPanel();
+        progressBar = new JProgressBar();
+        progressBar.setIndeterminate(true);
+        progressBar.setVisible(false);
+        centerPanel.add(progressBar);
+
         add(upperPanel);
         add(Box.createVerticalGlue());
         add(centerPanel);
         add(Box.createVerticalGlue());
-        add(new ModPanelElement(profile));
+        add(new ModPanelElement(profile, this));
     }
 
     public void reload(){
@@ -269,5 +278,6 @@ public class ProfileOpenPageCardElement extends JPanel {
             remove.setEnabled(false);
         }
         setPath.setVisible(Cogfly.settings.profileSpecificPaths);
+        progressBar.setVisible(Utils.isDownloading(profile));
     }
 }

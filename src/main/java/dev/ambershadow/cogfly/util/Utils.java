@@ -322,19 +322,29 @@ public class Utils {
     public static void downloadMod(ModData mod, Profile profile, boolean deps){
         downloadMod(mod, profile, deps, true);
     }
-    public static boolean isDownloading() {
-        return !currentDownloads.isEmpty();
+    public static boolean isDownloading(Profile profile) {
+        return !getActiveDownloads(profile).isEmpty();
     }
 
     private static final Set<CompletableFuture<Void>> currentDownloads =
             ConcurrentHashMap.newKeySet();
-    private static final Set<String> activeDownloads = ConcurrentHashMap.newKeySet();
+    private static final Map<String, Set<String>> activeDownloads =
+            new ConcurrentHashMap<>();
+
+    private static Set<String> getActiveDownloads(Profile profile) {
+        return activeDownloads.computeIfAbsent(
+                profile.getName(),
+                _ -> ConcurrentHashMap.newKeySet()
+        );
+    }
     public static void downloadMod(ModData mod, Profile profile, boolean deps, boolean enabled){
         CompletableFuture<Void> download = CompletableFuture.runAsync(() -> {
-            String key = profile.getName() + ":" + mod.getFullName();
-            if (!activeDownloads.add(key)) {
+            String key = mod.getFullName();
+            Set<String> profileDownloads = getActiveDownloads(profile);
+            if (!profileDownloads.add(key)) {
                 return;
             }
+            ModPanelElement.setProgressBar(profile);
             try(InputStream is = mod.getDownloadUrl().openStream()) {
                 if (mod.isInstalled(profile))
                     return;
@@ -354,7 +364,7 @@ public class Utils {
                 throw new RuntimeException(e);
             }
             finally {
-                activeDownloads.remove(key);
+                getActiveDownloads(profile).remove(mod.getFullName());
             }
             mod.setEnabled(profile, enabled);
             SwingUtilities.invokeLater(() -> {
@@ -363,7 +373,10 @@ public class Utils {
             });
         });
         currentDownloads.add(download);
-        download.whenComplete((_, _) -> currentDownloads.remove(download));
+        download.whenComplete((_, _) ->{
+            currentDownloads.remove(download);
+            ModPanelElement.setProgressBar(profile);
+        });
     }
 
     public static void downloadModZipStream(InputStream stream, String fullName, Profile profile){
