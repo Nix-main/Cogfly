@@ -5,6 +5,7 @@ import com.google.gson.JsonParser;
 import com.sun.jna.Native;
 import com.sun.jna.platform.win32.Advapi32Util;
 import com.sun.jna.platform.win32.WinReg;
+import dev.ambershadow.cogfly.asset.CogflyAsset;
 import dev.ambershadow.cogfly.elements.profiles.ProfilesScreenElement;
 import dev.ambershadow.cogfly.loader.ModData;
 import dev.ambershadow.cogfly.loader.ModFetcher;
@@ -24,7 +25,6 @@ import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.Charset;
 import java.nio.file.*;
 import java.time.Instant;
 import java.util.*;
@@ -33,7 +33,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.zip.ZipInputStream;
 
 public class Cogfly {
 
@@ -87,6 +86,10 @@ public class Cogfly {
             dataJson.createNewFile();
         }
         settings = Settings.load(dataJson);
+        if (!Files.exists(Paths.get(localDataPath).resolve("icon.ico")))
+            try(InputStream stream = new CogflyAsset(Cogfly.getResource("/assets/icon.ico")).url().openStream()) {
+                Files.write(Paths.get(localDataPath).resolve("icon.ico"), stream.readAllBytes());
+            }
         if (args.length > 0){
             String arg = args[0].replace("cogfly://", "");
             if (arg.toLowerCase().startsWith("launch/")){
@@ -144,10 +147,10 @@ public class Cogfly {
                             "");
 
                     if (!command.equals("\"" + exe + "\" \"%1\"")) {
-                        registerWinKey(exe, "Software\\Classes\\cogfly");
+                        registerWinKey(exe);
                     }
                 } else {
-                    registerWinKey(exe, "Software\\Classes\\cogfly");
+                    registerWinKey(exe);
                 }
             } catch (UnsatisfiedLinkError | URISyntaxException e) {
                 throw new RuntimeException(e);
@@ -563,24 +566,24 @@ public class Cogfly {
         });
     }
 
-    private static void registerWinKey(Path exe, String key) {
-        Advapi32Util.registryCreateKey(WinReg.HKEY_CURRENT_USER, key);
+    private static void registerWinKey(Path exe) {
+        Advapi32Util.registryCreateKey(WinReg.HKEY_CURRENT_USER, "Software\\Classes\\cogfly");
         Advapi32Util.registrySetStringValue(
                 WinReg.HKEY_CURRENT_USER,
-                key,
+                "Software\\Classes\\cogfly",
                 "",
                 "URL:Cogfly Protocol");
         Advapi32Util.registrySetStringValue(
                 WinReg.HKEY_CURRENT_USER,
-                key,
+                "Software\\Classes\\cogfly",
                 "URL Protocol",
                 "");
         Advapi32Util.registryCreateKey(
                 WinReg.HKEY_CURRENT_USER,
-                key + "\\shell\\open\\command");
+                "Software\\Classes\\cogfly\\shell\\open\\command");
         Advapi32Util.registrySetStringValue(
                 WinReg.HKEY_CURRENT_USER,
-                key + "\\shell\\open\\command",
+                "Software\\Classes\\cogfly\\shell\\open\\command",
                 "",
                 "\"" + exe + "\" \"%1\""
         );
