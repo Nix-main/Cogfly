@@ -460,6 +460,10 @@ public class Utils {
     }
     public static void launchModdedGame(Profile profile){
         Cogfly.logger.info("Attempting to launch game with profile: {}",  profile.getName());
+        if (isDownloading(profile)){
+            JOptionPane.showMessageDialog(FrameManager.getOrCreate().frame, "Downloads are currently in-progress for this profile. Please wait for them to complete before launching.", "Downloads in progress!", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
         Cogfly.launchGameAsync(true, profile.getBepInExPath().toString(), profile.getGamePath());
     }
 
