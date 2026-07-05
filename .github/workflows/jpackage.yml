@@ -9,12 +9,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest, macos-15-intel ]
-        arch: [amd64]
-        include:
-          - os: macos-latest
-            arch: aarch64
-
+        os: [ ubuntu-latest, windows-latest, macosos-latest ]
 
     steps:
       - name: Checkout code
@@ -40,34 +35,20 @@ jobs:
             ./gradlew clean shadowJar
           fi
 
-      - name: Build macOS amd64 dmg
-        if: runner.os == 'macOS' && matrix.arch == 'amd64'
+      - name: Build macOS dmg
+        if: runner.os == 'macOS'
         run: |
           jpackage \
               --input build/libs \
               --main-jar Cogfly-1.1.2.jar \
               --main-class dev.ambershadow.cogfly.Cogfly \
-              --name "Cogfly_intel" \
+              --name "Cogfly" \
               --type dmg \
               --vendor "Ambershadow" \
               --icon ./icons/icon.icns \
               --app-version 1.1.2 \
               --dest output/${{ runner.os }}-${{ matrix.arch }} \
-              --verbose
-
-      - name: Build macOS aarch64 dmg
-        if: runner.os == 'macOS' && matrix.arch == 'aarch64'
-        run: |
-          jpackage \
-              --input build/libs \
-              --main-jar Cogfly-1.1.2.jar \
-              --main-class dev.ambershadow.cogfly.Cogfly \
-              --name "Cogfly_silicon" \
-              --type dmg \
-              --vendor "Ambershadow" \
-              --icon ./icons/icon.icns \
-              --app-version 1.1.2 \
-              --dest output/${{ runner.os }}-${{ matrix.arch }} \
+              --resource-dir plist \
               --verbose
 
       - name: Build MSI
@@ -86,6 +67,7 @@ jobs:
             --win-menu `
             --win-shortcut `
             --verbose
+
       - name: Build EXE
         if: runner.os == 'Windows' && matrix.arch == 'amd64'
         run: |
@@ -163,7 +145,7 @@ jobs:
           chmod +x appimagetool
           ls -l output/appimage/Cogfly-Linux_amd64
           export APPIMAGE_EXTRACT_AND_RUN=1
-          ./appimagetool output/appimage/Cogfly-Linux_amd64 output/${{ runner.os }}-${{ matrix.arch }}/Cogfly-1.1.2.AppImage
+          ./appimagetool -u output/appimage/Cogfly-Linux_amd64 output/${{ runner.os }}-${{ matrix.arch }}/Cogfly-1.1.2.AppImage
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
