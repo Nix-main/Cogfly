@@ -35,7 +35,6 @@ public class FrameManager {
         screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         frame = new JFrame();
         frame.setTitle("Cogfly - v" + Cogfly.version);
-        frame.setResizable(false);
         frame.setMinimumSize(new Dimension(1200, 750));
         frame.setPreferredSize(new Dimension(1200, 750));
         frame.setLocation(screenSize.width/2-frame.getWidth()/2,screenSize.height/2-frame.getHeight()/2);
