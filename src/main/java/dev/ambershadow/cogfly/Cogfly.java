@@ -179,7 +179,6 @@ public class Cogfly {
             data.add(new ModData(object));
         }
         downloadPack(latestPackVer);
-        downloadDoorstop(Paths.get(settings.gamePath));
         if (settings.baseGameEnabled)
             Cogfly.downloadBepInEx(Path.of(settings.gamePath));
         data.sort(
@@ -230,7 +229,9 @@ public class Cogfly {
         Files.write(ver, version.getBytes());
     }
 
-    public static void downloadDoorstop(Path path){
+    private static void downloadDoorstop(Path path){
+        if (hasDoorstop(path))
+            return;
         try(Stream<Path> files = Files.list(doorstop)) {
             for (Path file : files.toList()) {
                 if (!latestPackVer.equals(oldPackVersion)) {
@@ -244,6 +245,20 @@ public class Cogfly {
             throw new RuntimeException(e);
         }
     }
+
+    private static boolean hasDoorstop(Path path) {
+        boolean exists = false;
+        try (Stream<Path> files = Files.list(doorstop)) {
+            for (Path file : files.toList()) {
+                exists = Files.exists(path.resolve(file.getFileName()));
+            }
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return exists;
+    }
+
     public static void downloadBepInEx(Path path){
         Path bepindll = path.resolve("BepInEx/core/BepInEx.dll");
         if (Files.exists(bepindll))
@@ -490,6 +505,8 @@ public class Cogfly {
             ProcessBuilder builder = new ProcessBuilder();
             List<String> cmds = new ArrayList<>();
             Path game = Paths.get(gamePath);
+            if (enabled)
+                downloadDoorstop(game);
             Path gameAppPath = game.resolve(Utils.getGameExecutable());
             if (Utils.OperatingSystem.current().equals(Utils.OperatingSystem.MAC)) {
                 builder.directory(game.toFile());

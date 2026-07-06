@@ -74,13 +74,8 @@ public class Profile {
         }
         gamePath = Cogfly.settings.gamePath;
     }
-
-    public void setGamePathWithoutSaving(String gamePath){
-        this.gamePath = gamePath;
-        CompletableFuture.runAsync(() -> Cogfly.downloadDoorstop(Paths.get(Cogfly.settings.gamePath)));
-    }
     public void setGamePath(String gamePath){
-        setGamePathWithoutSaving(gamePath);
+        this.gamePath = gamePath;
         try(JsonWriter writer = new JsonWriter(Files.newBufferedWriter(getPath().resolve("cogfly_data.json")))) {
             writer.beginObject();
             writer.name("gamePath");
