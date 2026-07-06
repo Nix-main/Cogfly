@@ -1,0 +1,8 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=PROFILE_NAME
+Exec=xdg-open "cogfly://launch/PROFILE_NAME"
+Icon=ICON_PATH
+Terminal=false
+Categories=Game;

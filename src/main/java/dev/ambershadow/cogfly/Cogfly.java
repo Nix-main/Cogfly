@@ -5,6 +5,7 @@ import com.google.gson.JsonParser;
 import com.sun.jna.Native;
 import com.sun.jna.platform.win32.Advapi32Util;
 import com.sun.jna.platform.win32.WinReg;
+import dev.ambershadow.cogfly.asset.Assets;
 import dev.ambershadow.cogfly.asset.CogflyAsset;
 import dev.ambershadow.cogfly.elements.profiles.ProfilesScreenElement;
 import dev.ambershadow.cogfly.loader.ModData;
@@ -89,6 +90,10 @@ public class Cogfly {
         if (!Files.exists(Paths.get(localDataPath).resolve("icon.ico")))
             try(InputStream stream = new CogflyAsset(Cogfly.getResource("/assets/icon.ico")).url().openStream()) {
                 Files.write(Paths.get(localDataPath).resolve("icon.ico"), stream.readAllBytes());
+            }
+        if (!Files.exists(Paths.get(localDataPath).resolve("icon.png")))
+            try(InputStream stream = Assets.icon.url().openStream()) {
+                Files.write(Paths.get(localDataPath).resolve("icon.png"), stream.readAllBytes());
             }
         if (args.length > 0){
             String arg = args[0].replace("cogfly://", "");

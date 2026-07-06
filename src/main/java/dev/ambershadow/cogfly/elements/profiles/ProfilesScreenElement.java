@@ -7,12 +7,19 @@ import dev.ambershadow.cogfly.util.*;
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
 import java.awt.event.MouseEvent;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 public class ProfilesScreenElement extends JPanel implements ReloadablePage {
@@ -208,10 +215,91 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
         JButton createProfile = new JButton("Create Profile");
         createProfile.addActionListener(_ -> createPrompt(() -> {}));
 
+        JButton createShortcut = new JButton("Create Shortcut");
+        createShortcut.addActionListener(_ -> {
+            JDialog dialog = new JDialog(FrameManager.getOrCreate().frame, "Create Shortcut", true);
+            dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+            dialog.setLocationRelativeTo(null);
+            List<Profile> profiles = new ArrayList<>(ProfileManager.profiles);
+            JComboBox<String> profileComboBox = new JComboBox<>();
+            profiles.forEach(profile -> profileComboBox.addItem(profile.getName() + " (" + profile.getPath() + ")"));
+            String def = switch(Utils.OperatingSystem.current()) {
+                case WINDOWS -> FileSystemView.getFileSystemView().getHomeDirectory().getAbsolutePath();
+                case MAC -> Paths.get(System.getProperty("user.home"), "Desktop").toAbsolutePath().toString();
+                case LINUX -> Paths.get(System.getProperty("user.home"), ".local/share/applications").toAbsolutePath().toString();
+                case OTHER -> "";
+            };
+            JButton path = new JButton(def);
+            path.addActionListener(_ -> Utils.pickFolder((folder) ->
+                path.setText(folder.toAbsolutePath().toString())));
+            JButton create = new JButton("Create");
+            create.addActionListener(_ -> {
+                dialog.dispose();
+                Profile profile = profiles.get(profileComboBox.getSelectedIndex());
+                Path loc = Path.of(path.getText());
+                try {
+                    switch (Utils.OperatingSystem.current()){
+                        case WINDOWS -> {
+                            String cmd =
+                                    String.format("$s=(New-Object -COM WScript.Shell).CreateShortcut('%s');" +
+                                            "$s.TargetPath='explorer.exe';" +
+                                            "$s.Arguments='cogfly://launch/%s';" +
+                                            "$s.IconLocation='%s,0';" +
+                                            "$s.Save()",
+                                            loc.resolve(profile.getName() + ".lnk").toAbsolutePath().toString(),
+                                            profile.getName(),
+                                            Path.of(Cogfly.localDataPath).resolve("icon.ico").toAbsolutePath());
+
+                                new ProcessBuilder(
+                                        "powershell.exe",
+                                        "-Command",
+                                        cmd
+                                ).start();
+                        }
+                        case LINUX -> {
+                            try(InputStream entry = Cogfly.getResource("/Profile.desktop").openStream()) {
+                                String desktop = new String(
+                                        entry.readAllBytes(),
+                                        StandardCharsets.UTF_8
+                                );
+                                desktop = desktop.replace("PROFILE_NAME", profile.getName());
+                                desktop = desktop.replace("ICON_PATH", Path.of(Cogfly.localDataPath).resolve("icon.png").toAbsolutePath().toString());
+                                Path file = loc.resolve(profile.getName() + ".desktop");
+                                Files.writeString(file, desktop);
+                                Set<PosixFilePermission> perms = Files.getPosixFilePermissions(file);
+                                perms.add(PosixFilePermission.OWNER_EXECUTE);
+                                perms.add(PosixFilePermission.GROUP_EXECUTE);
+                                perms.add(PosixFilePermission.OTHERS_EXECUTE);
+                                Files.setPosixFilePermissions(file, perms);
+                            }
+                        }
+                        case MAC -> {
+
+                        }
+                    }
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+
+            JPanel panel = new JPanel();
+            panel.add(new JLabel("Profile: "), BorderLayout.WEST);
+            panel.add(profileComboBox, BorderLayout.EAST);
+            JPanel pathPanel = new JPanel();
+            pathPanel.add(new JLabel("Path: "), BorderLayout.WEST);
+            pathPanel.add(path, BorderLayout.EAST);
+            dialog.add(panel, BorderLayout.NORTH);
+            dialog.add(pathPanel, BorderLayout.CENTER);
+            dialog.add(create, BorderLayout.SOUTH);
+            dialog.pack();
+            dialog.setVisible(true);
+        });
+
         upperPanel.add(createProfile);
         upperPanel.add(launchVanilla);
         upperPanel.add(importFromFile);
         upperPanel.add(importFromCode);
+        upperPanel.add(createShortcut);
 
         setLayout(new BorderLayout());
         setPreferredSize(new Dimension(1150, 600));
