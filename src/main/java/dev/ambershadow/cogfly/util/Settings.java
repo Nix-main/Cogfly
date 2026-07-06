@@ -74,6 +74,7 @@ public class Settings {
     public boolean useRelativeTime = false;
     public boolean profileSpecificPaths = false;
     public boolean showInstalledModsOnTop = false;
+    public boolean launchWithSteam = false;
 
     private Settings(){}
     private transient File dataFile;

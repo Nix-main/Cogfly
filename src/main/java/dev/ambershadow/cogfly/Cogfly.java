@@ -502,79 +502,88 @@ public class Cogfly {
     public static void launchGameAsync(boolean enabled, String path, String gamePath){
         CompletableFuture.runAsync(() -> {
             logger.info("Launching game. OS: {}, Path: {}", Utils.OperatingSystem.current(), path);
-            ProcessBuilder builder = new ProcessBuilder();
-            List<String> cmds = new ArrayList<>();
             Path game = Paths.get(gamePath);
             if (enabled)
                 downloadDoorstop(game);
-            Path gameAppPath = game.resolve(Utils.getGameExecutable());
-            if (Utils.OperatingSystem.current().equals(Utils.OperatingSystem.MAC)) {
-                builder.directory(game.toFile());
-                cmds.add("arch");
-                cmds.add("-x86_64");
-                cmds.add("sh");
-                cmds.add(Utils.getGameExecutable());
-            } else if (Utils.OperatingSystem.current().equals(Utils.OperatingSystem.LINUX)) {
-                builder.directory(game.toFile());
-                cmds.add("setsid");
-                cmds.add("sh");
-                cmds.add(Utils.getGameExecutable());
-            } else {
-                cmds.add("cmd");
-                cmds.add("/c");
-                cmds.add("start");
-                cmds.add("\"\"");
-                cmds.add(gameAppPath.toString());
-            }
-            cmds.add("--doorstop-enabled");
-            cmds.add(String.valueOf(enabled));
+            List<String> args = new ArrayList<>();
+            args.add("--doorstop-enabled");
+            args.add(String.valueOf(enabled));
             if (enabled) {
-                cmds.add("--doorstop-target-assembly");
-                cmds.add(Paths.get(path).resolve("core/BepInEx.Preloader.dll").toString());
+                args.add("--doorstop-target-assembly");
+                String target = "\"" + Paths.get(path).resolve("core/BepInEx.Preloader.dll") + "\"";
+                if (settings.launchWithSteam)
+                    target = target.replace("/", "%2F");
+                args.add(target);
             }
-            builder.command(cmds);
-            logger.info("Launch command: {}", cmds);
-            /*if (settings.launchWithSteam) {
-                logger.info("Launching with Steam Client");
-                if (Files.exists(game.resolve("steam_appid.txt")))
+            String arg = String.join(" ", args);
+            logger.info("Launch arguments: {}", arg);
+            if (settings.launchWithSteam) {
+                String cmd = "steam://rungameid/1030300//" + String.join(" ", args) + "/";
+                logger.info("Launching with Steam Client. Command={}", cmd);
+                cmd = cmd.replace(" ", "%20").replace("\\", "%5C").replace("\"", "%22");
+                if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
                     try {
-                        Files.delete(game.resolve("steam_appid.txt"));
+                        Desktop.getDesktop().browse(URI.create(cmd));
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
-            } else {
-                logger.info("Launching standalone");
-                if (!Files.exists(game.resolve("steam_appid.txt")))
-                    try {
-                        Files.writeString(game.resolve("steam_appid.txt"), "1030300");
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-            }*/
-            try {
-                Process process = builder.start();
-                CompletableFuture<String> stdoutFuture = CompletableFuture.supplyAsync(() -> {
-                    try { return new String(process.getInputStream().readAllBytes()); }
-                    catch (IOException e) { return ""; }
-                });
-                CompletableFuture<String> stderrFuture = CompletableFuture.supplyAsync(() -> {
-                    try { return new String(process.getErrorStream().readAllBytes()); }
-                    catch (IOException e) { return ""; }
-                });
-                int exitCode = process.waitFor();
-                String stdout = stdoutFuture.join();
-                String stderr = stderrFuture.join();
-                if (exitCode != 0) {
-                    String details = Stream.of(
-                            stdout.isBlank() ? null : "stdout: " + stdout.trim(),
-                            stderr.isBlank() ? null : "stderr: " + stderr.trim()
-                    ).filter(Objects::nonNull).collect(Collectors.joining("\n"));
-                    if (details.isBlank()) details = "Process exited with code " + exitCode;
-                    logger.warn("Game process exited with code {}\n{}", exitCode, details);
-                    showLaunchError(details);
                 }
-            } catch (IOException | InterruptedException e) {
-                throw new RuntimeException(e);
+            } else {
+                List<String> cmds = new ArrayList<>();
+                switch (Utils.OperatingSystem.current()) {
+                    case MAC -> {
+                        cmds.add("arch");
+                        cmds.add("-x86_64");
+                        cmds.add("sh");
+                    }
+                    case LINUX -> {
+                        cmds.add("setsid");
+                        cmds.add("sh");
+                    }
+                    default -> {
+                        cmds.add("cmd");
+                        cmds.add("/c");
+                        cmds.add("start");
+                        cmds.add("\"\"");
+                    }
+                }
+                cmds.add(Utils.getGameExecutable());
+                ProcessBuilder builder = new ProcessBuilder();
+                builder.directory(game.toFile());
+                cmds.addAll(args);
+                builder.command(cmds);
+                logger.info("Launching standalone. Command={}, Directory={}", String.join(" ", cmds), game);
+                try {
+                    Process process = builder.start();
+                    CompletableFuture<String> stdoutFuture = CompletableFuture.supplyAsync(() -> {
+                        try {
+                            return new String(process.getInputStream().readAllBytes());
+                        } catch (IOException e) {
+                            return "";
+                        }
+                    });
+                    CompletableFuture<String> stderrFuture = CompletableFuture.supplyAsync(() -> {
+                        try {
+                            return new String(process.getErrorStream().readAllBytes());
+                        } catch (IOException e) {
+                            return "";
+                        }
+                    });
+                    int exitCode = process.waitFor();
+                    String stdout = stdoutFuture.join();
+                    String stderr = stderrFuture.join();
+                    if (exitCode != 0) {
+                        String details = Stream.of(
+                                stdout.isBlank() ? null : "stdout: " + stdout.trim(),
+                                stderr.isBlank() ? null : "stderr: " + stderr.trim()
+                        ).filter(Objects::nonNull).collect(Collectors.joining("\n"));
+                        if (details.isBlank()) details = "Process exited with code " + exitCode;
+                        logger.warn("Game process exited with code {}\n{}", exitCode, details);
+                        showLaunchError(details);
+                    }
+                } catch (IOException | InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
             }
         }).exceptionally(e -> {
             logger.error("Failed to launch game", e);
