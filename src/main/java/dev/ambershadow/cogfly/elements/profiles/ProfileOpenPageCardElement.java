@@ -205,44 +205,42 @@ public class ProfileOpenPageCardElement extends JPanel {
         });
 
         JButton install = new JButton("Install Manually");
-        install.addActionListener(_ -> Utils.pickFile((path) -> {
-            CompletableFuture.runAsync(() -> {
-                try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(path))) {
-                    String fullName = "";
-                    ZipEntry entry;
+        install.addActionListener(_ -> Utils.pickFile((path) -> CompletableFuture.runAsync(() -> {
+            try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(path))) {
+                String fullName = "";
+                ZipEntry entry;
 
-                    while ((entry = zis.getNextEntry()) != null) {
-                        if (entry.getName().endsWith("manifest.json")) {
+                while ((entry = zis.getNextEntry()) != null) {
+                    if (entry.getName().endsWith("manifest.json")) {
 
-                            ByteArrayOutputStream os = new ByteArrayOutputStream();
-                            byte[] buffer = new byte[4096];
-                            int len;
-                            while ((len = zis.read(buffer)) > 0) {
-                                os.write(buffer, 0, len);
-                            }
-                            String content = os.toString(StandardCharsets.UTF_8);
-                            JsonObject object = JsonParser.parseString(content).getAsJsonObject();
-                            JsonElement element = object.get("FullName");
-                            if (element != null && !element.isJsonNull()) {
-                                fullName = element.getAsString();
-                            }
-                            zis.closeEntry();
-                            break;
+                        ByteArrayOutputStream os = new ByteArrayOutputStream();
+                        byte[] buffer = new byte[4096];
+                        int len;
+                        while ((len = zis.read(buffer)) > 0) {
+                            os.write(buffer, 0, len);
+                        }
+                        String content = os.toString(StandardCharsets.UTF_8);
+                        JsonObject object = JsonParser.parseString(content).getAsJsonObject();
+                        JsonElement element = object.get("FullName");
+                        if (element != null && !element.isJsonNull()) {
+                            fullName = element.getAsString();
                         }
                         zis.closeEntry();
+                        break;
                     }
-                    if (!fullName.isEmpty()) {
-                        Utils.downloadModZipStream(Files.newInputStream(path), fullName, profile);
-                    } else {
-                        Files.copy(path, profile.getPluginsPath().resolve(path.getFileName()));
-                    }
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
+                    zis.closeEntry();
                 }
-                profile.refreshMods();
-                ModPanelElement.redraw(profile);
-            });
-        }, "*", "dll"));
+                if (!fullName.isEmpty()) {
+                    Utils.downloadModZipStream(Files.newInputStream(path), fullName, profile);
+                } else {
+                    Files.copy(path, profile.getPluginsPath().resolve(path.getFileName()));
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            profile.refreshMods();
+            ModPanelElement.redraw(profile);
+        }), "*", "dll"));
 
         upperPanel.add(launch);
         upperPanel.add(updateAll);

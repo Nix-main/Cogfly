@@ -246,7 +246,7 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
                                             "$s.Arguments='cogfly://launch/%s';" +
                                             "$s.IconLocation='%s,0';" +
                                             "$s.Save()",
-                                            loc.resolve(profile.getName() + ".lnk").toAbsolutePath().toString(),
+                                            loc.resolve(profile.getName() + ".lnk").toAbsolutePath(),
                                             profile.getName(),
                                             Path.of(Cogfly.localDataPath).resolve("icon.ico").toAbsolutePath());
 
@@ -326,7 +326,7 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
             Icon icon = ProfilesScreenElement.icon;
             if (profiles.get(i-1).getIcon() != null)
                 icon = profiles.get(i-1).getIcon();
-            rowPanel.add(new ProfileCardElement(profiles.get(i-1), icon, this));
+            rowPanel.add(new ProfileCardElement(profiles.get(i-1), icon));
 
             if (i % maxPerRow == 0) {
                 parentPanel.add(rowPanel);

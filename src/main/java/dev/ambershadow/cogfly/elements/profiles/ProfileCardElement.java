@@ -17,7 +17,7 @@ public class ProfileCardElement extends JPanel {
 
     public static Color normal = UIManager.getColor("Button.background").darker();
     public static Color hover = UIManager.getColor("Button.pressedBackground");
-    public ProfileCardElement(Profile profile, Icon icon, ProfilesScreenElement screen) {
+    public ProfileCardElement(Profile profile, Icon icon) {
         setPreferredSize(new Dimension(200, 160));
         setLayout(new BorderLayout(8, 8));
         ProfileOpenPageCardElement panel = new ProfileOpenPageCardElement(profile);

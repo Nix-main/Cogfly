@@ -230,5 +230,6 @@ public class SettingsDialog extends JDialog {
         initialRelativeTime = Cogfly.settings.useRelativeTime;
         initialPerProfilePaths = Cogfly.settings.profileSpecificPaths;
         initialShowInstalledModsOnTop = Cogfly.settings.showInstalledModsOnTop;
+        initialProfileSources = Cogfly.settings.profileSources;
     }
 }
