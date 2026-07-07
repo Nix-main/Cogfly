@@ -24,7 +24,6 @@ import java.util.zip.GZIPInputStream;
 
 public class ModFetcher {
     private static final String Url = "https://thunderstore.io/c/hollow-knight-silksong/api/v1/package-listing-index/";
-    private static List<JsonObject> fallbackList = new ArrayList<>();
     public static List<JsonObject> getAllMods() {
         List<JsonObject> all = new ArrayList<>();
         String content;
@@ -44,14 +43,13 @@ public class ModFetcher {
             return new ArrayList<>();
         }
         catch (IOException e) {
-            return fallbackList;
+            return new ArrayList<>();
         }
 
         JsonArray items = JsonParser.parseString(content).getAsJsonArray();
         for (JsonElement el : items)
             all.add(el.getAsJsonObject());
 
-        fallbackList = all;
         ModData.rawModData = all;
         return all;
     }

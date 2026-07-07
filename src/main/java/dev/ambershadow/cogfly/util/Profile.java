@@ -9,11 +9,16 @@ import javax.swing.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class Profile {
-    List<ModData> installedMods = new ArrayList<>();
+    private HashMap<String, ModData> installedMods = new HashMap<>();
+    private Set<String> disabledMods = new HashSet<>();
     private final Path path;
     private final String name;
     private String gamePath = Cogfly.settings.gamePath;
@@ -39,19 +44,30 @@ public class Profile {
         return getBepInExPath().resolve("plugins");
     }
     public List<ModData> getInstalledMods() {
-        return installedMods;
+        return installedMods.values().stream().toList();
     }
 
     public void removeMod(ModData mod){
-        ModData m = new ArrayList<>(installedMods).stream().filter(md -> md.equalsIgnoreVersion(mod)).findFirst().orElse(null);
-        installedMods.remove(m);
+        installedMods.remove(mod.getFullName());
+    }
+
+    public void addMod(ModData mod){
+        installedMods.put(mod.getFullName(), mod);
+    }
+
+    public void setEnabled(ModData mod, boolean enabled){
+        if (enabled)
+            disabledMods.remove(mod.getFullName());
+        else
+            disabledMods.add(mod.getFullName());
+    }
+
+    public boolean isEnabled(ModData mod){
+        return !disabledMods.contains(mod.getFullName());
     }
 
     public String getInstalledVersion(ModData mod) {
-        var x = installedMods.stream().filter(md -> md.equalsIgnoreVersion(mod)).toList();
-        if (!x.isEmpty())
-            return x.getFirst().getVersionNumber();
-        return "";
+        return installedMods.get(mod.getFullName()).getVersionNumber();
     }
 
     public Icon getIcon() {
@@ -85,12 +101,21 @@ public class Profile {
     }
 
     public void refreshMods(){
-        getInstalledMods().clear();
-        getInstalledMods().addAll(ModFetcher.getInstalledMods(getPluginsPath()));
+        installedMods = ModFetcher.getInstalledMods(getPluginsPath())
+                .stream().collect(Collectors.toMap(
+                        ModData::getFullName,
+                        Function.identity(),
+                        (_, v) -> v,
+                        HashMap::new
+                ));
+        disabledMods = installedMods.values().stream()
+                .map(ModData::getFullName)
+                .filter(fullName -> ModData.containsOldFile(getPluginsPath().resolve(fullName)))
+                .collect(Collectors.toSet());
     }
 
     public List<ModData> getManualMods(){
-        return installedMods.stream().filter(ModData::isManual).toList();
+        return installedMods.values().stream().filter(ModData::isManual).toList();
     }
 
     public String getName() {

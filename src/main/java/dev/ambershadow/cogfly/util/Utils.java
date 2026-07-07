@@ -295,7 +295,7 @@ public class Utils {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            profile.refreshMods();
+            profile.removeMod(mod);
             ModPanelElement.redraw(profile);
             return;
         }
@@ -344,7 +344,7 @@ public class Utils {
             if (!profileDownloads.add(key)) {
                 return;
             }
-            ModPanelElement.setProgressBar(profile);
+            SwingUtilities.invokeLater(() -> ModPanelElement.setProgressBar(profile));
             try(InputStream is = mod.getDownloadUrl().openStream()) {
                 if (mod.isInstalled(profile))
                     return;
@@ -368,7 +368,7 @@ public class Utils {
             }
             mod.setEnabled(profile, enabled);
             SwingUtilities.invokeLater(() -> {
-                profile.refreshMods();
+                profile.addMod(mod);
                 ModPanelElement.redraw(profile);
             });
         });

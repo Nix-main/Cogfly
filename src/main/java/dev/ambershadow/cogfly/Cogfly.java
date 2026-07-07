@@ -6,6 +6,7 @@ import com.sun.jna.Native;
 import com.sun.jna.platform.win32.Advapi32Util;
 import com.sun.jna.platform.win32.WinReg;
 import dev.ambershadow.cogfly.asset.Assets;
+import dev.ambershadow.cogfly.elements.ModPanelElement;
 import dev.ambershadow.cogfly.elements.profiles.ProfilesScreenElement;
 import dev.ambershadow.cogfly.loader.ModData;
 import dev.ambershadow.cogfly.loader.ModFetcher;
@@ -18,10 +19,7 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import java.awt.*;
 import java.io.*;
-import java.net.ConnectException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
+import java.net.*;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -53,7 +51,7 @@ public class Cogfly {
             add("Kesomannen-GaleModManager");
         }
     };
-    public static List<ModData> mods = null;
+    public static List<ModData> mods = new ArrayList<>();
     public static String localDataPath;
     public static String roamingDataPath;
     public static File dataJson;
@@ -65,6 +63,7 @@ public class Cogfly {
     public static Path doorstop;
     public static Path pack;
     private static String oldPackVersion;
+    public static boolean createdProfiles;
     public static @SuppressWarnings("unused") void main(String[] args) throws IOException {
         AppDirs dirs = AppDirsFactory.getInstance();
         localDataPath = dirs.getUserDataDir("Cogfly", null, "");
@@ -165,36 +164,53 @@ public class Cogfly {
                 throw new RuntimeException(e);
             }
         }
-        long start = System.currentTimeMillis();
-        List<JsonObject> m = ModFetcher.getAllMods();
-        List<ModData> data = new ArrayList<>();
-        for (JsonObject object : m) {
-            if (object.get("full_name").getAsString().equals("silksong_modding-BepInExPack_Silksong")) {
-                JsonObject version = object.get("versions").getAsJsonArray().get(0).getAsJsonObject();
-                packUrl = URL.of(URI.create(version.get("download_url").getAsString()), null);
-                latestPackVer =  version.get("version_number").getAsString();
+        final long modStart = System.currentTimeMillis();
+        CompletableFuture.runAsync(() -> {
+                    List<JsonObject> m = ModFetcher.getAllMods();
+                    List<ModData> data = new ArrayList<>();
+                    for (JsonObject object : m) {
+                        if (object.get("full_name").getAsString().equals("silksong_modding-BepInExPack_Silksong")) {
+                            JsonObject version = object.get("versions").getAsJsonArray().get(0).getAsJsonObject();
+                            try {
+                                packUrl = URL.of(URI.create(version.get("download_url").getAsString()), null);
+                            } catch (MalformedURLException e) {
+                                throw new RuntimeException(e);
+                            }
+                            latestPackVer = version.get("version_number").getAsString();
+                        }
+                        if (object.get("is_deprecated").getAsBoolean())
+                            continue;
+                        if (object.get("has_nsfw_content").getAsBoolean())
+                            continue;
+                        if (excludedMods.contains(object.get("full_name").getAsString()))
+                            continue;
+                        data.add(new ModData(object));
+                    }
+                    data.sort(
+                            Comparator.comparing(
+                                    o -> o.getName().toLowerCase(),
+                                    Comparator.nullsLast(Comparator.naturalOrder())
+                            ));
+                    Cogfly.mods = data;
+                }
+        ).whenComplete((_, _) -> {
+            long after = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+            logger.info("Loaded and parsed mods in {} milliseconds", (System.currentTimeMillis() - modStart));
+            ModPanelElement.redrawAll();
+            long start = System.currentTimeMillis();
+            ProfileManager.loadProfiles();
+            logger.info("Loaded profiles in {} milliseconds", (System.currentTimeMillis() - start));
+            Cogfly.createdProfiles = true;
+            ProfilesScreenElement.queueRefresh();
+            FrameManager.getOrCreate().getCurrentPage().reload();
+            try {
+                downloadPack(latestPackVer);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-            if (object.get("is_deprecated").getAsBoolean())
-                continue;
-            if (object.get("has_nsfw_content").getAsBoolean())
-                continue;
-            if (excludedMods.contains(object.get("full_name").getAsString()))
-                continue;
-            data.add(new ModData(object));
-        }
-        downloadPack(latestPackVer);
-        if (settings.baseGameEnabled)
-            Cogfly.downloadBepInEx(Path.of(settings.gamePath));
-        data.sort(
-                Comparator.comparing(
-                        o -> o.getName().toLowerCase(),
-                        Comparator.nullsLast(Comparator.naturalOrder())
-                ));
-        Cogfly.mods = data;
-        logger.info("Loaded and parsed mods in {} milliseconds", (System.currentTimeMillis() - start));
-        start = System.currentTimeMillis();
-        ProfileManager.loadProfiles();
-        logger.info("Loaded profiles in {} milliseconds", (System.currentTimeMillis() - start));
+            if (settings.baseGameEnabled)
+                Cogfly.downloadBepInEx(Path.of(settings.gamePath));
+        });
         UIManager.put("TextComponent.arc", 5);
         logger.info("Showing UI");
         FrameManager.getOrCreate().frame.setVisible(true);

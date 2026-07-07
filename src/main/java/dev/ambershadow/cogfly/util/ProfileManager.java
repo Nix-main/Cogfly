@@ -128,12 +128,12 @@ public class ProfileManager {
                 if (!file.isDirectory())
                     continue;
                 Profile profile = loadProfile(file);
-                profile.installedMods = ModFetcher.getInstalledMods(profile.getPluginsPath());
+                profile.refreshMods();
                 profiles.add(profile);
             }
         }
         baseGame = new Profile("Base Game", Paths.get(Cogfly.settings.gamePath), Assets.silksongIcon.getAsIcon());
-        baseGame.installedMods = ModFetcher.getInstalledMods(baseGame.getPluginsPath());
+        baseGame.refreshMods();
     }
 
     public static Profile loadProfile(File file){

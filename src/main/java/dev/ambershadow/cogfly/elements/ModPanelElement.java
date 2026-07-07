@@ -18,6 +18,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ModPanelElement extends JPanel {
     private static final HashMap<Profile, ModPanelElement> panels = new HashMap<>();
@@ -25,6 +26,10 @@ public class ModPanelElement extends JPanel {
     public static void redraw(Profile profile) {
         if (panels.containsKey(profile))
             panels.get(profile).redrawPanel();
+    }
+
+    public static void redrawAll(){
+        panels.values().forEach(ModPanelElement::redrawPanel);
     }
 
     public static void setProgressBar(Profile profile) {
@@ -135,12 +140,12 @@ public class ModPanelElement extends JPanel {
         scrollPane.setSize(getSize());
     }
 
+    private final Map<ModData, Mod> mods = new HashMap<>();
+
     private void refreshButtons(List<ModData> mods) {
-        buttonsPanel.removeAll();
         List<ModData> installed = new ArrayList<>();
         if (Cogfly.settings.showInstalledModsOnTop) {
             List<ModData> notInstalled = new ArrayList<>();
-
             for (ModData mod : mods) {
                 if (mod.isInstalled(profile))
                     installed.add(mod);
@@ -148,143 +153,183 @@ public class ModPanelElement extends JPanel {
                     notInstalled.add(mod);
             }
             installed.addAll(notInstalled);
-        }
-        else
+        } else {
             installed.addAll(mods);
-
+        }
+        buttonsPanel.removeAll();
         for (ModData mod : installed) {
-            JPanel modPanel = new JPanel();
-            modPanel.setLayout(new BoxLayout(modPanel, BoxLayout.Y_AXIS));
+            Mod entry = this.mods.get(mod);
+            if (entry == null) {
+                entry = new Mod();
+                JPanel modPanel = new JPanel();
+                modPanel.setLayout(new BoxLayout(modPanel, BoxLayout.Y_AXIS));
 
-            JPanel rowPanel = new JPanel();
-            rowPanel.setLayout(new BoxLayout(rowPanel, BoxLayout.X_AXIS));
+                JPanel rowPanel = new JPanel();
+                rowPanel.setLayout(new BoxLayout(rowPanel, BoxLayout.X_AXIS));
 
-            JToggleButton toggleButton;
-            if (mod.getName().toLowerCase().contains("bepinex"))
-                toggleButton = new JToggleButton("▼ " + mod.getName().replace("_", " "));
-            else {
-                String name = mod.getName().replace("_", " ");
-                name = Cogfly.settings.modNameSpaces ? name.replaceAll("(?<=[a-z])(?=[A-Z])", " ") : name;
-                toggleButton = new JToggleButton("▼ " + name);
-            }
-            toggleButton.setHorizontalAlignment(SwingConstants.LEFT);
-            toggleButton.setAlignmentX(Component.LEFT_ALIGNMENT);
-            toggleButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, toggleButton.getPreferredSize().height));
-            JButton installButton = new JButton();
-            installButton.setText(mod.isInstalled(profile) ? mod.isOutdated(profile) ? "Update" : "Uninstall" : "Install");
-            installButton.setPreferredSize(new Dimension(100, installButton.getPreferredSize().height));
-            installButton.setAlignmentY(Component.CENTER_ALIGNMENT);
-
-            boolean enabled = mod.isEnabled(profile);
-            JToggleButton enableButton = new JToggleButton(enabled ? "On" : "Off");
-            enableButton.setSelected(enabled);
-            enableButton.setEnabled(mod.isInstalled(profile));
-            enableButton.addActionListener(_ -> {
-                mod.setEnabled(profile, enableButton.isSelected());
-                enableButton.setText(enableButton.isSelected() ? "On" : "Off");
-            });
-
-            rowPanel.add(enableButton);
-            rowPanel.add(Box.createHorizontalGlue());
-            rowPanel.add(toggleButton);
-            rowPanel.add(Box.createHorizontalGlue());
-            rowPanel.add(installButton);
-
-            rowPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, toggleButton.getPreferredSize().height));
-            rowPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-            modPanel.add(rowPanel);
-
-            JPanel holderPanel = new JPanel();
-            holderPanel.setBorder(BorderFactory.createEmptyBorder(2, 10, 2, 10));
-            JPanel infoPanel = new JPanel();
-            infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
-            infoPanel.add(new JLabel("Description: " + mod.getDescription()));
-            infoPanel.add(new JLabel("Author: " + mod.getAuthor()));
-            infoPanel.add(new JLabel("Latest version: " + mod.getVersionNumber()));
-            infoPanel.add(new JLabel("Total downloads: " + mod.getTotalDownloads()));
-            Instant created = Instant.parse(mod.getDateCreated());
-            ZoneId userZone = ZoneId.systemDefault();
-            ZonedDateTime localCreated = created.atZone(userZone);
-            Instant updated = Instant.parse(mod.getDateModified());
-            ZonedDateTime localModified = updated.atZone(userZone);
-            DateTimeFormatter formatter =
-                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-            if (!Cogfly.settings.useRelativeTime) {
-                infoPanel.add(new JLabel("Date created: " + localCreated.format(formatter)));
-                infoPanel.add(new JLabel("Date updated: " + localModified.format(formatter)));
-            } else {
-                Instant now = Instant.now();
-                infoPanel.add(new JLabel("Date created: " + formatRelative(localCreated.toInstant(), now)));
-                infoPanel.add(new JLabel("Date updated: " + formatRelative(localModified.toInstant(), now)));
-            }
-            if (!mod.getDependencies().isEmpty()) {
-                infoPanel.add(new JLabel(" "));
-                infoPanel.add(new JLabel("Dependencies"));
-            }
-            for (String string : mod.getDependencies()){
-                String[] strs = string.trim().replaceAll("_", " ").split("-");
-                JLabel label;
-                if (strs.length > 2) {
-                    label = new JLabel("\t• " + strs[strs.length - 2] + " - " + strs[strs.length - 1]);
+                JToggleButton toggleButton;
+                if (mod.getName().toLowerCase().contains("bepinex")) {
+                    toggleButton = new JToggleButton("▼ " + mod.getName().replace("_", " "));
                 } else {
-                    label = new JLabel("\t• " + strs[strs.length-1]);
+                    String name = mod.getName().replace("_", " ");
+                    name = Cogfly.settings.modNameSpaces ? name.replaceAll("(?<=[a-z])(?=[A-Z])", " ") : name;
+                    toggleButton = new JToggleButton("▼ " + name);
                 }
-                label.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 0));
-                infoPanel.add(label);
-            }
+                toggleButton.setHorizontalAlignment(SwingConstants.LEFT);
+                toggleButton.setAlignmentX(Component.LEFT_ALIGNMENT);
+                toggleButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, toggleButton.getPreferredSize().height));
 
-            JButton open = new JButton("Open Thunderstore Page");
-            open.addActionListener(_ -> Utils.openURI(mod.getPackageUrl()));
-            JButton openWebsite = new JButton("Open Project Website");
-            if (mod.getWebsiteUrl() != null)
-                openWebsite.setToolTipText(mod.getWebsiteUrl().toString());
-            openWebsite.addActionListener(_ -> Utils.openURI(mod.getWebsiteUrl()));
+                JButton installButton = new JButton();
+                installButton.setPreferredSize(new Dimension(100, installButton.getPreferredSize().height));
+                installButton.setAlignmentY(Component.CENTER_ALIGNMENT);
 
-            Box buttonBox = Box.createHorizontalBox();
-            if (mod.getPackageUrl() != null)
-                buttonBox.add(open);
-            if (mod.getWebsiteUrl() != null) {
-                buttonBox.add(Box.createRigidArea(new Dimension(10, 0)));
-                buttonBox.add(openWebsite);
-            }
+                JToggleButton enableButton = new JToggleButton();
+                enableButton.addActionListener(_ -> {
+                    mod.setEnabled(profile, enableButton.isSelected());
+                    enableButton.setText(enableButton.isSelected() ? "On" : "Off");
+                });
 
-            buttonBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+                rowPanel.add(enableButton);
+                rowPanel.add(Box.createHorizontalGlue());
+                rowPanel.add(toggleButton);
+                rowPanel.add(Box.createHorizontalGlue());
+                rowPanel.add(installButton);
+                rowPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, toggleButton.getPreferredSize().height));
+                rowPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+                modPanel.add(rowPanel);
 
-            infoPanel.add(buttonBox);
-            infoPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-            holderPanel.setVisible(false);
-            holderPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-            holderPanel.add(infoPanel, BorderLayout.WEST);
-            modPanel.add(holderPanel);
-            JLabel iconLabel = new JLabel();
-            toggleButton.addActionListener(_ -> {
-                if (toggleButton.isSelected()){
-                    if (mod.getIconBytes() != null){
-                        iconLabel.setAlignmentX(Component.RIGHT_ALIGNMENT);
-                        iconLabel.setIcon(mod.getIcon());
-                        holderPanel.add(iconLabel, BorderLayout.EAST);
+                JPanel holderPanel = new JPanel();
+                holderPanel.setBorder(BorderFactory.createEmptyBorder(2, 10, 2, 10));
+                JPanel infoPanel = new JPanel();
+                infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
+                infoPanel.add(new JLabel("Description: " + mod.getDescription()));
+                infoPanel.add(new JLabel("Author: " + mod.getAuthor()));
+                infoPanel.add(new JLabel("Latest version: " + mod.getVersionNumber()));
+                infoPanel.add(new JLabel("Total downloads: " + mod.getTotalDownloads()));
+                Instant created = Instant.parse(mod.getDateCreated());
+                ZoneId userZone = ZoneId.systemDefault();
+                ZonedDateTime localCreated = created.atZone(userZone);
+                Instant updated = Instant.parse(mod.getDateModified());
+                ZonedDateTime localModified = updated.atZone(userZone);
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                if (!Cogfly.settings.useRelativeTime) {
+                    entry.created = new JLabel("Date created: " + localCreated.format(formatter));
+                    entry.updated = new JLabel("Date updated: " + localModified.format(formatter));
+                } else {
+                    Instant now = Instant.now();
+                    entry.created = new JLabel("Date created: " + formatRelative(localCreated.toInstant(), now));
+                    entry.updated = new JLabel("Date updated: " + formatRelative(localModified.toInstant(), now));
+                }
+                infoPanel.add(entry.created);
+                infoPanel.add(entry.updated);
+                if (!mod.getDependencies().isEmpty()) {
+                    infoPanel.add(new JLabel(" "));
+                    infoPanel.add(new JLabel("Dependencies"));
+                }
+                for (String string : mod.getDependencies()) {
+                    String[] strs = string.trim().replaceAll("_", " ").split("-");
+                    JLabel label;
+                    if (strs.length > 2) {
+                        label = new JLabel("\t• " + strs[strs.length - 2] + " - " + strs[strs.length - 1]);
+                    } else {
+                        label = new JLabel("\t• " + strs[strs.length - 1]);
                     }
-                } else
-                    holderPanel.remove(iconLabel);
-                holderPanel.setVisible(toggleButton.isSelected());
-                if (toggleButton.isSelected()) {
-                    toggleButton.setText(toggleButton.getText().replace('▼', '▲'));
-                } else {
-                    toggleButton.setText(toggleButton.getText().replace('▲', '▼'));
+                    label.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 0));
+                    infoPanel.add(label);
                 }
-            });
 
-            installButton.addActionListener(_ -> {
-                if (mod.isInstalled(profile) && !mod.isOutdated(profile)) Utils.removeMod(mod, profile);
-                else Utils.downloadMod(mod, profile, true);
-                filterButtons();
-            });
+                JButton open = new JButton("Open Thunderstore Page");
+                open.addActionListener(_ -> Utils.openURI(mod.getPackageUrl()));
+                JButton openWebsite = new JButton("Open Project Website");
+                if (mod.getWebsiteUrl() != null)
+                    openWebsite.setToolTipText(mod.getWebsiteUrl().toString());
+                openWebsite.addActionListener(_ -> Utils.openURI(mod.getWebsiteUrl()));
 
-            buttonsPanel.add(modPanel);
+                Box buttonBox = Box.createHorizontalBox();
+                if (mod.getPackageUrl() != null)
+                    buttonBox.add(open);
+                if (mod.getWebsiteUrl() != null) {
+                    buttonBox.add(Box.createRigidArea(new Dimension(10, 0)));
+                    buttonBox.add(openWebsite);
+                }
+                buttonBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+                infoPanel.add(buttonBox);
+                infoPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+                holderPanel.setVisible(false);
+                holderPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+                holderPanel.add(infoPanel, BorderLayout.WEST);
+                modPanel.add(holderPanel);
+
+                JLabel iconLabel = new JLabel();
+                toggleButton.addActionListener(_ -> {
+                    if (toggleButton.isSelected()) {
+                        if (mod.getIconBytes() != null) {
+                            iconLabel.setAlignmentX(Component.RIGHT_ALIGNMENT);
+                            iconLabel.setIcon(mod.getIcon());
+                            holderPanel.add(iconLabel, BorderLayout.EAST);
+                        }
+                    } else {
+                        holderPanel.remove(iconLabel);
+                    }
+                    holderPanel.setVisible(toggleButton.isSelected());
+                    if (toggleButton.isSelected()) {
+                        toggleButton.setText(toggleButton.getText().replace('▼', '▲'));
+                    } else {
+                        toggleButton.setText(toggleButton.getText().replace('▲', '▼'));
+                    }
+                });
+
+                installButton.addActionListener(_ -> {
+                    if (mod.isInstalled(profile) && !mod.isOutdated(profile)) Utils.removeMod(mod, profile);
+                    else Utils.downloadMod(mod, profile, true);
+                    update(mod, ModPanelElement.this.mods.get(mod));
+                    filterButtons();
+                });
+
+                entry.modPanel = modPanel;
+                entry.toggleButton = toggleButton;
+                entry.installButton = installButton;
+                entry.enableButton = enableButton;
+                entry.holderPanel = holderPanel;
+                entry.iconLabel = iconLabel;
+
+                update(mod, entry);
+                this.mods.put(mod, entry);
+            } else {
+                update(mod, entry);
+            }
+
+            buttonsPanel.add(entry.modPanel);
             buttonsPanel.add(Box.createVerticalStrut(5));
         }
+
         buttonsPanel.revalidate();
         buttonsPanel.repaint();
+    }
+    private void update(ModData mod, Mod entry) {
+        boolean installedNow = mod.isInstalled(profile);
+        entry.installButton.setText(installedNow ? (mod.isOutdated(profile) ? "Update" : "Uninstall") : "Install");
+
+        boolean enabled = mod.isEnabled(profile);
+        entry.enableButton.setSelected(enabled);
+        entry.enableButton.setText(enabled ? "On" : "Off");
+        entry.enableButton.setEnabled(installedNow);
+
+        Instant created = Instant.parse(mod.getDateCreated());
+        ZoneId userZone = ZoneId.systemDefault();
+        ZonedDateTime localCreated = created.atZone(userZone);
+        Instant updated = Instant.parse(mod.getDateModified());
+        ZonedDateTime localModified = updated.atZone(userZone);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        if (!Cogfly.settings.useRelativeTime) {
+            entry.created = new JLabel("Date created: " + localCreated.format(formatter));
+            entry.updated = new JLabel("Date updated: " + localModified.format(formatter));
+        } else {
+            Instant now = Instant.now();
+            entry.created = new JLabel("Date created: " + formatRelative(localCreated.toInstant(), now));
+            entry.updated = new JLabel("Date updated: " + formatRelative(localModified.toInstant(), now));
+        }
     }
 
     private void filterButtons() {
@@ -354,5 +399,16 @@ public class ModPanelElement extends JPanel {
 
     private static String plural(long value) {
         return value == 1 ? "" : "s";
+    }
+
+    private static class Mod {
+        JPanel modPanel;
+        JToggleButton toggleButton;
+        JButton installButton;
+        JToggleButton enableButton;
+        JPanel holderPanel;
+        JLabel iconLabel;
+        JLabel created;
+        JLabel updated;
     }
 }

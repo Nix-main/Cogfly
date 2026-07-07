@@ -21,6 +21,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -61,7 +62,7 @@ public class ModData {
         ).findFirst().orElse(null);
     }
 
-    private static boolean containsOldFile(Path directory) {
+    public static boolean containsOldFile(Path directory) {
         try (Stream<Path> files = Files.walk(directory)) {
             return files
                     .filter(Files::isRegularFile)
@@ -274,14 +275,7 @@ public class ModData {
             return enabled;
         if (!isInstalled(profile))
             return false;
-        try (Stream<Path> paths = Files.walk(profile.getBepInExPath())) {
-            return paths
-                    .filter(Files::isDirectory)
-                    .filter(p -> p.getFileName().toString().equals(getFullName()))
-                    .noneMatch(ModData::containsOldFile);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        return profile.isEnabled(this);
     }
 
     public void setEnabled(Profile profile, boolean enabled) {
@@ -308,6 +302,7 @@ public class ModData {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        profile.setEnabled(this, enabled);
     }
 
     public boolean isManual(){
@@ -318,6 +313,11 @@ public class ModData {
         return name + (enabled ? "" : ".old");
     }
 
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, author, description, fullName, versionNumber);
+    }
     @Override
     public boolean equals(Object o){
         return o instanceof ModData md &&
