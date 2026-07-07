@@ -534,7 +534,7 @@ public class Cogfly {
             String arg = String.join(" ", args);
             logger.info("Launch arguments: {}", arg);
             if (settings.launchWithSteam) {
-                long id = 1030300L;
+                String cmd = "steam://rungameid/1030300//" + arg + "/";
                 if (!gamePath.equals(settings.gamePath)){
                     try {
                         long val = getSteamIdSafe(game);
@@ -545,8 +545,8 @@ public class Cogfly {
                                     JOptionPane.WARNING_MESSAGE, Assets.icon.getAsIcon());
                             return;
                         }
-                        id = val;
                         // steam doesn't pass launch args to non-steam games because it's CRINGE and LAME
+                        cmd = "steam://rungameid/" + Long.toUnsignedString(val);
                         List<String> lines = Files.readAllLines(game.resolve("doorstop_config.ini"));
                         for (String line : lines) {
                             if (line.startsWith("enabled"))
@@ -559,7 +559,6 @@ public class Cogfly {
                         throw new RuntimeException(e);
                     }
                 }
-                String cmd = "steam://rungameid/" + Long.toUnsignedString(id) + "//" + arg + "/";
                 logger.info("Launching with Steam Client. Command={}", cmd);
                 cmd = cmd.replace(" ", "%20").replace("\\", "%5C").replace("\"", "%22");
                 if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
@@ -725,7 +724,7 @@ public class Cogfly {
     // steam shortcut.vdf strings are terminated by a null byte as documented at https://developer.valvesoftware.com/wiki/Binary_VDF
     // which java natively doesn't handle
     private static String getString(DataInputStream in) throws IOException {
-        byte[] buffer = new byte[1024];
+        byte[] buffer = new byte[256];
         int index = 0;
         while ((buffer[index] = in.readByte()) != 0) {
             index++;
