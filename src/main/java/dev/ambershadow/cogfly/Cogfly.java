@@ -48,6 +48,7 @@ public class Cogfly {
         {
             add("ebkr-r2modman");
             add("BepInEx-BepInExPack_Silksong");
+            add("silksong_modding-BepInExPack_Silksong");
             add("Kesomannen-GaleModManager");
         }
     };
