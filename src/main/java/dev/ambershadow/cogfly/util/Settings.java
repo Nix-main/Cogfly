@@ -75,6 +75,7 @@ public class Settings {
     public boolean profileSpecificPaths = false;
     public boolean showInstalledModsOnTop = false;
     public boolean launchWithSteam = false;
+    public boolean dontShowPatreonAgain = false;
 
     private Settings(){}
     private transient File dataFile;
