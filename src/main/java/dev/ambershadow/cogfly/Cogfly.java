@@ -484,8 +484,10 @@ public class Cogfly {
                     Assets.icon.getAsIcon(),
                     new Object[]{"Close & Don't Show Again", "Open My Patreon", "Close"},
                     "Open My Patreon");
-            if (val == JOptionPane.YES_OPTION)
+            if (val == JOptionPane.YES_OPTION){
                 settings.dontShowPatreonAgain = true;
+                settings.save();
+            }
             else if (val == JOptionPane.NO_OPTION)
                 if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE))
                     Desktop.getDesktop().browse(URI.create("https://www.patreon.com/c/AmberShadowo"));
