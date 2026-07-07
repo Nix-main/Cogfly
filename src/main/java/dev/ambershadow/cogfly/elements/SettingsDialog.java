@@ -183,8 +183,6 @@ public class SettingsDialog extends JDialog {
                  IllegalAccessException e) {
             throw new RuntimeException(e);
         }
-        SwingUtilities.updateComponentTreeUI(FrameManager.getOrCreate().frame);
-        SwingUtilities.updateComponentTreeUI(this);
         ProfileCardElement.normal = UIManager.getColor("Button.background").darker();
         ProfileCardElement.hover = UIManager.getColor("Button.pressedBackground");
         ProfileCardElement.hover = FlatLaf.isLafDark() ? ProfileCardElement.hover.brighter() : ProfileCardElement.hover.darker();
@@ -204,9 +202,11 @@ public class SettingsDialog extends JDialog {
 
         if (!queuedProfileSources.equals(initialProfileSources))
             ProfileManager.loadProfiles();
-        ProfileManager.baseGame = new Profile("Base Game", Paths.get(Cogfly.settings.gamePath), Assets.silksongIcon.getAsIcon());
         if (queuedBaseGameBool)
             Cogfly.downloadBepInEx(Path.of(queuedGamePath));
+        SwingUtilities.invokeLater(ModPanelElement::redrawAll);
+        SwingUtilities.updateComponentTreeUI(FrameManager.getOrCreate().frame);
+        SwingUtilities.updateComponentTreeUI(this);
         Cogfly.settings.save();
     }
 
