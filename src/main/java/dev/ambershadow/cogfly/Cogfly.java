@@ -53,8 +53,8 @@ public class Cogfly {
         }
     };
     public static List<ModData> mods = new ArrayList<>();
-    public static String localDataPath;
-    public static String roamingDataPath;
+    public static Path localDataPath;
+    public static Path roamingDataPath;
     public static File dataJson;
     public static Settings settings;
     private static URL packUrl;
@@ -67,10 +67,9 @@ public class Cogfly {
     public static boolean createdProfiles;
     public static @SuppressWarnings("unused") void main(String[] args) throws IOException {
         AppDirs dirs = AppDirsFactory.getInstance();
-        localDataPath = dirs.getUserDataDir("Cogfly", null, "");
-        roamingDataPath = dirs.getUserDataDir("Cogfly", null, "", true);
-        String logDir = Paths.get(localDataPath).resolve("logs").toString();
-        System.setProperty("app.log.dir", logDir);
+        localDataPath = Paths.get(dirs.getUserDataDir("Cogfly", null, ""));
+        roamingDataPath = Paths.get(dirs.getUserDataDir("Cogfly", null, "", true));
+        System.setProperty("app.log.dir", localDataPath.resolve("logs").toString());
 
         logger = LoggerFactory.getLogger(Cogfly.class);
         logger.info("Initializing...");
@@ -87,17 +86,17 @@ public class Cogfly {
             dataJson.createNewFile();
         }
         settings = Settings.load(dataJson);
-        if (!Files.exists(Paths.get(localDataPath).resolve("icon.ico")))
+        if (!Files.exists(localDataPath.resolve("icon.ico")))
             try(InputStream stream = Cogfly.getResource("/assets/icon.ico").openStream()) {
-                Files.write(Paths.get(localDataPath).resolve("icon.ico"), stream.readAllBytes());
+                Files.write(localDataPath.resolve("icon.ico"), stream.readAllBytes());
             }
-        if (!Files.exists(Paths.get(localDataPath).resolve("icon.png")))
+        if (!Files.exists(localDataPath.resolve("icon.png")))
             try(InputStream stream = Assets.icon.url().openStream()) {
-                Files.write(Paths.get(localDataPath).resolve("icon.png"), stream.readAllBytes());
+                Files.write(localDataPath.resolve("icon.png"), stream.readAllBytes());
             }
-        if (!Files.exists(Paths.get(localDataPath).resolve("icon.icns")))
+        if (!Files.exists(localDataPath.resolve("icon.icns")))
             try(InputStream stream = Cogfly.getResource("/assets/icon.icns").openStream()) {
-                Files.write(Paths.get(localDataPath).resolve("icon.icns"), stream.readAllBytes());
+                Files.write(localDataPath.resolve("icon.icns"), stream.readAllBytes());
             }
         if (args.length > 0){
             String arg = args[0].replace("cogfly://", "");
@@ -220,15 +219,15 @@ public class Cogfly {
 
     private static void downloadPack(String version) throws IOException {
         oldPackVersion = "-1";
-        Path ver = Path.of(localDataPath).resolve("pack_version.txt");
+        Path ver = localDataPath.resolve("pack_version.txt");
         if (Files.exists(ver)){
             oldPackVersion = Files.readString(ver);
         }
-        Cogfly.pack = Path.of(localDataPath).resolve("BepInExPack");
-        doorstop = Path.of(localDataPath).resolve("doorstop");
+        Cogfly.pack = localDataPath.resolve("BepInExPack");
+        doorstop = localDataPath.resolve("doorstop");
         if (version.equals(oldPackVersion))
             return;
-        Path pack = Path.of(localDataPath).resolve("bex_pack");
+        Path pack = localDataPath.resolve("bex_pack");
         Utils.downloadAndExtract(packUrl, pack);
         Utils.deleteFolder(Cogfly.pack);
         Files.move(pack.resolve("BepInExPack"), Cogfly.pack);
@@ -514,7 +513,7 @@ public class Cogfly {
 
     private static void showLaunchError(String details) {
         String[] lines = details.split("\n");
-        Path logFile = Paths.get(localDataPath).resolve("logs/launch-error.log");
+        Path logFile = localDataPath.resolve("logs/launch-error.log");
         boolean truncated = lines.length > 20;
         if (truncated) {
             try {

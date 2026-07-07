@@ -250,7 +250,7 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
                                             "$s.Save()",
                                             loc.resolve(profile.getName() + ".lnk").toAbsolutePath(),
                                             profile.getName(),
-                                            Path.of(Cogfly.localDataPath).resolve("icon.ico").toAbsolutePath());
+                                            Cogfly.localDataPath.resolve("icon.ico").toAbsolutePath());
 
                                 new ProcessBuilder(
                                         "powershell.exe",
@@ -265,7 +265,7 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
                                         StandardCharsets.UTF_8
                                 );
                                 desktop = desktop.replace("PROFILE_NAME", profile.getName());
-                                desktop = desktop.replace("ICON_PATH", Path.of(Cogfly.localDataPath).resolve("icon.png").toAbsolutePath().toString());
+                                desktop = desktop.replace("ICON_PATH", Cogfly.localDataPath.resolve("icon.png").toAbsolutePath().toString());
                                 Path file = loc.resolve(profile.getName() + ".desktop");
                                 Files.writeString(file, desktop);
                                 Set<PosixFilePermission> perms = Files.getPosixFilePermissions(file);
@@ -282,7 +282,7 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
                             try (OutputStream out = process.getOutputStream()) {
                                 out.write(("do shell script \"open cogfly://launch/" + profile.getName() + "\"").getBytes(StandardCharsets.UTF_8));
                                 process.waitFor();
-                                Files.copy(Path.of(Cogfly.localDataPath).resolve("icon.icns"), file.resolve("Contents/Resources/applet.icns"), StandardCopyOption.REPLACE_EXISTING);
+                                Files.copy(Cogfly.localDataPath.resolve("icon.icns"), file.resolve("Contents/Resources/applet.icns"), StandardCopyOption.REPLACE_EXISTING);
                             }
                             catch (IOException e){
                                 throw new RuntimeException(e);

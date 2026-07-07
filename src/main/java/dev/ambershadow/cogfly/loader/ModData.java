@@ -17,7 +17,6 @@ import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
@@ -151,8 +150,8 @@ public class ModData {
         parentObject.get("versions").getAsJsonArray().forEach(v -> totalDownloads += v.getAsJsonObject().get("downloads").getAsInt());
 
         try {
-            Files.createDirectories(Paths.get(Cogfly.localDataPath).resolve("icons"));
-            Path path = Paths.get(Cogfly.localDataPath).resolve("icons").resolve(getFullName() + ".png");
+            Files.createDirectories(Cogfly.localDataPath.resolve("icons"));
+            Path path = Cogfly.localDataPath.resolve("icons").resolve(getFullName() + ".png");
             if (Files.exists(path)){
                 iconBytes = Files.readAllBytes(path);
             }

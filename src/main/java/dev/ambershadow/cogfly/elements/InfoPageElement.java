@@ -12,7 +12,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Paths;
 
 public class InfoPageElement extends JPanel implements ReloadablePage {
 
@@ -91,7 +90,7 @@ public class InfoPageElement extends JPanel implements ReloadablePage {
         logsButton.setHorizontalAlignment(SwingConstants.LEFT);
         logsButton.setPreferredSize(dim);
         logsButton.setMaximumSize(max);
-        logsButton.addActionListener(_ -> Utils.openPath(Paths.get(Cogfly.localDataPath).resolve("logs")));
+        logsButton.addActionListener(_ -> Utils.openPath(Cogfly.localDataPath.resolve("logs")));
 
         JButton launchVanilla = new JButton("Launch Vanilla Game");
         launchVanilla.setHorizontalAlignment(SwingConstants.CENTER);

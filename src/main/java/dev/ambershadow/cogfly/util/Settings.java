@@ -66,7 +66,7 @@ public class Settings {
 
     public String theme = FlatNordIJTheme.class.getName();
     public String gamePath = findDefaultPath();
-    public String profileSavePath = Paths.get(Cogfly.roamingDataPath + "/profiles/").toString();
+    public String profileSavePath = Cogfly.roamingDataPath.resolve("/profiles/").toString();
     public List<String> profileSources = new ArrayList<>();
     public boolean baseGameEnabled = false;
     public boolean modNameSpaces = true;
