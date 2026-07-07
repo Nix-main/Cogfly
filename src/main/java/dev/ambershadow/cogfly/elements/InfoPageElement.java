@@ -16,9 +16,7 @@ import java.nio.file.Paths;
 
 public class InfoPageElement extends JPanel implements ReloadablePage {
 
-
-    private JButton github;
-    private JButton discord;
+    private final JButton[] buttons = new JButton[3];
     public InfoPageElement() {
         setLayout(new BorderLayout());
 
@@ -37,52 +35,43 @@ public class InfoPageElement extends JPanel implements ReloadablePage {
     }
 
     public JScrollPane createLinks(){
+        String[] text = {
+                "Source Code",
+                "Modding Discord",
+                "My Patreon"
+        };
+        String[] links = {
+                "https://github.com/nix-main/Cogfly",
+                "https://discord.gg/VDsg3HmWuB",
+                "https://patreon.com/c/AmberShadowo"
+        };
         Dimension size = new Dimension(150, 125);
         JPanel panel = new JPanel();
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        SVGIcon icon = new SVGIcon();
-        try {
-            icon.setSvgURI(Assets.github.url().toURI());
-        } catch (URISyntaxException e){
-            throw new RuntimeException(e);
+        for (int i = 0; i < 3; i++) {
+            SVGIcon icon = new SVGIcon();
+            try {
+                icon.setSvgURI(Assets.linkIcons[i].url().toURI());
+                icon.setPreferredSize(new Dimension(75, 0));
+                icon.setAutosize(SVGIcon.AUTOSIZE_HORIZ);
+                icon.setAntiAlias(true);
+                buttons[i] = new JButton(text[i], icon);
+                buttons[i].setForeground(Color.WHITE);
+                buttons[i].setFont(new Font("Arial", Font.PLAIN, 14));
+                buttons[i].setHorizontalTextPosition(SwingConstants.CENTER);
+                buttons[i].setVerticalTextPosition(SwingConstants.TOP);
+                buttons[i].setIconTextGap(8);
+                buttons[i].setPreferredSize(size);
+                buttons[i].setToolTipText(links[i]);
+                final String link = links[i];
+                buttons[i].addActionListener(_ -> Utils.openURI(URI.create(link)));
+                HoverLerp.install(buttons[i], () -> ProfileCardElement.normal, () -> ProfileCardElement.hover);
+                panel.add(buttons[i]);
+            } catch (URISyntaxException e){
+                throw new RuntimeException(e);
+            }
         }
-        icon.setPreferredSize(new Dimension(75, 0));
-        icon.setAutosize(SVGIcon.AUTOSIZE_HORIZ);
-        icon.setAntiAlias(true);
-        github = new JButton("Source Code", icon);
-        github.setForeground(Color.WHITE);
-        github.setFont(new Font("Arial", Font.PLAIN, 14));
-        github.setHorizontalTextPosition(SwingConstants.CENTER);
-        github.setVerticalTextPosition(SwingConstants.TOP);
-        github.setIconTextGap(8);
-        github.setPreferredSize(size);
-        github.setToolTipText("https://github.com/nix-main/Cogfly");
-        github.addActionListener(_ -> Utils.openURI(URI.create("https://github.com/nix-main/Cogfly")));
-        HoverLerp.install(github, () -> ProfileCardElement.normal, () -> ProfileCardElement.hover);
-        panel.add(github);
-
-        SVGIcon icon2 = new SVGIcon();
-        try {
-            icon2.setSvgURI(Assets.discord.url().toURI());
-        } catch (URISyntaxException e){
-            throw new RuntimeException(e);
-        }
-        icon2.setPreferredSize(new Dimension(75, 0));
-        icon2.setAutosize(SVGIcon.AUTOSIZE_HORIZ);
-        icon2.setAntiAlias(true);
-        discord = new JButton("Modding Discord", icon2);
-        discord.setForeground(Color.WHITE);
-        discord.setFont(new Font("Arial", Font.PLAIN, 14));
-        discord.setHorizontalTextPosition(SwingConstants.CENTER);
-        discord.setVerticalTextPosition(SwingConstants.TOP);
-        discord.setIconTextGap(8);
-        discord.setPreferredSize(size);
-        discord.setToolTipText("https://discord.gg/VDsg3HmWuB");
-        discord.addActionListener(_ -> Utils.openURI(URI.create("https://discord.gg/VDsg3HmWuB")));
-        HoverLerp.install(discord, () -> ProfileCardElement.normal, () -> ProfileCardElement.hover);
-        panel.add(discord);
-
         return new JScrollPane(panel, ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
     }
 
@@ -130,7 +119,8 @@ public class InfoPageElement extends JPanel implements ReloadablePage {
 
     @Override
     public void reload() {
-        discord.setBackground(ProfileCardElement.normal);
-        github.setBackground(ProfileCardElement.normal);
+        for (JButton button : buttons) {
+            button.setBackground(ProfileCardElement.normal);
+        }
     }
 }

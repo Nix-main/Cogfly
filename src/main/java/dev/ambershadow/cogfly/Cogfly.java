@@ -507,7 +507,7 @@ public class Cogfly {
             }
             else if (val == JOptionPane.NO_OPTION)
                 if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE))
-                    Desktop.getDesktop().browse(URI.create("https://www.patreon.com/c/AmberShadowo"));
+                    Desktop.getDesktop().browse(URI.create("https://www.patreon.com/c/AmberShadowo?utm_medium=unknown&utm_source=join_link&utm_campaign=creatorshare_creator&utm_content=copyLink"));
         }
     }
 
