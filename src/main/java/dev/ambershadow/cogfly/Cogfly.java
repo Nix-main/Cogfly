@@ -6,7 +6,6 @@ import com.sun.jna.Native;
 import com.sun.jna.platform.win32.Advapi32Util;
 import com.sun.jna.platform.win32.WinReg;
 import dev.ambershadow.cogfly.asset.Assets;
-import dev.ambershadow.cogfly.asset.CogflyAsset;
 import dev.ambershadow.cogfly.elements.profiles.ProfilesScreenElement;
 import dev.ambershadow.cogfly.loader.ModData;
 import dev.ambershadow.cogfly.loader.ModFetcher;
@@ -319,7 +318,7 @@ public class Cogfly {
         return mds;
     }
 
-    private static void showEarlyDialogs(){
+    private static void showEarlyDialogs() throws IOException {
         if (settings.getData() != null && settings.getData().has("profileSavePath")) {
             Cogfly.settings.profileSavePath = settings.getData().get("profileSavePath").getAsString();
         } else {
@@ -470,6 +469,22 @@ public class Cogfly {
             if (update == JOptionPane.YES_OPTION) {
                 Utils.openURI(URI.create("https://github.com/nix-main/Cogfly/releases/latest"));
             }
+        }
+        if (!settings.dontShowPatreonAgain) {
+            int val = JOptionPane.showOptionDialog(
+                    FrameManager.getOrCreate().frame,
+                    "I have a patreon! If you want to support me and Cogfly, please do so at https://www.patreon/com/c/AmberShadowo",
+                    "Support me?",
+                    JOptionPane.YES_NO_CANCEL_OPTION,
+                    JOptionPane.INFORMATION_MESSAGE,
+                    Assets.icon.getAsIcon(),
+                    new Object[]{"Close & Don't Show Again", "Open My Patreon", "Close"},
+                    "Open My Patreon");
+            if (val == JOptionPane.YES_OPTION)
+                settings.dontShowPatreonAgain = true;
+            else if (val == JOptionPane.NO_OPTION)
+                if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE))
+                    Desktop.getDesktop().browse(URI.create("https://www.patreon.com/c/AmberShadowo"));
         }
     }
 
