@@ -2,11 +2,9 @@ package dev.ambershadow.cogfly.elements;
 
 import com.formdev.flatlaf.FlatLaf;
 import dev.ambershadow.cogfly.Cogfly;
-import dev.ambershadow.cogfly.asset.Assets;
 import dev.ambershadow.cogfly.elements.profiles.ProfileCardElement;
 import dev.ambershadow.cogfly.elements.settings.*;
 import dev.ambershadow.cogfly.util.FrameManager;
-import dev.ambershadow.cogfly.util.Profile;
 import dev.ambershadow.cogfly.util.ProfileManager;
 
 import javax.swing.*;
@@ -15,7 +13,6 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
