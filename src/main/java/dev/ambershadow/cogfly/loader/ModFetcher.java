@@ -92,7 +92,7 @@ public class ModFetcher {
                         if (description.equals(mod.getDescription()))
                             matches++;
                         if (mod.getWebsiteUrl() != null)
-                            if (website.equals(mod.getWebsiteUrl().getPath()))
+                            if (website.equals(mod.getWebsiteUrl().toString()))
                                 matches++;
                         if (name.equals(mod.getName()))
                             matches++;
