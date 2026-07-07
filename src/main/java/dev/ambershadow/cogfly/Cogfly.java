@@ -95,6 +95,10 @@ public class Cogfly {
             try(InputStream stream = Assets.icon.url().openStream()) {
                 Files.write(Paths.get(localDataPath).resolve("icon.png"), stream.readAllBytes());
             }
+        if (!Files.exists(Paths.get(localDataPath).resolve("icon.icns")))
+            try(InputStream stream = Cogfly.getResource("/assets/icon.icns").openStream()) {
+                Files.write(Paths.get(localDataPath).resolve("icon.icns"), stream.readAllBytes());
+            }
         if (args.length > 0){
             String arg = args[0].replace("cogfly://", "");
             if (arg.toLowerCase().startsWith("launch/")){

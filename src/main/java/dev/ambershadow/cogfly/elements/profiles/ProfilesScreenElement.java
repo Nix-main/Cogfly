@@ -12,10 +12,12 @@ import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayList;
 import java.util.List;
@@ -274,10 +276,25 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
                             }
                         }
                         case MAC -> {
-
+                            Path file = loc.resolve(profile.getName() + ".app");
+                            Process process = new ProcessBuilder(
+                                    "osacompile", "-o", file.toString()).start();
+                            try (OutputStream out = process.getOutputStream()) {
+                                out.write(("do shell script \"open cogfly://launch/" + profile.getName() + "\"").getBytes(StandardCharsets.UTF_8));
+                                process.waitFor();
+                                Files.copy(Path.of(Cogfly.localDataPath).resolve("icon.icns"), file.resolve("Contents/Resources/applet.icns"), StandardCopyOption.REPLACE_EXISTING);
+                            }
+                            catch (IOException e){
+                                throw new RuntimeException(e);
+                            }
+                            Set<PosixFilePermission> perms = Files.getPosixFilePermissions(file);
+                            perms.add(PosixFilePermission.OWNER_EXECUTE);
+                            perms.add(PosixFilePermission.GROUP_EXECUTE);
+                            perms.add(PosixFilePermission.OTHERS_EXECUTE);
+                            Files.setPosixFilePermissions(file, perms);
                         }
                     }
-                } catch (IOException e) {
+                } catch (IOException | InterruptedException e) {
                     throw new RuntimeException(e);
                 }
             });
