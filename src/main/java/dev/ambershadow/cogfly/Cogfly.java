@@ -26,6 +26,7 @@ import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.time.Instant;
 import java.util.*;
@@ -88,7 +89,7 @@ public class Cogfly {
         }
         settings = Settings.load(dataJson);
         if (!Files.exists(Paths.get(localDataPath).resolve("icon.ico")))
-            try(InputStream stream = new CogflyAsset(Cogfly.getResource("/assets/icon.ico")).url().openStream()) {
+            try(InputStream stream = Cogfly.getResource("/assets/icon.ico").openStream()) {
                 Files.write(Paths.get(localDataPath).resolve("icon.ico"), stream.readAllBytes());
             }
         if (!Files.exists(Paths.get(localDataPath).resolve("icon.png")))
@@ -259,7 +260,7 @@ public class Cogfly {
         return exists;
     }
 
-    public static void downloadBepInEx(Path path){
+    public static void downloadBepInEx(Path path) {
         Path bepindll = path.resolve("BepInEx/core/BepInEx.dll");
         if (Files.exists(bepindll))
             return;
@@ -518,7 +519,32 @@ public class Cogfly {
             String arg = String.join(" ", args);
             logger.info("Launch arguments: {}", arg);
             if (settings.launchWithSteam) {
-                String cmd = "steam://rungameid/1030300//" + String.join(" ", args) + "/";
+                long id = 1030300L;
+                if (!gamePath.equals(settings.gamePath)){
+                    try {
+                        long val = getSteamIdSafe(game);
+                        if (val == -1){
+                            JOptionPane.showMessageDialog(FrameManager.getOrCreate().frame,
+                                    "You must add this executable as a non-steam game in your steam client to launch this profile through steam.",
+                                    "Missing non-steam game!",
+                                    JOptionPane.WARNING_MESSAGE, Assets.icon.getAsIcon());
+                            return;
+                        }
+                        id = val;
+                        // steam doesn't pass launch args to non-steam games because it's CRINGE and LAME
+                        List<String> lines = Files.readAllLines(game.resolve("doorstop_config.ini"));
+                        for (String line : lines) {
+                            if (line.startsWith("enabled"))
+                                lines.set(lines.indexOf(line), "enabled = " + enabled);
+                            if (line.startsWith("target_assembly"))
+                                lines.set(lines.indexOf(line), "target_assembly = " + Paths.get(path).resolve("core/BepInEx.Preloader.dll"));
+                        }
+                        Files.write(game.resolve("doorstop_config.ini"), lines);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                String cmd = "steam://rungameid/" + Long.toUnsignedString(id) + "//" + arg + "/";
                 logger.info("Launching with Steam Client. Command={}", cmd);
                 cmd = cmd.replace(" ", "%20").replace("\\", "%5C").replace("\"", "%22");
                 if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
@@ -595,6 +621,102 @@ public class Cogfly {
             );
             return null;
         });
+    }
+
+    private static long getSteamIdSafe(Path executable) throws IOException {
+        Path steamRoot = switch (Utils.OperatingSystem.current()) {
+            case WINDOWS -> Paths.get(Advapi32Util.registryGetStringValue(WinReg.HKEY_CURRENT_USER, "Software\\Valve\\Steam", "SteamPath"));
+            case LINUX -> Paths.get(System.getProperty("user.home"), ".local/share/Steam");
+            case MAC -> Paths.get(System.getProperty("user.home"), "Library/Application Support/Steam");
+            default -> null;
+        };
+        if (steamRoot == null) return -1;
+        Set<Integer> ids = getSteamUserIds(steamRoot.resolve("config", "loginusers.vdf"));
+        // checks all for redundancy but ordered by MostRecent
+        for (int id : ids) {
+            Path vdf = steamRoot.resolve("userdata", id + "/config", "shortcuts.vdf");
+            if (!Files.exists(vdf)) continue;
+            long appid = getSteamId(executable, vdf);
+            logger.info("Found Steam app id {} for executable {} under user {}", appid, executable, vdf);
+            // conversion from 64-bit appid to BPID
+            // as seen at https://github.com/ValveSoftware/steam-for-linux/issues/9463#issuecomment-2558366504
+            // and https://gist.github.com/sonic2kk/934fc97d27d9d8c4ac9c1d817e163bf1
+            if (appid != -1) return (appid << 32) | 0x02000000;
+        }
+        return -1;
+    }
+
+    private static Set<Integer> getSteamUserIds(Path vdf) throws IOException {
+        Map<Long, Integer> map = new LinkedHashMap<>();
+        String lastId = null;
+        int lastMostRecent = 0;
+        for (String line : Files.readAllLines(vdf)) {
+            String trimmed = line.trim();
+            if (trimmed.matches("\"\\d{17}\"")) {
+                if (lastId != null)
+                    map.put(Long.parseLong(lastId), lastMostRecent);
+                lastId = trimmed.replaceAll("\"", "");
+                lastMostRecent = 0;
+            }
+            if (trimmed.startsWith("\"MostRecent\""))
+                lastMostRecent = Integer.parseInt(trimmed.replaceAll("[^0-9]", ""));
+        }
+        if (lastId != null)
+            map.put(Long.parseLong(lastId), lastMostRecent);
+        return map.keySet().stream()
+                .sorted(Comparator.comparing(map::get))
+                .map(l -> (int)(l - 0x0110000100000000L))
+                .collect(Collectors.toCollection(LinkedHashSet::new)).reversed();
+    }
+
+
+    // documentation of the steam VDF format can be found at https://developer.valvesoftware.com/wiki/Binary_VDF
+    private static long getSteamId(Path exePath, Path vdf) {
+        try (DataInputStream in = new DataInputStream(Files.newInputStream(vdf))) {
+
+            String exe = null;
+            Integer appid = null;
+            // this ^ is necessary because the appid key comes before the exe path
+            // for me, exe always comes 3 entries after appid, so I could theoretically just skip to it, but I wasn't sure if this was safe
+            // or the same for everybody/across systems, so I'm doing this instead
+            while (true) { // always exits either exceptionally or with a return
+                switch (in.readUnsignedByte()) {
+                    case 0x00 -> getString(in);
+                    case 0x01 -> {
+                        String key = getString(in), value = getString(in);
+                        if (key.equals("Exe"))
+                            exe = value.replace("\"", "");
+                    }
+                    case 0x02 -> {
+                        String key = getString(in);
+                        int value = Integer.reverseBytes(in.readInt());
+                        if (key.equals("appid"))
+                            appid = value;
+                    }
+                    case 0x08 -> { // app read ended
+                        if (exe != null && appid != null && Path.of(exe).getParent().equals(exePath))
+                            return appid;
+                    }
+                }
+            }
+        } catch (EOFException ignored) {
+            // reached end of file, no game found
+            return -1;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    // steam shortcut.vdf strings are terminated by a null byte as documented at https://developer.valvesoftware.com/wiki/Binary_VDF
+    // which java natively doesn't handle
+    private static String getString(DataInputStream in) throws IOException {
+        byte[] buffer = new byte[1024];
+        int index = 0;
+        while ((buffer[index] = in.readByte()) != 0) {
+            index++;
+        }
+        buffer = Arrays.copyOf(buffer, index);
+        return new String(buffer, StandardCharsets.UTF_8);
     }
 
     private static void registerWinKey(Path exe) {
