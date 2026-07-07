@@ -7,7 +7,6 @@ import dev.ambershadow.cogfly.Cogfly;
 import dev.ambershadow.cogfly.asset.Assets;
 import dev.ambershadow.cogfly.elements.profiles.ProfilesScreenElement;
 import dev.ambershadow.cogfly.loader.ModData;
-import dev.ambershadow.cogfly.loader.ModFetcher;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 

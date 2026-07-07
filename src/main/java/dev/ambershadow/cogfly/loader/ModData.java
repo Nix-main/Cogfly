@@ -239,9 +239,6 @@ public class ModData {
     public URI getWebsiteUrl(){
         return websiteUrl;
     }
-    public URL getIconUrl(){
-        return iconUrl;
-    }
     public ImageIcon getIcon() {
         if (cachedIcon == null && iconBytes != null) {
             cachedIcon = new ImageIcon(iconBytes);
