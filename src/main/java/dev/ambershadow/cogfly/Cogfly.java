@@ -666,7 +666,7 @@ public class Cogfly {
         int lastMostRecent = 0;
         for (String line : Files.readAllLines(vdf)) {
             String trimmed = line.trim();
-            if (trimmed.matches("\"\\d{17}\"")) {
+            if (trimmed.matches("\"\\d+\"")) {
                 if (lastId != null)
                     map.put(Long.parseLong(lastId), lastMostRecent);
                 lastId = trimmed.replaceAll("\"", "");
