@@ -35,7 +35,7 @@ import java.util.stream.Stream;
 
 public class Cogfly {
 
-    public static String version = "1.1.2";
+    public static String version = "1.2.0";
 
     public static URL getResource(String path) {
         URL url = Cogfly.class.getResource(path);
