@@ -570,6 +570,7 @@ public class Cogfly {
                         }
                         // steam doesn't pass launch args to non-steam games because it's CRINGE and LAME
                         cmd = "steam://rungameid/" + Long.toUnsignedString(val);
+                        // also you actually CAN launch a non-steam game by its signed ID but this is easier for clarity
                         List<String> lines = Files.readAllLines(game.resolve("doorstop_config.ini"));
                         for (String line : lines) {
                             if (line.startsWith("enabled"))
