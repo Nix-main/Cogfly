@@ -103,7 +103,7 @@ public class FrameManager {
         }
     }
     public enum CogflyPage {
-        INFO(Character.toString(0x1F6C8) + " Info", new InfoPageElement()),
+        INFO("ⓘ Info", new InfoPageElement()),
         PROFILES("▶ Profiles", new ProfilesScreenElement()),
         SETTINGS("⚙ Settings", (_) -> {})
         ;
