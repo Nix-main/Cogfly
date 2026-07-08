@@ -305,7 +305,7 @@ public class Cogfly {
     }
 
     public static List<ModData> sortList(SortingType type, String direction, Profile profile, boolean installedOnly){
-        List<ModData> mods = getDisplayedMods(profile, installedOnly);
+        List<ModData> mods = new ArrayList<>(getDisplayedMods(profile, installedOnly));
         switch (type) {
             case NAME:
                 mods.sort(
