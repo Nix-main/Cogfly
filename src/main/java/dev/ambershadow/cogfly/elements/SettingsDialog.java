@@ -37,6 +37,7 @@ public class SettingsDialog extends JDialog {
         holder.add(new PerProfileGamePathsElement(this));
         holder.add(new InstalledModsOnTopElement(this));
         holder.add(new LaunchWithSteamElement(this));
+        holder.add(new AllowLaunchArgsElement(this));
         holder.add(new ProfileSourcesPanelElement(this));
 
         saveButton = new JButton("Apply & Save");
@@ -92,6 +93,7 @@ public class SettingsDialog extends JDialog {
     private boolean initialPerProfilePaths;
     private boolean initialLaunchWithSteam;
     private boolean initialShowInstalledModsOnTop;
+    private boolean queuedSteamArgs;
     private String queuedTheme;
     private String queuedGamePath;
     public List<String> queuedProfileSources;
@@ -103,6 +105,7 @@ public class SettingsDialog extends JDialog {
     private boolean queuedPerProfilePaths;
     private boolean queuedLaunchWithSteam;
     private boolean queuedShowInstalledModsOnTop;
+    private boolean initialSteamArgs;
 
     public void updateTheme(UIManager.LookAndFeelInfo theme){
         queuedTheme = theme.getClassName();
@@ -119,6 +122,11 @@ public class SettingsDialog extends JDialog {
 
     public void updateModNameSpacing(boolean spaces){
         queuedNameSpaceBool = spaces;
+        update();
+    }
+
+    public void updateSteamLaunchArgs(boolean args){
+        queuedSteamArgs = args;
         update();
     }
 
@@ -196,6 +204,7 @@ public class SettingsDialog extends JDialog {
         Cogfly.settings.profileSpecificPaths = queuedPerProfilePaths;
         Cogfly.settings.showInstalledModsOnTop = queuedShowInstalledModsOnTop;
         Cogfly.settings.launchWithSteam = queuedLaunchWithSteam;
+        Cogfly.settings.acceptedSteamArgs = queuedSteamArgs;
 
         if (!queuedProfileSources.equals(initialProfileSources))
             ProfileManager.loadProfiles();
@@ -219,6 +228,7 @@ public class SettingsDialog extends JDialog {
         queuedPerProfilePaths = Cogfly.settings.profileSpecificPaths;
         queuedShowInstalledModsOnTop = Cogfly.settings.showInstalledModsOnTop;
         queuedLaunchWithSteam = Cogfly.settings.launchWithSteam;
+        queuedSteamArgs = Cogfly.settings.acceptedSteamArgs;
         initialAutoNameSpacing = Cogfly.settings.modNameSpaces;
         initialBaseGameEnabled = Cogfly.settings.baseGameEnabled;
         initialSavePath = Cogfly.settings.profileSavePath;
@@ -230,5 +240,6 @@ public class SettingsDialog extends JDialog {
         initialShowInstalledModsOnTop = Cogfly.settings.showInstalledModsOnTop;
         initialProfileSources = Cogfly.settings.profileSources;
         initialLaunchWithSteam = Cogfly.settings.launchWithSteam;
+        initialSteamArgs = Cogfly.settings.acceptedSteamArgs;
     }
 }

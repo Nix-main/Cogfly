@@ -76,6 +76,8 @@ public class Settings {
     public boolean showInstalledModsOnTop = false;
     public boolean launchWithSteam = false;
     public boolean dontShowPatreonAgain = false;
+    public boolean finishedSteamPopup = false;
+    public boolean acceptedSteamArgs = false;
 
     private Settings(){}
     private transient File dataFile;

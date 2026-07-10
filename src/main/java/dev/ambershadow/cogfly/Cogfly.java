@@ -283,6 +283,72 @@ public class Cogfly {
         return exists;
     }
 
+    private static boolean setLaunchArgs(Path vdf, String args) throws IOException{
+        int silksongIndex = -1;
+        int launchOptsIndex = -1;
+        boolean isSilk = false;
+        String launchOpts = "";
+        List<String> lines = Files.readAllLines(vdf);
+        for (String line : lines){
+            String val = line.trim().replaceAll("\"", "");
+            if (val.matches("\\d+"))
+                isSilk = false;
+            if (val.equals("1030300"))
+                isSilk = (silksongIndex = lines.indexOf(line)) != -1;
+            if (val.startsWith("LaunchOptions") && isSilk) {
+                launchOpts = line;
+                launchOptsIndex = lines.indexOf(line);
+                break;
+            }
+        }
+        if (silksongIndex == -1)
+            return false;
+        if (launchOpts.contains("run_bepinex.sh"))
+            return true;
+        if (!settings.finishedSteamPopup){
+            int opt = JOptionPane.showOptionDialog(FrameManager.getOrCreate().frame,
+                    "Cogfly is trying to add " + "\"" + args + "\" to your steam launch arguments, this is necessary for the Launch with Steam setting to work on Mac and Linux. This will not overwrite your existing launch arguments, they will still work. You will not be shown this popup again, but can always modify this value in your settings.",
+                    "Steam Launch Args",
+                    JOptionPane.YES_NO_CANCEL_OPTION,
+                    JOptionPane.INFORMATION_MESSAGE,
+                    Assets.icon.getAsIcon(),
+                    new Object[]{"Allow", "Don't Allow"},
+                    "Allow");
+            if (opt == JOptionPane.YES_OPTION)
+                settings.acceptedSteamArgs = true;
+            settings.finishedSteamPopup = true;
+        }
+        if (!settings.acceptedSteamArgs)
+            return true;
+        String val;
+        int index;
+        if (launchOptsIndex == -1 || launchOpts.isEmpty()){
+            String[] vals = lines.get(silksongIndex+2).split("\"");
+            vals[1] = "LaunchOptions";
+            vals[3] = args + "\"";
+            val = String.join("\"", vals);
+            index = silksongIndex + 2;
+        }
+        else {
+            String[] vals = launchOpts.split("\"");
+            if (vals[3].contains("%command%")){
+                List<String> a = new ArrayList<>(Arrays.stream(vals[3].split("%command%")).toList());
+                a.add(1, args + " %command% ");
+                a.add("\"");
+                vals[3] = String.join("", a);
+            }
+            else
+                vals[3] = args + vals[3] + "\"";
+            lines.remove(launchOptsIndex);
+            index = launchOptsIndex;
+            val = String.join("\"", vals);
+        }
+        logger.info(val);
+        lines.add(index, String.join("\"", val));
+        Files.write(vdf, lines);
+        return true;
+    }
+
     private static List<Path> queuedPaths = new ArrayList<>();
 
     public static void downloadBepInEx(Path path) {
@@ -597,6 +663,20 @@ public class Cogfly {
                         throw new RuntimeException(e);
                     }
                 }
+                else {
+                    if (Utils.OperatingSystem.current() != Utils.OperatingSystem.WINDOWS) {
+                        try {
+                            for (Path config : getSteamFolders()) {
+                                Path vdf = config.resolve("localconfig.vdf");
+                                boolean argsSet = setLaunchArgs(vdf, game.resolve("run_bepinex.sh").toAbsolutePath().toString());
+                                if (argsSet)
+                                    break;
+                            }
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                }
                 logger.info("Launching with Steam Client. Command={}", cmd);
                 cmd = cmd.replace(" ", "%20")
                         .replace("\\", "%5C")
@@ -678,18 +758,24 @@ public class Cogfly {
         });
     }
 
-    private static long getSteamIdSafe(Path executable) throws IOException {
+    private static List<Path> getSteamFolders() throws IOException {
         Path steamRoot = switch (Utils.OperatingSystem.current()) {
             case WINDOWS -> Paths.get(Advapi32Util.registryGetStringValue(WinReg.HKEY_CURRENT_USER, "Software\\Valve\\Steam", "SteamPath"));
             case LINUX -> Paths.get(System.getProperty("user.home"), ".local/share/Steam");
             case MAC -> Paths.get(System.getProperty("user.home"), "Library/Application Support/Steam");
             default -> null;
         };
-        if (steamRoot == null) return -1;
-        Set<Integer> ids = getSteamUserIds(steamRoot.resolve("config", "loginusers.vdf"));
-        // checks all for redundancy but ordered by MostRecent
-        for (int id : ids) {
-            Path vdf = steamRoot.resolve("userdata", id + "/config", "shortcuts.vdf");
+        if (steamRoot == null) return List.of();
+        List<Path> paths = new ArrayList<>();
+        for (int id : getSteamUserIds(steamRoot.resolve("config", "loginusers.vdf"))){
+            paths.add(steamRoot.resolve("userdata", id + "/config"));
+        }
+        return paths;
+    }
+
+    private static long getSteamIdSafe(Path executable) throws IOException {
+        for (Path folder : getSteamFolders()) {
+            Path vdf = folder.resolve("shortcuts.vdf");
             if (!Files.exists(vdf)) continue;
             long appid = getSteamId(executable, vdf);
             logger.info("Found Steam app id {} for executable {} under user {}", appid, executable, vdf);
