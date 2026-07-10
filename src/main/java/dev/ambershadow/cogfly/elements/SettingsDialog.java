@@ -175,7 +175,8 @@ public class SettingsDialog extends JDialog {
                         initialRelativeTime != queuedRelativeTime ||
                         initialPerProfilePaths != queuedPerProfilePaths ||
                         initialLaunchWithSteam != queuedLaunchWithSteam ||
-                        initialShowInstalledModsOnTop != queuedShowInstalledModsOnTop;
+                        initialShowInstalledModsOnTop != queuedShowInstalledModsOnTop ||
+                        initialSteamArgs != queuedSteamArgs;
 
         saveButton.setEnabled(dirty);
     }
