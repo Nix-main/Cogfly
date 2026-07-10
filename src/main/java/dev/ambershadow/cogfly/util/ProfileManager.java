@@ -112,7 +112,7 @@ public class ProfileManager {
         profile.setIcon(new ImageIcon(iconPath));
     }
 
-    public static void loadProfiles() {
+    public static synchronized void loadProfiles() {
         profiles.clear();
         List<String> paths = new ArrayList<>(Cogfly.settings.profileSources);
         paths.add(Cogfly.settings.profileSavePath);

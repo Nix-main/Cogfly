@@ -196,13 +196,15 @@ public class Cogfly {
         ).whenComplete((_, _) -> {
             long after = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
             logger.info("Loaded and parsed mods in {} milliseconds", (System.currentTimeMillis() - modStart));
-            ModPanelElement.redrawAll();
-            long start = System.currentTimeMillis();
-            ProfileManager.loadProfiles();
-            logger.info("Loaded profiles in {} milliseconds", (System.currentTimeMillis() - start));
-            Cogfly.createdProfiles = true;
-            ProfilesScreenElement.queueRefresh();
-            FrameManager.getOrCreate().getCurrentPage().reload();
+            SwingUtilities.invokeLater(() -> {
+                ModPanelElement.redrawAll();
+                long start = System.currentTimeMillis();
+                ProfileManager.loadProfiles();
+                logger.info("Loaded profiles in {} milliseconds", (System.currentTimeMillis() - start));
+                Cogfly.createdProfiles = true;
+                ProfilesScreenElement.queueRefresh();
+                FrameManager.getOrCreate().getCurrentPage().reload();
+            });
             try {
                 downloadPack(latestPackVer);
             } catch (IOException e) {
