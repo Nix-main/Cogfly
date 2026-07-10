@@ -585,8 +585,7 @@ public class Cogfly {
                 settings.save();
             }
             else if (val == JOptionPane.NO_OPTION)
-                if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE))
-                    Desktop.getDesktop().browse(URI.create("https://www.patreon.com/c/AmberShadowo?utm_medium=unknown&utm_source=join_link&utm_campaign=creatorshare_creator&utm_content=copyLink"));
+                Utils.openURI(URI.create("https://www.patreon.com/c/AmberShadowo?utm_medium=unknown&utm_source=join_link&utm_campaign=creatorshare_creator&utm_content=copyLink"));
         }
     }
 
@@ -637,11 +636,7 @@ public class Cogfly {
             String arg = String.join(" ", args);
             logger.info("Launch arguments: {}", arg);
             if (settings.launchWithSteam) {
-                String extra = Utils.OperatingSystem.current() != Utils.OperatingSystem.WINDOWS
-                        ? "\"" + game.resolve(Utils.getGameExecutable()) + "\" %command% "
-                        : "";
-                extra = extra.replace("/", "%2F");
-                String cmd = "steam://rungameid/1030300//" + extra + arg + "/";
+                String cmd = "steam://rungameid/1030300//" + arg + "/";
                 if (!gamePath.equals(settings.gamePath)){
                     try {
                         long val = getSteamIdSafe(game);
@@ -684,15 +679,8 @@ public class Cogfly {
                 logger.info("Launching with Steam Client. Command={}", cmd);
                 cmd = cmd.replace(" ", "%20")
                         .replace("\\", "%5C")
-                        .replace("\"", "%22")
-                        .replace("%", "%25");
-                if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-                    try {
-                        Desktop.getDesktop().browse(URI.create(cmd));
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
+                        .replace("\"", "%22");
+                Utils.openURI(URI.create(cmd));
             } else {
                 List<String> cmds = new ArrayList<>();
                 switch (Utils.OperatingSystem.current()) {
