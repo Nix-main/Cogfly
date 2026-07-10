@@ -331,14 +331,18 @@ public class Cogfly {
         }
         else {
             String[] vals = launchOpts.split("\"");
-            if (vals[3].contains("%command%")){
-                List<String> a = new ArrayList<>(Arrays.stream(vals[3].split("%command%")).toList());
-                a.add(1, args + " %command% ");
-                a.add("\"");
-                vals[3] = String.join("", a);
+            if (vals.length > 3) {
+                if (vals[3].contains("%command%")) {
+                    List<String> a = new ArrayList<>(Arrays.stream(vals[3].split("%command%")).toList());
+                    a.add(1, "v" + " %command%");
+                    a.add("\"");
+                    vals[3] = String.join("", a);
+                }
+                else
+                    vals[3] = "v %command% " + vals[3] + "\"";
             }
             else
-                vals[3] = args + vals[3] + "\"";
+                vals[2] = " \t\"v %command% \"";
             lines.remove(launchOptsIndex);
             index = launchOptsIndex;
             val = String.join("\"", vals);
