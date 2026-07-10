@@ -209,7 +209,9 @@ public class Cogfly {
                 throw new RuntimeException(e);
             }
             if (settings.baseGameEnabled)
-                Cogfly.downloadBepInEx(Path.of(settings.gamePath));
+                downloadBepInEx(Path.of(settings.gamePath));
+            queuedPaths.forEach(Cogfly::downloadBepInEx);
+            queuedPaths = null;
         });
         UIManager.put("TextComponent.arc", 5);
         logger.info("Showing UI");
@@ -279,7 +281,13 @@ public class Cogfly {
         return exists;
     }
 
+    private static List<Path> queuedPaths = new ArrayList<>();
+
     public static void downloadBepInEx(Path path) {
+        if (pack == null) {
+            queuedPaths.add(path);
+            return;
+        }
         Path bepindll = path.resolve("BepInEx/core/BepInEx.dll");
         if (Files.exists(bepindll))
             return;
@@ -493,7 +501,7 @@ public class Cogfly {
         if (!settings.dontShowPatreonAgain) {
             int val = JOptionPane.showOptionDialog(
                     FrameManager.getOrCreate().frame,
-                    "I have a patreon! If you want to support me and Cogfly, please do so at https://www.patreon/com/c/AmberShadowo",
+                    "I have a Patreon! If you want to support me and Cogfly, please do so at https://www.patreon/com/c/AmberShadowo",
                     "Support me?",
                     JOptionPane.YES_NO_CANCEL_OPTION,
                     JOptionPane.INFORMATION_MESSAGE,
@@ -557,7 +565,11 @@ public class Cogfly {
             String arg = String.join(" ", args);
             logger.info("Launch arguments: {}", arg);
             if (settings.launchWithSteam) {
-                String cmd = "steam://rungameid/1030300//" + arg + "/";
+                String extra = Utils.OperatingSystem.current() != Utils.OperatingSystem.WINDOWS
+                        ? "\"" + game.resolve(Utils.getGameExecutable()) + "\" %command% "
+                        : "";
+                extra = extra.replace("/", "%2F");
+                String cmd = "steam://rungameid/1030300//" + extra + arg + "/";
                 if (!gamePath.equals(settings.gamePath)){
                     try {
                         long val = getSteamIdSafe(game);
@@ -584,7 +596,10 @@ public class Cogfly {
                     }
                 }
                 logger.info("Launching with Steam Client. Command={}", cmd);
-                cmd = cmd.replace(" ", "%20").replace("\\", "%5C").replace("\"", "%22");
+                cmd = cmd.replace(" ", "%20")
+                        .replace("\\", "%5C")
+                        .replace("\"", "%22")
+                        .replace("%", "%25");
                 if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
                     try {
                         Desktop.getDesktop().browse(URI.create(cmd));
