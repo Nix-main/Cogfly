@@ -56,6 +56,7 @@ val compileTinyFileDialogs by tasks.registering(Exec::class) {
 }
 
 val compileNative by tasks.registering {
+    mkdir("${layout.buildDirectory.get()}/native")
     dependsOn(compileWinFolderPicker, compileTinyFileDialogs)
 }
 
