@@ -543,9 +543,9 @@ public class Utils {
             if (current == null) {
                 String os = System.getProperty("os.name").toLowerCase();
                 if (os.contains("win")) current = WINDOWS;
-                if (os.contains("mac")) current = MAC;
-                if (os.contains("nix") || os.contains("nux")) current = LINUX;
-                current = OTHER;
+                else if (os.contains("mac")) current = MAC;
+                else if (os.contains("nix") || os.contains("nux")) current = LINUX;
+                else current = OTHER;
             }
             return current;
         }
