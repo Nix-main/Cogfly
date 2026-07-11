@@ -538,12 +538,16 @@ public class Utils {
     public enum OperatingSystem {
         WINDOWS, MAC, LINUX, OTHER;
 
+        private static OperatingSystem current;
         public static OperatingSystem current() {
-            String os = System.getProperty("os.name").toLowerCase();
-            if (os.contains("win")) return WINDOWS;
-            if (os.contains("mac")) return MAC;
-            if (os.contains("nix") || os.contains("nux")) return LINUX;
-            return OTHER;
+            if (current == null) {
+                String os = System.getProperty("os.name").toLowerCase();
+                if (os.contains("win")) current = WINDOWS;
+                if (os.contains("mac")) current = MAC;
+                if (os.contains("nix") || os.contains("nux")) current = LINUX;
+                current = OTHER;
+            }
+            return current;
         }
     }
 }
