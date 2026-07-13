@@ -161,7 +161,12 @@ public class ModPanelElement extends JPanel {
             Mod entry = this.mods.get(mod);
             if (entry == null) {
                 entry = new Mod();
-                JPanel modPanel = new JPanel();
+                JPanel modPanel = new JPanel() {
+                    @Override
+                    public Dimension getMaximumSize() {
+                        return new Dimension(Integer.MAX_VALUE, getPreferredSize().height);
+                    }
+                };
                 modPanel.setLayout(new BoxLayout(modPanel, BoxLayout.Y_AXIS));
 
                 JPanel rowPanel = new JPanel();
