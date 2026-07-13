@@ -641,8 +641,7 @@ public class Cogfly {
 
     public static void launchGameAsync(boolean enabled, String path, String gamePath){
         CompletableFuture.runAsync(() -> {
-            logger.info("Launching game. OS: {}, Path: {}", Utils.OperatingSystem.current(), path);
-            Path game = Paths.get(gamePath);
+            logger.info("Launching game. OS: {}, BepInExPath: {}, GamePath: {}", Utils.OperatingSystem.current(), path, gamePath);            Path game = Paths.get(gamePath);
             if (enabled)
                 downloadDoorstop(game);
             List<String> args = new ArrayList<>();
@@ -707,9 +706,9 @@ public class Cogfly {
                 List<String> cmds = new ArrayList<>();
                 switch (Utils.OperatingSystem.current()) {
                     case MAC -> {
-                        cmds.add("arch");
+                        cmds.add("/usr/bin/arch");
                         cmds.add("-x86_64");
-                        cmds.add("sh");
+                        cmds.add("/bin/sh");
                     }
                     case LINUX -> {
                         cmds.add("setsid");
