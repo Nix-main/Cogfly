@@ -322,6 +322,10 @@ public class ModPanelElement extends JPanel {
         Instant updated = Instant.parse(mod.getDateModified());
         ZonedDateTime localModified = updated.atZone(userZone);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        if (mod.isManual()){
+            entry.created.setVisible(false);
+            entry.updated.setVisible(false);
+        }
         if (!Cogfly.settings.useRelativeTime) {
             entry.created.setText("Date created: " + localCreated.format(formatter));
             entry.updated.setText("Date updated: " + localModified.format(formatter));

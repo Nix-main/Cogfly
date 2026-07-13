@@ -34,7 +34,9 @@ public class Utils {
             Map.entry("gif", "public.image"),
             Map.entry("app", "com.apple.application-bundle"),
             Map.entry("sh", "public.unix-executable"),
-            Map.entry("bin", "public.unix-executable")
+            Map.entry("bin", "public.unix-executable"),
+            Map.entry("zip", "com.pkware.zip-archive"),
+            Map.entry("dll", "com.microsoft.windows-dynamic-link-library")
     );
 
     private static final Map<String, String> EXT_TO_MIME = Map.ofEntries(
@@ -45,7 +47,9 @@ public class Utils {
             Map.entry("png", "image/png"),
             Map.entry("jpg", "image/jpeg"),
             Map.entry("jpeg","image/jpeg"),
-            Map.entry("gif", "image/gif")
+            Map.entry("gif", "image/gif"),
+            Map.entry("zip", "application/zip"),
+            Map.entry("dll", "application/x-msdownload")
     );
 
     public static Path getSavePath() {

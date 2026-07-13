@@ -42,6 +42,10 @@ public class ModData {
         return new ModData(parent, targetVersion[0]);
     }
 
+    public static ModData getModByName(String name){
+        return Cogfly.mods.stream().filter(mod -> mod.getName().equals(name)).findFirst().orElse(null);
+    }
+
     public static ModData getModAtVersion(String fullName, String version){
         Optional<JsonObject> mod = rawModData.stream()
                 .filter(obj -> obj.get("full_name")

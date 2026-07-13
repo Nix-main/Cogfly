@@ -64,7 +64,7 @@ public class ModFetcher {
             File[] innerFiles = file.listFiles();
             if (innerFiles == null)
                 continue;
-            Path manifest = Paths.get(file.getAbsolutePath() + "/manifest.json");
+            Path manifest = Paths.get(file.getAbsolutePath()).resolve("manifest.json");
             if (Files.exists(manifest)) {
                 try (JsonReader reader = new JsonReader(Files.newBufferedReader(manifest))) {
                     JsonObject object = JsonParser.parseReader(reader).getAsJsonObject();
@@ -72,6 +72,7 @@ public class ModFetcher {
                     String website = get(object, "website_url");
                     String name = get(object, "name");
                     String description = get(object, "description");
+                    String verion = get(object, "version_number");
                     List<String> dependencies = new ArrayList<>();
                     JsonArray deps = object.has("dependencies") ? object.get("dependencies").getAsJsonArray() : null;
                     if (deps != null)
@@ -94,9 +95,12 @@ public class ModFetcher {
                                 matches++;
                         if (name.equals(mod.getName()))
                             matches++;
-                        boolean de = new HashSet<>(dependencies).equals(new HashSet<>(mod.getDependencies()));
-                        if (de)
+                        if (verion.equals(mod.getVersionNumber()))
                             matches++;
+                        boolean de = new HashSet<>(dependencies).equals(new HashSet<>(mod.getDependencies()));
+                        if (de && !mod.getDependencies().isEmpty())
+                            matches++;
+
                         if (matches >= 3) {
                             var installedVersion = get(object, "version_number");
                             if (installedVersion.isEmpty()) {
@@ -119,11 +123,11 @@ public class ModFetcher {
         try (Stream<Path> paths = Files.list(plugins)){
             paths
                     .filter(Files::isRegularFile)
-                    .filter(pth -> pth.getFileName().toString().endsWith(".dll")
-                            || pth.getFileName().toString().endsWith(".dll.old"))
-                    .forEach(pth -> {
-                        System.out.println(pth);
-                        installedMods.add(new ModData(pth.getFileName().toString(), !pth.getFileName().toString().endsWith(".dll.old")));
+                    .filter(path -> path.getFileName().toString().endsWith(".dll")
+                            || path.getFileName().toString().endsWith(".dll.old"))
+                    .forEach(path -> {
+                        Cogfly.logger.info("Found manual mod at {}", path);
+                        installedMods.add(new ModData(path.getFileName().toString(), !path.getFileName().toString().endsWith(".dll.old")));
                     });
         }
         catch (IOException e){

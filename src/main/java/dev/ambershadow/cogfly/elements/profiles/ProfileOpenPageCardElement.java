@@ -208,11 +208,10 @@ public class ProfileOpenPageCardElement extends JPanel {
         install.addActionListener(_ -> Utils.pickFile((path) -> CompletableFuture.runAsync(() -> {
             try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(path))) {
                 String fullName = "";
+                String name = "";
                 ZipEntry entry;
-
                 while ((entry = zis.getNextEntry()) != null) {
                     if (entry.getName().endsWith("manifest.json")) {
-
                         ByteArrayOutputStream os = new ByteArrayOutputStream();
                         byte[] buffer = new byte[4096];
                         int len;
@@ -222,17 +221,28 @@ public class ProfileOpenPageCardElement extends JPanel {
                         String content = os.toString(StandardCharsets.UTF_8);
                         JsonObject object = JsonParser.parseString(content).getAsJsonObject();
                         JsonElement element = object.get("FullName");
+                        JsonElement nm = object.get("name");
                         if (element != null && !element.isJsonNull()) {
                             fullName = element.getAsString();
+                        }
+                        if (nm != null && !nm.isJsonNull()) {
+                            name = nm.getAsString();
                         }
                         zis.closeEntry();
                         break;
                     }
                     zis.closeEntry();
                 }
-                if (!fullName.isEmpty()) {
+                if (!fullName.isBlank()) {
                     Utils.downloadModZipStream(Files.newInputStream(path), fullName, profile);
                 } else {
+                    if (!name.isBlank()) {
+                        ModData md = ModData.getModByName(name);
+                        if (md != null) {
+                            Utils.downloadModZipStream(Files.newInputStream(path), md.getFullName(), profile);
+                            return;
+                        }
+                    }
                     Files.copy(path, profile.getPluginsPath().resolve(path.getFileName()));
                 }
             } catch (IOException e) {
@@ -240,7 +250,7 @@ public class ProfileOpenPageCardElement extends JPanel {
             }
             profile.refreshMods();
             ModPanelElement.redraw(profile);
-        }), "*", "dll"));
+        }), "*", "zip", "dll"));
 
         upperPanel.add(launch);
         upperPanel.add(updateAll);
