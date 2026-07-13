@@ -9,18 +9,18 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest, macosos-latest ]
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       - name: Set up Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v5
         with:
           distribution: liberica
           java-version: 25
-          architecture: ${{ matrix.arch }}
+          architecture: x64
 
       - name: Make Gradle wrapper executable
         if: runner.os != 'Windows'
@@ -35,119 +35,109 @@ jobs:
             ./gradlew clean shadowJar
           fi
 
+      - name: Get version
+        shell: bash
+        run: |
+          echo "ver=$(./gradlew -q ver)" >> "$GITHUB_ENV"
+
       - name: Build macOS dmg
         if: runner.os == 'macOS'
         run: |
           jpackage \
               --input build/libs \
-              --main-jar Cogfly-1.2.0.jar \
+              --main-jar Cogfly-${{ env.ver }}.jar \
               --main-class dev.ambershadow.cogfly.Cogfly \
               --name "Cogfly" \
               --type dmg \
               --vendor "Ambershadow" \
               --icon ./icons/icon.icns \
-              --app-version 1.2.0 \
-              --dest output/${{ runner.os }}-${{ matrix.arch }} \
+              --app-version ${{ env.ver }} \
+              --dest output/${{ runner.os }} \
               --resource-dir plist \
               --verbose
 
-      - name: Build MSI
-        if: runner.os == 'Windows' && matrix.arch == 'amd64'
+      - name: Build Windows EXE
+        if: runner.os == 'Windows'
         run: |
+          choco install innosetup --no-progress -y
           jpackage `
             --input build/libs `
-            --main-jar Cogfly-1.2.0.jar `
-            --main-class dev.ambershadow.cogfly.Cogfly `
-            --name Cogfly `
-            --type msi `
-            --vendor "Ambershadow" `
-            --icon ./icons/icon.ico `
-            --app-version 1.2.0 `
-            --dest output/${{ runner.os }}-${{ matrix.arch }} `
-            --win-menu `
-            --win-shortcut `
-            --verbose
-
-      - name: Build Windows AppImage
-        if: runner.os == 'Windows' && matrix.arch == 'amd64'
-        run: |
-          jpackage `
-            --input build/libs `
-            --main-jar Cogfly-1.2.0.jar `
+            --main-jar Cogfly-${{ env.ver }}.jar `
             --main-class dev.ambershadow.cogfly.Cogfly `
             --name Cogfly `
             --type app-image `
             --vendor "Ambershadow" `
             --icon ./icons/icon.ico `
-            --app-version 1.2.0 `
-            --dest output/${{ runner.os }}-${{ matrix.arch }} `
+            --app-version ${{ env.ver }} `
+            --dest output/${{ runner.os }} `
             --verbose
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "/Dver=${{ env.ver }}" Cogfly.iss
 
       - name: Build DEB
-        if: runner.os == 'Linux' && matrix.arch == 'amd64'
+        if: runner.os == 'Linux'
         run: |
           jpackage \
             --input build/libs \
-            --main-jar Cogfly-1.2.0.jar \
+            --main-jar Cogfly-${{ env.ver }}.jar \
             --main-class dev.ambershadow.cogfly.Cogfly \
             --name Cogfly \
             --type deb \
             --vendor "Ambershadow" \
             --icon ./icons/icon.png \
-            --app-version 1.2.0 \
-            --dest output/${{ runner.os }}-${{ matrix.arch }} \
+            --app-version ${{ env.ver }} \
+            --dest output/${{ runner.os }} \
             --resource-dir desktop \
             --verbose
 
       - name: Build RPM
-        if: runner.os == 'Linux' && matrix.arch == 'amd64'
+        if: runner.os == 'Linux'
         run: |
           jpackage \
             --input build/libs \
-            --main-jar Cogfly-1.2.0.jar \
+            --main-jar Cogfly-${{ env.ver }}.jar \
             --main-class dev.ambershadow.cogfly.Cogfly \
             --name Cogfly \
             --type rpm \
             --vendor "Ambershadow" \
             --icon ./icons/icon.png \
-            --app-version 1.2.0 \
-            --dest output/${{ runner.os }}-${{ matrix.arch }} \
+            --app-version ${{ env.ver }} \
+            --dest output/${{ runner.os }} \
             --resource-dir desktop \
             --verbose
 
       - name: Build APPIMAGE
-        if: runner.os == 'Linux' && matrix.arch == 'amd64'
+        if: runner.os == 'Linux'
         run: |
           mkdir -p output/appimage
           jpackage \
             --input build/libs \
-            --main-jar Cogfly-1.2.0.jar \
+            --main-jar Cogfly-${{ env.ver }}.jar \
             --main-class dev.ambershadow.cogfly.Cogfly \
-            --name Cogfly-Linux_amd64 \
+            --name Cogfly \
             --type app-image \
             --vendor "Ambershadow" \
             --icon ./icons/icon.png \
-            --app-version 1.2.0 \
+            --app-version ${{ env.ver }} \
             --dest output/appimage \
             --verbose 
-          cp ./icons/icon.png output/appimage/Cogfly-Linux_amd64/
-          cat > output/appimage/Cogfly-Linux_amd64/AppRun << 'EOF'
+          cp ./icons/icon.png output/appimage/Cogfly/
+          cat > output/appimage/Cogfly/AppRun << 'EOF'
           #!/bin/sh
           export _JAVA_AWT_WM_NONREPARENTING=1
           HERE="$(dirname "$(readlink -f "$0")")"
-          exec "$HERE/bin/Cogfly-Linux_amd64" "$@"
+          exec "$HERE/bin/Cogfly" "$@"
           EOF
-          chmod +x output/appimage/Cogfly-Linux_amd64/AppRun
+          chmod +x output/appimage/Cogfly/AppRun
           sudo apt update
           wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O appimagetool
           chmod +x appimagetool
-          ls -l output/appimage/Cogfly-Linux_amd64
+          ls -l output/appimage/Cogfly
           export APPIMAGE_EXTRACT_AND_RUN=1
-          ./appimagetool -u output/appimage/Cogfly-Linux_amd64 output/${{ runner.os }}-${{ matrix.arch }}/Cogfly-1.2.0.AppImage
+          ./appimagetool -u output/appimage/Cogfly output/${{ runner.os }}/Cogfly-${{ env.ver }}.AppImage
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: Cogfly-${{ runner.os }}-${{ matrix.arch }}
-          path: output/${{ runner.os }}-${{ matrix.arch }}
+          name: Cogfly-${{ runner.os }}
+          path: output/${{ runner.os }}
           retention-days: 14

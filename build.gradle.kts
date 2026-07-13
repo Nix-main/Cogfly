@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "dev.ambershadow"
-version = "1.2.0"
+version = property("version") as String
 
 repositories {
     mavenCentral()
@@ -55,6 +55,11 @@ val compileTinyFileDialogs by tasks.registering(Exec::class) {
     )
 }
 
+tasks.register("ver") {
+    doLast {
+        println(project.version)
+    }
+}
 val compileNative by tasks.registering {
     mkdir("${layout.buildDirectory.get()}/native")
     dependsOn(compileWinFolderPicker, compileTinyFileDialogs)
@@ -75,8 +80,9 @@ tasks.processResources {
 tasks.shadowJar {
     archiveBaseName.set("Cogfly")
     archiveClassifier.set("")
-    archiveVersion.set("" + version)
+    archiveVersion.set(version.toString())
     manifest {
         attributes["Main-Class"] = "dev.ambershadow.cogfly.Cogfly"
+        attributes["Implementation-Version"] = archiveVersion.get()
     }
 }
