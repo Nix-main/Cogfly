@@ -83,6 +83,6 @@ tasks.shadowJar {
     archiveVersion.set(version.toString())
     manifest {
         attributes["Main-Class"] = "dev.ambershadow.cogfly.Cogfly"
-        attributes["Implementation-Version"] = archiveVersion.get()
+        attributes["Implementation-Version"] = version
     }
 }
