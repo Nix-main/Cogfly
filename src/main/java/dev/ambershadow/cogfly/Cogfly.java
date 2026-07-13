@@ -87,18 +87,11 @@ public class Cogfly {
             Files.createFile(dataJson);
         }
         settings = Settings.load(dataJson);
-        if (!Files.exists(localDataPath.resolve("icon.ico")))
-            try(InputStream stream = Cogfly.getResource("/assets/icon.ico").openStream()) {
-                Files.write(localDataPath.resolve("icon.ico"), stream.readAllBytes());
-            }
-        if (!Files.exists(localDataPath.resolve("icon.png")))
-            try(InputStream stream = Assets.icon.url().openStream()) {
-                Files.write(localDataPath.resolve("icon.png"), stream.readAllBytes());
-            }
-        if (!Files.exists(localDataPath.resolve("icon.icns")))
-            try(InputStream stream = Cogfly.getResource("/assets/icon.icns").openStream()) {
-                Files.write(localDataPath.resolve("icon.icns"), stream.readAllBytes());
-            }
+        for (String ext : new String[]{"ico", "png", "icns"})
+            if (!Files.exists(localDataPath.resolve("icon." + ext)))
+                try(InputStream stream = getResource("/assets/icon." + ext).openStream()) {
+                    Files.write(localDataPath.resolve("icon." + ext), stream.readAllBytes());
+                }
         if (args.length > 0){
             String arg = args[0].replace("cogfly://", "");
             if (arg.toLowerCase().startsWith("launch/")){
