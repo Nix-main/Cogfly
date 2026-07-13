@@ -8,13 +8,13 @@ import net.harawata.appdirs.AppDirsFactory;
 
 import javax.swing.*;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 public class Settings {
     private static final String[] STATIC_PATHS = new String[]
     {
@@ -28,10 +28,10 @@ public class Settings {
             "GOG Galaxy/Games/Hollow Knight Silksong",
     };
 
-    private static JsonObject getData(File dataJson){
+    private static JsonObject getData(Path dataJson){
         String content;
-        try(FileReader reader = new FileReader(dataJson)) {
-            content = new BufferedReader(reader).lines().collect(Collectors.joining("\n"));
+        try(InputStream stream = Files.newInputStream(dataJson)) {
+            content = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -42,9 +42,9 @@ public class Settings {
         }
         return null;
     }
-    public static Settings load(File file) {
+    public static Settings load(Path file) {
         Settings settings = null;
-        if (file.exists())
+        if (Files.exists(file))
             settings = new Gson().fromJson(getData(file), Settings.class);
         if (settings == null)
             settings = new Settings();
@@ -80,7 +80,7 @@ public class Settings {
     public boolean acceptedSteamArgs = false;
 
     private Settings(){}
-    private transient File dataFile;
+    private transient Path dataFile;
     public JsonObject getData() {
         return getData(dataFile);
     }
@@ -107,7 +107,7 @@ public class Settings {
     }
 
     public void save(){
-        try (Writer writer = Files.newBufferedWriter(dataFile.toPath())) {
+        try (Writer writer = Files.newBufferedWriter(dataFile)) {
             new GsonBuilder().setPrettyPrinting().create()
                     .toJson(this, writer);
         } catch (IOException ex) {

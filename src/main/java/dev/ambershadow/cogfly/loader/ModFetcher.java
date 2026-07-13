@@ -10,17 +10,14 @@ import dev.ambershadow.cogfly.util.FrameManager;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 
@@ -71,70 +68,70 @@ public class ModFetcher {
         List<ModData> installedMods = new ArrayList<>();
         if (!Files.exists(plugins))
             return installedMods;
-        File[] files = plugins.toFile().listFiles();
-        if (files == null)
-            return installedMods;
-        files: for (File file : files){
-            if (file.isDirectory()){
-                Path manifest = Paths.get(file.getAbsolutePath()).resolve("manifest.json");
-                if (Files.exists(manifest)) {
-                    try (JsonReader reader = new JsonReader(Files.newBufferedReader(manifest))) {
-                        JsonObject object = JsonParser.parseReader(reader).getAsJsonObject();
-                        String author = get(object, "namespace");
-                        String website = get(object, "website_url");
-                        String name = get(object, "name");
-                        String description = get(object, "description");
-                        String verion = get(object, "version_number");
-                        List<String> dependencies = new ArrayList<>();
-                        JsonArray deps = object.has("dependencies") ? object.get("dependencies").getAsJsonArray() : null;
-                        if (deps != null)
-                            deps.forEach(dep -> {
-                                if (dep.getAsString().contains("BepInEx-BepInExPack") || dep.getAsString().trim().isEmpty())
-                                    return;
-                                dependencies.add(dep.getAsString());
-                            });
+        try(Stream<Path> files = Files.list(plugins)) {
+            files:
+            for (Path path : files.toList()) {
+                if (Files.isDirectory(path)) {
+                    Path manifest = path.resolve("manifest.json");
+                    if (Files.exists(manifest)) {
+                        try (JsonReader reader = new JsonReader(Files.newBufferedReader(manifest))) {
+                            JsonObject object = JsonParser.parseReader(reader).getAsJsonObject();
+                            String author = get(object, "namespace");
+                            String website = get(object, "website_url");
+                            String name = get(object, "name");
+                            String description = get(object, "description");
+                            String verion = get(object, "version_number");
+                            List<String> dependencies = new ArrayList<>();
+                            JsonArray deps = object.has("dependencies") ? object.get("dependencies").getAsJsonArray() : null;
+                            if (deps != null)
+                                deps.forEach(dep -> {
+                                    if (dep.getAsString().contains("BepInEx-BepInExPack") || dep.getAsString().trim().isEmpty())
+                                        return;
+                                    dependencies.add(dep.getAsString());
+                                });
 
-                        for (ModData mod : Cogfly.mods.values()) {
-                            if (installedMods.contains(mod))
-                                continue;
-                            int matches = 0;
-                            if (author.equals(mod.getAuthor()))
-                                matches++;
-                            if (description.equals(mod.getDescription()))
-                                matches++;
-                            if (mod.getWebsiteUrl() != null)
-                                if (website.equals(mod.getWebsiteUrl().toString()))
+                            for (ModData mod : Cogfly.mods.values()) {
+                                if (installedMods.contains(mod))
+                                    continue;
+                                int matches = 0;
+                                if (author.equals(mod.getAuthor()))
                                     matches++;
-                            if (name.equals(mod.getName()))
-                                matches++;
-                            if (verion.equals(mod.getVersionNumber()))
-                                matches++;
-                            boolean de = new HashSet<>(dependencies).equals(new HashSet<>(mod.getDependencies()));
-                            if (de && !mod.getDependencies().isEmpty())
-                                matches++;
+                                if (description.equals(mod.getDescription()))
+                                    matches++;
+                                if (mod.getWebsiteUrl() != null)
+                                    if (website.equals(mod.getWebsiteUrl().toString()))
+                                        matches++;
+                                if (name.equals(mod.getName()))
+                                    matches++;
+                                if (verion.equals(mod.getVersionNumber()))
+                                    matches++;
+                                boolean de = new HashSet<>(dependencies).equals(new HashSet<>(mod.getDependencies()));
+                                if (de && !mod.getDependencies().isEmpty())
+                                    matches++;
 
-                            if (matches >= 3) {
-                                var installedVersion = get(object, "version_number");
-                                if (installedVersion.isEmpty()) {
-                                    installedVersion = mod.getVersionNumber();
+                                if (matches >= 3) {
+                                    var installedVersion = get(object, "version_number");
+                                    if (installedVersion.isEmpty()) {
+                                        installedVersion = mod.getVersionNumber();
+                                    }
+                                    var md = ModData.getModAtVersion(mod.rawObj, installedVersion);
+                                    if (md == null) {
+                                        Cogfly.logger.info("Failed to check if mod '{}' is installed. Make sure you are using an official version published on Thunderstore", mod.getFullName());
+                                        break;
+                                    }
+                                    installedMods.add(md);
+                                    continue files;
                                 }
-                                var md = ModData.getModAtVersion(mod.rawObj, installedVersion);
-                                if (md == null) {
-                                    Cogfly.logger.info("Failed to check if mod '{}' is installed. Make sure you are using an official version published on Thunderstore", mod.getFullName());
-                                    break;
-                                }
-                                installedMods.add(md);
-                                continue files;
                             }
+                            installedMods.add(new ModData(name + " (manual)", author, dependencies, verion, description, website));
+                            continue;
                         }
-                        installedMods.add(new ModData(name + " (manual)", author, dependencies, verion, description, website));
-                        continue;
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
                     }
                 }
+                installedMods.add(new ModData(path.getFileName().toString(), !path.getFileName().endsWith(".old")));
             }
-            installedMods.add(new ModData(file.getName(), !file.getName().endsWith(".old")));
+        } catch (IOException e){
+            throw new RuntimeException(e);
         }
         try (Stream<Path> paths = Files.list(plugins)){
             paths

@@ -58,7 +58,7 @@ public class Cogfly {
     public static Map<String, ModData> mods = new HashMap<>();
     public static Path localDataPath;
     public static Path roamingDataPath;
-    public static File dataJson;
+    public static Path dataJson;
     public static Settings settings;
     private static URL packUrl;
     public static String latestPackVer;
@@ -81,12 +81,10 @@ public class Cogfly {
             logger.error("Uncaught exception in thread {}", thread.getName(), throwable);
             Utils.throwNonFatalError(throwable);
         });
-        dataJson = new File(localDataPath + "/settings.json");
-        //noinspection ResultOfMethodCallIgnored
-        dataJson.getParentFile().mkdirs();
-        if (!dataJson.exists()) {
-            //noinspection ResultOfMethodCallIgnored
-            dataJson.createNewFile();
+        dataJson = localDataPath.resolve("settings.json");
+        Files.createDirectories(dataJson.getParent());
+        if (!Files.exists(dataJson)) {
+            Files.createFile(dataJson);
         }
         settings = Settings.load(dataJson);
         if (!Files.exists(localDataPath.resolve("icon.ico")))
@@ -109,7 +107,6 @@ public class Cogfly {
                 List<Path> paths = new ArrayList<>();
                 paths.add(Path.of(settings.profileSavePath));
                 paths.addAll(settings.profileSources.stream().map(Path::of).toList());
-                System.out.println(name);
                 for (Path profiles : paths) {
                     try(Stream<Path> stream = Files.list(profiles)){
                         stream.filter(path -> Files.isDirectory(path) && path.getFileName().toString().equalsIgnoreCase(name))
@@ -118,7 +115,7 @@ public class Cogfly {
                     }
                 }
                 if (profile[0] != null){
-                    Profile f = ProfileManager.loadProfile(new File(profile[0]));
+                    Profile f = ProfileManager.loadProfile(Paths.get(profile[0]));
                     launchGameAsync(true, f.getPath().toString(), f.getGamePath());
                 } else {
                     JOptionPane.showMessageDialog(null, "This profile does not exist.", "Error", JOptionPane.ERROR_MESSAGE);

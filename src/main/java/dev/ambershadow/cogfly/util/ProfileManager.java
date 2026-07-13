@@ -120,32 +120,34 @@ public class ProfileManager {
             Path path = Paths.get(m);
             if (!Files.exists(path))
                 continue;
-            File[] files = path.toFile().listFiles();
-            if (files == null)
-                continue;
-            for (File file : files) {
-                if (!file.isDirectory())
-                    continue;
-                Profile profile = loadProfile(file);
-                profile.refreshMods();
-                profiles.add(profile);
+            try(Stream<Path> files = Files.list(path)) {
+                for (Path file : files.toList()) {
+                    if (!Files.isDirectory(file))
+                        continue;
+                    Profile profile = loadProfile(file);
+                    profile.refreshMods();
+                    profiles.add(profile);
+                }
+            }
+            catch (IOException e){
+                throw new RuntimeException(e);
             }
         }
         baseGame = new Profile("Base Game", Paths.get(Cogfly.settings.gamePath), Assets.silksongIcon.getAsIcon());
         baseGame.refreshMods();
     }
 
-    public static Profile loadProfile(File file){
+    public static Profile loadProfile(Path path){
         String[] extensions = {"png", "jpeg", "jpg", "gif"};
         ImageIcon icon = null;
         for (String extension : extensions) {
-            Path path2 = file.toPath().resolve("icon." + extension);
+            Path path2 = path.resolve("icon." + extension);
             if (Files.exists(path2)){
                 icon = new ImageIcon(path2.toString());
                 break;
             }
         }
-        Path data = file.toPath().resolve("cogfly_data.json");
+        Path data = path.resolve("cogfly_data.json");
         String gamePath = "";
         if (Files.exists(data)){
             try(JsonReader reader = new JsonReader(Files.newBufferedReader(data))) {
@@ -158,7 +160,7 @@ public class ProfileManager {
                 throw new RuntimeException(e);
             }
         }
-        Profile profile = new Profile(file.getName(), Paths.get(file.getAbsolutePath()), icon);
+        Profile profile = new Profile(path.getFileName().toString(), path.toAbsolutePath(), icon);
         if (!gamePath.isEmpty())
             profile.setGamePath(Paths.get(gamePath).toString());
         Cogfly.logger.info("Read path {} for profile {}.", gamePath, profile.getName());
@@ -166,8 +168,7 @@ public class ProfileManager {
     }
 
     public static void fromFile(Path path, BiConsumer<Profile, ModData[]> outdated){
-        File file = path.toFile();
-        try(ZipInputStream zis = new ZipInputStream(new FileInputStream(file))){
+        try(ZipInputStream zis = new ZipInputStream(Files.newInputStream(path))){
             fromZipStream(zis, outdated);
         } catch (IOException e){
             throw new RuntimeException(e);
@@ -180,7 +181,6 @@ public class ProfileManager {
             URL url = URL.of(URI.create("https://thunderstore.io/api/experimental/legacyprofile/get/" + id), null);
             InputStream is = url.openStream();
             String content = new String(is.readAllBytes());
-            System.out.println(content);
             content = content.replace("#r2modman", "");
             ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(
                     Base64.getMimeDecoder().decode(content)));
@@ -295,7 +295,6 @@ public class ProfileManager {
                     .POST(HttpRequest.BodyPublishers.ofString(base64))
                     .build();
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            System.out.println(response.body());
             JsonObject json = JsonParser.parseString(response.body()).getAsJsonObject();
             return json.get("key").getAsString();
         } catch (IOException | InterruptedException e) {
@@ -307,7 +306,7 @@ public class ProfileManager {
         String r2x = "export.r2x";
         String stappid = "steam_appid.txt";
         String stappidContent = "1030300";
-        File doorStop = profile.getPath().resolve("doorstop_config.ini").toFile();
+        Path doorstop = profile.getPath().resolve("doorstop_config.ini");
         Path config = profile.getBepInExPath().resolve("config/");
 
         Map<String, Object> root = new LinkedHashMap<>();
@@ -348,11 +347,9 @@ public class ProfileManager {
         try{
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             ZipOutputStream zos = new ZipOutputStream(bos);
-
-            zipFolder(config.toFile(), config.toFile().getName(), zos);
-
-            try (FileInputStream fis = new FileInputStream(doorStop)) {
-                ZipEntry zipEntry = new ZipEntry(doorStop.getName());
+            zipFolder(config, config.toFile().getName(), zos);
+            try (InputStream fis = Files.newInputStream(doorstop)) {
+                ZipEntry zipEntry = new ZipEntry(doorstop.getFileName().toString());
                 zos.putNextEntry(zipEntry);
 
                 byte[] buffer = new byte[1024];
@@ -383,20 +380,18 @@ public class ProfileManager {
         }
     }
 
-    private static void zipFolder(File folder, String parentFolder, ZipOutputStream zos) throws IOException {
-        File[] files = folder.listFiles();
-        if (files == null) return;
-        for (File file : files) {
-            if (file.isDirectory()) {
-                String dirEntryName = parentFolder + "/" + file.getName() + "/";
+    private static void zipFolder(Path folder, String parentFolder, ZipOutputStream zos) throws IOException {
+        Stream<Path> files = Files.list(folder);
+        for (Path path : files.toList()) {
+            if (Files.isDirectory(path)) {
+                String dirEntryName = parentFolder + "/" + path.getFileName() + "/";
                 zos.putNextEntry(new ZipEntry(dirEntryName));
                 zos.closeEntry();
-                zipFolder(file, parentFolder + "/" + file.getName(), zos);
+                zipFolder(path, parentFolder + "/" + path.getFileName(), zos);
             } else {
-                try (FileInputStream fis = new FileInputStream(file)) {
-                    String zipEntryName = parentFolder + "/" + file.getName();
+                try (InputStream fis = Files.newInputStream(path)) {
+                    String zipEntryName = parentFolder + "/" + path.getFileName() + "/";
                     zos.putNextEntry(new ZipEntry(zipEntryName));
-
                     byte[] buffer = new byte[1024];
                     int length;
                     while ((length = fis.read(buffer)) >= 0) {
