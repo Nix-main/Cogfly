@@ -329,30 +329,37 @@ public class Utils {
     public static boolean isDownloading(Profile profile) {
         return !getActiveDownloads(profile).isEmpty();
     }
-
-    private static final Set<CompletableFuture<Void>> currentDownloads =
-            ConcurrentHashMap.newKeySet();
-    private static final Map<String, Set<String>> activeDownloads =
+    private static final Map<Profile, Set<String>> activeDownloads =
             new ConcurrentHashMap<>();
 
     private static Set<String> getActiveDownloads(Profile profile) {
         return activeDownloads.computeIfAbsent(
-                profile.getName(),
+                profile,
                 _ -> ConcurrentHashMap.newKeySet()
         );
     }
+
+    public static void addDownload(Profile profile, String name, CompletableFuture<Void> download){
+        getActiveDownloads(profile).add(name);
+        ModPanelElement.setProgressBar(profile);
+        download.whenComplete((_, _) -> {
+            getActiveDownloads(profile).remove(name);
+            ModPanelElement.setProgressBar(profile);
+            if (getActiveDownloads(profile).isEmpty())
+                activeDownloads.remove(profile);
+        });
+    }
     public static void downloadMod(ModData mod, Profile profile, boolean deps, boolean enabled){
         CompletableFuture<Void> download = CompletableFuture.runAsync(() -> {
-            String key = mod.getFullName();
-            Set<String> profileDownloads = getActiveDownloads(profile);
-            if (!profileDownloads.add(key)) {
+            String fn = mod.getFullName();
+            if (!getActiveDownloads(profile).add(fn)) {
                 return;
             }
             SwingUtilities.invokeLater(() -> ModPanelElement.setProgressBar(profile));
             try(InputStream is = mod.getDownloadUrl().openStream()) {
                 if (mod.isInstalled(profile))
                     return;
-                Cogfly.logger.info("Attempting to download {} at version {} for profile {}.", mod.getFullName(), mod.getVersionNumber(), profile.getName());
+                Cogfly.logger.info("Attempting to download {} at version {} for profile {}.", fn, mod.getVersionNumber(), profile.getName());
                 profile.removeMod(mod);
                 for (String dep : mod.getDependencies()) {
                     if (dep.contains("BepInExPack"))
@@ -363,12 +370,14 @@ public class Utils {
                             downloadMod(m, profile, true);
                     }
                 }
-                downloadModZipStream(is, mod.getFullName(), profile);
+                downloadModZipStream(is, fn, profile);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
             finally {
                 getActiveDownloads(profile).remove(mod.getFullName());
+                if (getActiveDownloads(profile).isEmpty())
+                    activeDownloads.remove(profile);
             }
             mod.setEnabled(profile, enabled);
             SwingUtilities.invokeLater(() -> {
@@ -376,9 +385,7 @@ public class Utils {
                 ModPanelElement.redraw(profile);
             });
         });
-        currentDownloads.add(download);
         download.whenComplete((_, _) ->{
-            currentDownloads.remove(download);
             ModPanelElement.setProgressBar(profile);
         });
         download.exceptionally(e -> {

@@ -414,8 +414,8 @@ public class Cogfly {
                 mods.sort(
                         Comparator.comparing(
                                 o -> o.getName().toLowerCase(),
-                                Comparator.nullsLast(Comparator.reverseOrder())
-                        ));
+                                Comparator.reverseOrder())
+                        );
                 break;
             case DOWNLOADS:
                 mods.sort(Comparator.comparingInt(ModData::getTotalDownloads));

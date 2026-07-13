@@ -199,6 +199,22 @@ public class ModData {
         this.enabled = enabled;
     }
 
+    public ModData(String name, String author, List<String> dependencies, String versionNumber, String description, String websiteUrl){
+        manual = true;
+        rawObj = new JsonObject();
+        this.name = name;
+        fullName = author + "-" + name;
+        this.author = author;
+        this.dependencies = dependencies;
+        this.versionNumber = versionNumber;
+        this.description = description;
+        dateCreated = "2000-01-01T00:00:00Z";
+        dateModified = "2000-01-01T00:00:00Z";
+        packageUrl = null;
+        this.websiteUrl = URI.create(websiteUrl);
+        iconUrl = null;
+    }
+
     public List<String> getDependencies() {
         return dependencies;
     }

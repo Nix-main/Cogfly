@@ -74,65 +74,67 @@ public class ModFetcher {
         File[] files = plugins.toFile().listFiles();
         if (files == null)
             return installedMods;
-        for (File file : files){
-            File[] innerFiles = file.listFiles();
-            if (innerFiles == null)
-                continue;
-            Path manifest = Paths.get(file.getAbsolutePath()).resolve("manifest.json");
-            if (Files.exists(manifest)) {
-                try (JsonReader reader = new JsonReader(Files.newBufferedReader(manifest))) {
-                    JsonObject object = JsonParser.parseReader(reader).getAsJsonObject();
-                    String author = get(object, "namespace");
-                    String website = get(object, "website_url");
-                    String name = get(object, "name");
-                    String description = get(object, "description");
-                    String verion = get(object, "version_number");
-                    List<String> dependencies = new ArrayList<>();
-                    JsonArray deps = object.has("dependencies") ? object.get("dependencies").getAsJsonArray() : null;
-                    if (deps != null)
-                        deps.forEach(dep -> {
-                            if (dep.getAsString().contains("BepInEx-BepInExPack") || dep.getAsString().trim().isEmpty())
-                                return;
-                            dependencies.add(dep.getAsString());
-                        });
+        files: for (File file : files){
+            if (file.isDirectory()){
+                Path manifest = Paths.get(file.getAbsolutePath()).resolve("manifest.json");
+                if (Files.exists(manifest)) {
+                    try (JsonReader reader = new JsonReader(Files.newBufferedReader(manifest))) {
+                        JsonObject object = JsonParser.parseReader(reader).getAsJsonObject();
+                        String author = get(object, "namespace");
+                        String website = get(object, "website_url");
+                        String name = get(object, "name");
+                        String description = get(object, "description");
+                        String verion = get(object, "version_number");
+                        List<String> dependencies = new ArrayList<>();
+                        JsonArray deps = object.has("dependencies") ? object.get("dependencies").getAsJsonArray() : null;
+                        if (deps != null)
+                            deps.forEach(dep -> {
+                                if (dep.getAsString().contains("BepInEx-BepInExPack") || dep.getAsString().trim().isEmpty())
+                                    return;
+                                dependencies.add(dep.getAsString());
+                            });
 
-                    for (ModData mod : Cogfly.mods.values()) {
-                        if (installedMods.contains(mod))
-                            continue;
-                        int matches = 0;
-                        if (author.equals(mod.getAuthor()))
-                            matches++;
-                        if (description.equals(mod.getDescription()))
-                            matches++;
-                        if (mod.getWebsiteUrl() != null)
-                            if (website.equals(mod.getWebsiteUrl().toString()))
+                        for (ModData mod : Cogfly.mods.values()) {
+                            if (installedMods.contains(mod))
+                                continue;
+                            int matches = 0;
+                            if (author.equals(mod.getAuthor()))
                                 matches++;
-                        if (name.equals(mod.getName()))
-                            matches++;
-                        if (verion.equals(mod.getVersionNumber()))
-                            matches++;
-                        boolean de = new HashSet<>(dependencies).equals(new HashSet<>(mod.getDependencies()));
-                        if (de && !mod.getDependencies().isEmpty())
-                            matches++;
+                            if (description.equals(mod.getDescription()))
+                                matches++;
+                            if (mod.getWebsiteUrl() != null)
+                                if (website.equals(mod.getWebsiteUrl().toString()))
+                                    matches++;
+                            if (name.equals(mod.getName()))
+                                matches++;
+                            if (verion.equals(mod.getVersionNumber()))
+                                matches++;
+                            boolean de = new HashSet<>(dependencies).equals(new HashSet<>(mod.getDependencies()));
+                            if (de && !mod.getDependencies().isEmpty())
+                                matches++;
 
-                        if (matches >= 3) {
-                            var installedVersion = get(object, "version_number");
-                            if (installedVersion.isEmpty()) {
-                                installedVersion = mod.getVersionNumber();
+                            if (matches >= 3) {
+                                var installedVersion = get(object, "version_number");
+                                if (installedVersion.isEmpty()) {
+                                    installedVersion = mod.getVersionNumber();
+                                }
+                                var md = ModData.getModAtVersion(mod.rawObj, installedVersion);
+                                if (md == null) {
+                                    Cogfly.logger.info("Failed to check if mod '{}' is installed. Make sure you are using an official version published on Thunderstore", mod.getFullName());
+                                    break;
+                                }
+                                installedMods.add(md);
+                                continue files;
                             }
-                            var md = ModData.getModAtVersion(mod.rawObj, installedVersion);
-                            if (md == null) {
-                                Cogfly.logger.info("Failed to check if mod '{}' is installed. Make sure you are using an official version published on Thunderstore", mod.getFullName());
-                                break;
-                            }
-                            installedMods.add(md);
-                            break;
                         }
+                        installedMods.add(new ModData(name + " (manual)", author, dependencies, verion, description, website));
+                        continue;
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
                     }
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
                 }
             }
+            installedMods.add(new ModData(file.getName(), !file.getName().endsWith(".old")));
         }
         try (Stream<Path> paths = Files.list(plugins)){
             paths
