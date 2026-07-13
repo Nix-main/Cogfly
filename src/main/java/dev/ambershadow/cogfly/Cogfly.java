@@ -87,11 +87,7 @@ public class Cogfly {
             Files.createFile(dataJson);
         }
         settings = Settings.load(dataJson);
-        for (String ext : new String[]{"ico", "png", "icns"})
-            if (!Files.exists(localDataPath.resolve("icon." + ext)))
-                try(InputStream stream = getResource("/assets/icon." + ext).openStream()) {
-                    Files.write(localDataPath.resolve("icon." + ext), stream.readAllBytes());
-                }
+        extractIcons();
         if (args.length > 0){
             String arg = args[0].replace("cogfly://", "");
             if (arg.toLowerCase().startsWith("launch/")){
@@ -152,6 +148,10 @@ public class Cogfly {
                     }
                 } else {
                     registerWinKey(exe);
+                }
+                Files.createDirectories(localDataPath.resolve("updater"));
+                try(InputStream stream = getResource("/updater.ps1").openStream()) {
+                    Files.write(localDataPath.resolve("updater","updater.ps1"), stream.readAllBytes());
                 }
             } catch (UnsatisfiedLinkError | URISyntaxException e) {
                 throw new RuntimeException(e);
@@ -217,6 +217,33 @@ public class Cogfly {
         logger.info("Showing UI");
         FrameManager.getOrCreate().frame.setVisible(true);
         showEarlyDialogs();
+    }
+
+    private static void extractIcons() throws IOException {
+        String ext = switch (Utils.OperatingSystem.current()){
+            case WINDOWS -> "ico";
+            case MAC -> "icns";
+            default -> "png";
+        };
+        if (!Files.exists(localDataPath.resolve("icon." + ext)))
+            try(InputStream stream = getResource("/assets/icon." + ext).openStream()) {
+                Files.write(localDataPath.resolve("icon." + ext), stream.readAllBytes());
+            }
+    }
+
+    private static void autoUpdateWindows() throws IOException {
+        new ProcessBuilder(
+                "cmd.exe",
+                "/c",
+                "start",
+                "powershell.exe",
+                "-ExecutionPolicy", "Bypass",
+                "-File",
+                localDataPath.resolve("updater", "updater.ps1").toString(),
+                ProcessHandle.current().pid() + "",
+                "https://ambershadow.dev/cogfly/download/Cogfly-latest.exe"
+        ).start();
+        System.exit(0);
     }
 
     private static void downloadPack(String version) throws IOException {
@@ -431,7 +458,7 @@ public class Cogfly {
         return mds;
     }
 
-    private static void showEarlyDialogs() {
+    private static void showEarlyDialogs() throws IOException {
         if (settings.getData() != null && settings.getData().has("profileSavePath")) {
             Cogfly.settings.profileSavePath = settings.getData().get("profileSavePath").getAsString();
         } else {
@@ -550,18 +577,15 @@ public class Cogfly {
             try (HttpClient client = HttpClient.newHttpClient()){
                 HttpRequest request = HttpRequest.newBuilder()
                         .GET()
-                        .uri(URI.create("https://api.github.com/repos/nix-main/Cogfly/releases"))
+                        .uri(URI.create("https://ambershadow.dev/api/cogfly/latest/"))
                         .build();
                 try {
                     HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-                    return JsonParser.parseString(response.body()).getAsJsonArray().get(0).getAsJsonObject().get("tag_name").getAsString();
+                    return JsonParser.parseString(response.body()).getAsJsonObject().get("version").getAsString();
                 } catch (IOException | InterruptedException e) {
                     if (e instanceof ConnectException)
                         return version;
                     throw new RuntimeException(e);
-                } catch (IllegalStateException e) {
-                    JOptionPane.showMessageDialog(FrameManager.getOrCreate().frame, "The github rate limit was reached, or another IllegalStateException was encountered.");
-                    return version;
                 }
             }
         }).get();
@@ -570,16 +594,20 @@ public class Cogfly {
                     FrameManager.getOrCreate().frame,
                     String.format("There is an update available! You are using version %s. The latest version is %s.", version, latestVer),
                     "Update",
-                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.YES_NO_CANCEL_OPTION,
                     JOptionPane.WARNING_MESSAGE,
                     null,
                     new Object[]{
+                            "Update Automatically",
                             "Open Release Page",
                             "Close"
                     },
-                    null
+                    "Update Automatically"
             );
-            if (update == JOptionPane.YES_OPTION) {
+            if (update == JOptionPane.YES_OPTION){
+                autoUpdateWindows();
+            }
+            if (update == JOptionPane.NO_OPTION) {
                 Utils.openURI(URI.create("https://github.com/nix-main/Cogfly/releases/latest"));
             }
         }
@@ -599,6 +627,28 @@ public class Cogfly {
             }
             else if (val == JOptionPane.NO_OPTION)
                 Utils.openURI(URI.create("https://www.patreon.com/c/AmberShadowo?utm_medium=unknown&utm_source=join_link&utm_campaign=creatorshare_creator&utm_content=copyLink"));
+        }
+
+        try (HttpClient client = HttpClient.newHttpClient()){
+            HttpRequest request = HttpRequest.newBuilder()
+                    .GET()
+                    .uri(URI.create("https://ambershadow.dev/cogfly/dynamic_message.json"))
+                    .build();
+            try {
+                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+                JsonObject message = JsonParser.parseString(response.body()).getAsJsonObject();
+                String content = message.get("content").getAsString();
+                if (!content.isBlank()){
+                    JOptionPane.showMessageDialog(
+                            FrameManager.getOrCreate().frame,
+                            content,
+                            message.get("title").getAsString(),
+                            message.get("type").getAsInt()
+                    );
+                }
+            } catch (IOException | InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
