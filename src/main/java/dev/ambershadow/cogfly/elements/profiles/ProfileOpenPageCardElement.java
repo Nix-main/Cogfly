@@ -205,70 +205,7 @@ public class ProfileOpenPageCardElement extends JPanel {
         });
 
         JButton install = new JButton("Install Manually");
-        install.addActionListener(_ -> Utils.pickFile((path) -> CompletableFuture.runAsync(() -> {
-            final String[] fname = {""};
-            CompletableFuture<Void> download = CompletableFuture.runAsync(() -> {
-                try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(path))) {
-                    String fullName = "";
-                    String name = "";
-                    boolean isZip = false;
-                    ZipEntry entry;
-                    while ((entry = zis.getNextEntry()) != null) {
-                        isZip = true;
-                        if (entry.getName().endsWith("manifest.json")) {
-                            ByteArrayOutputStream os = new ByteArrayOutputStream();
-                            byte[] buffer = new byte[4096];
-                            int len;
-                            while ((len = zis.read(buffer)) > 0) {
-                                os.write(buffer, 0, len);
-                            }
-                            String content = os.toString(StandardCharsets.UTF_8);
-                            JsonObject object = JsonParser.parseString(content).getAsJsonObject();
-                            JsonElement element = object.get("FullName");
-                            JsonElement nm = object.get("name");
-                            if (element != null && !element.isJsonNull()) {
-                                fullName = element.getAsString();
-                            }
-                            if (nm != null && !nm.isJsonNull()) {
-                                name = nm.getAsString();
-                            }
-                            zis.closeEntry();
-                            break;
-                        }
-                        zis.closeEntry();
-                    }
-                    if (!isZip) {
-                        Files.copy(path, profile.getPluginsPath().resolve(path.getFileName()));
-                        fname[0] = path.getFileName().toString();
-                        return;
-                    }
-                    if (!fullName.isBlank()) {
-                        Utils.downloadModZipStream(Files.newInputStream(path), fullName, profile);
-                        fname[0] = fullName;
-                    } else {
-                        if (!name.isBlank()) {
-                            ModData md = ModData.getModByName(name);
-                            if (md != null) {
-                                Utils.downloadModZipStream(Files.newInputStream(path), md.getFullName(), profile);
-                                fname[0] = md.getFullName();
-                            } else {
-                                Utils.downloadModZipStream(Files.newInputStream(path), name, profile);
-                                fname[0] = name;
-                            }
-                        } else {
-                            Utils.downloadModZipStream(Files.newInputStream(path), path.getFileName().toString(), profile);
-                            fname[0] = path.getFileName().toString();
-                        }
-                    }
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }).whenComplete((_, _) -> {
-                profile.refreshMods();
-                ModPanelElement.redraw(profile);
-            });
-            Utils.addDownload(profile, fname[0], download);
-        }), "*", "zip", "dll"));
+        install.addActionListener(_ -> Utils.pickFile((path) -> Utils.downloadManualMod(path, profile, true), "*", "zip", "dll"));
 
         upperPanel.add(launch);
         upperPanel.add(updateAll);

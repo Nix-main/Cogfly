@@ -193,8 +193,9 @@ public class ProfileManager {
     @SuppressWarnings("unchecked")
     private static void fromZipStream(ZipInputStream zis,BiConsumer<Profile, ModData[]> outdated){
         String r2xContent = "";
-        byte[] doorstopConfigData = new byte[0];
+        String cogflyData = "";
         Map<String, byte[]> configData = new HashMap<>();
+        Map<String, byte[]> manualData = new HashMap<>();
         try {
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {
@@ -211,13 +212,13 @@ public class ProfileManager {
                 byte[] data = buffer.toByteArray();
                 Cogfly.logger.info("Read {} ({} bytes)", entry.getName(), data.length);
                 if (entry.getName().equals("export.r2x"))
-                    r2xContent = new String(data);
-                if (entry.getName().equals("doorstop_config.ini")){
-                    doorstopConfigData = data;
-                }
-                if (entry.getName().contains("config/")){
+                    r2xContent = new String(data, StandardCharsets.UTF_8);
+                if (entry.getName().equals("cogfly_data.json"))
+                    cogflyData = new String(data, StandardCharsets.UTF_8);
+                if (entry.getName().contains("config/"))
                     configData.put(entry.getName(), data);
-                }
+                if (entry.getName().contains("manual/"))
+                    manualData.put(entry.getName(), data);
                 zis.closeEntry();
             }
         } catch (IOException e){
@@ -271,7 +272,12 @@ public class ProfileManager {
                 Files.copy(new ByteArrayInputStream(configData.get(key)), profile.getBepInExPath().resolve(key),
                         StandardCopyOption.REPLACE_EXISTING);
             }
-            Files.copy(new ByteArrayInputStream(doorstopConfigData), profile.getPath().resolve("doorstop_config.ini"), StandardCopyOption.REPLACE_EXISTING);
+            if (!manualData.isEmpty())
+                Files.createDirectories(profile.getPath().resolve("manual"));
+            for (String key : manualData.keySet()) {
+                Files.write(profile.getPath().resolve(key), manualData.get(key), StandardOpenOption.CREATE_NEW);
+                Utils.downloadManualMod(profile.getPath().resolve(key), profile, false);
+            }
         } catch (IOException e){
             throw new RuntimeException(e);
         }
@@ -303,10 +309,6 @@ public class ProfileManager {
     }
 
     private static byte[] toZip(Profile profile){
-        String r2x = "export.r2x";
-        String stappid = "steam_appid.txt";
-        String stappidContent = "1030300";
-        Path doorstop = profile.getPath().resolve("doorstop_config.ini");
         Path config = profile.getBepInExPath().resolve("config/");
 
         Map<String, Object> root = new LinkedHashMap<>();
@@ -314,7 +316,7 @@ public class ProfileManager {
         List<Map<String, Object>> mods = new ArrayList<>();
 
         Map<String, Object> pack = new LinkedHashMap<>();
-        pack.put("name", "BepInEx-BepInExPack_Silksong");
+        pack.put("name", "silksong_modding-BepInExPack_Silksong");
         Map<String, Integer> version = new LinkedHashMap<>();
         String[] v = Cogfly.latestPackVer.split("\\.");
         version.put("major", Integer.parseInt(v[0]));
@@ -325,6 +327,8 @@ public class ProfileManager {
         mods.add(pack);
 
         for (ModData data : profile.getInstalledMods()){
+            if (data.isManual())
+                continue;
             Map<String, Object> mod = new LinkedHashMap<>();
             mod.put("name", data.getFullName());
             Map<String, Integer> ver = new LinkedHashMap<>();
@@ -347,30 +351,34 @@ public class ProfileManager {
         try{
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             ZipOutputStream zos = new ZipOutputStream(bos);
-            zipFolder(config, config.toFile().getName(), zos);
-            try (InputStream fis = Files.newInputStream(doorstop)) {
-                ZipEntry zipEntry = new ZipEntry(doorstop.getFileName().toString());
-                zos.putNextEntry(zipEntry);
+            zipFolder(config, config.getFileName().toString(), zos);
 
-                byte[] buffer = new byte[1024];
-                int length;
-                while ((length = fis.read(buffer)) >= 0) {
-                    zos.write(buffer, 0, length);
-                }
-                zos.closeEntry();
-            }
-
-            ZipEntry steamAppid = new ZipEntry(stappid);
+            ZipEntry steamAppid = new ZipEntry("steam_appid.txt");
             zos.putNextEntry(steamAppid);
-            byte[] bytes = stappidContent.getBytes(StandardCharsets.UTF_8);
+            byte[] bytes = "1030300".getBytes(StandardCharsets.UTF_8);
             zos.write(bytes, 0, bytes.length);
             zos.closeEntry();
 
-            ZipEntry r2xC = new ZipEntry(r2x);
+            ZipEntry r2xC = new ZipEntry("export.r2x");
             zos.putNextEntry(r2xC);
             byte[] b = r2xContent.getBytes(StandardCharsets.UTF_8);
             zos.write(b, 0, b.length);
             zos.closeEntry();
+
+            if (Files.exists(profile.getPath().resolve("cogfly_data.json"))) {
+                ZipEntry dat = new ZipEntry("cogfly_data.json");
+                zos.putNextEntry(dat);
+                byte[] a = Files.readAllBytes(profile.getPath().resolve("cogfly_data.json"));
+                zos.write(a, 0, a.length);
+                zos.closeEntry();
+            }
+
+
+            if (Files.exists(profile.getBepInExPath().resolve("manual"))) {
+                zipFolder(profile.getBepInExPath().resolve("manual"), "manual", zos);
+            }
+
+
 
             zos.finish();
             zos.close();

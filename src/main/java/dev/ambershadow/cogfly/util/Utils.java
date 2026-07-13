@@ -1,5 +1,8 @@
 package dev.ambershadow.cogfly.util;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.sun.jna.Pointer;
 import com.sun.jna.WString;
 import dev.ambershadow.cogfly.Cogfly;
@@ -338,16 +341,70 @@ public class Utils {
                 _ -> ConcurrentHashMap.newKeySet()
         );
     }
-
-    public static void addDownload(Profile profile, String name, CompletableFuture<Void> download){
-        getActiveDownloads(profile).add(name);
-        ModPanelElement.setProgressBar(profile);
-        download.whenComplete((_, _) -> {
-            getActiveDownloads(profile).remove(name);
+    public static void downloadManualMod(Path path, Profile profile, boolean copy){
+        final String[] fname = {""};
+        CompletableFuture.runAsync(() -> {
+            try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(path))) {
+                String fullName = "";
+                String name = "";
+                boolean isZip = false;
+                ZipEntry entry;
+                while ((entry = zis.getNextEntry()) != null) {
+                    isZip = true;
+                    if (entry.getName().endsWith("manifest.json")) {
+                        ByteArrayOutputStream os = new ByteArrayOutputStream();
+                        byte[] buffer = new byte[4096];
+                        int len;
+                        while ((len = zis.read(buffer)) > 0) {
+                            os.write(buffer, 0, len);
+                        }
+                        String content = os.toString(StandardCharsets.UTF_8);
+                        JsonObject object = JsonParser.parseString(content).getAsJsonObject();
+                        JsonElement element = object.get("FullName");
+                        JsonElement nm = object.get("name");
+                        if (element != null && !element.isJsonNull())
+                            fullName = element.getAsString();
+                        if (nm != null && !nm.isJsonNull())
+                            name = nm.getAsString();
+                        zis.closeEntry();
+                        break;
+                    }
+                    zis.closeEntry();
+                }
+                if (copy) {
+                    Files.createDirectories(profile.getPath().resolve("manual"));
+                    Files.copy(path, profile.getPath().resolve("manual").resolve(path.getFileName()));
+                }
+                if (!isZip) {
+                    Files.copy(path, profile.getPluginsPath().resolve(path.getFileName()));
+                    fname[0] = path.getFileName().toString();
+                    return;
+                }
+                if (!fullName.isBlank())
+                    fname[0] = fullName;
+                else
+                    if (!name.isBlank()) {
+                        ModData md = ModData.getModByName(name);
+                        if (md != null)
+                            fname[0] = md.getFullName();
+                        else
+                            fname[0] = name;
+                    } else
+                        fname[0] = path.getFileName().toString();
+                downloadModZipStream(Files.newInputStream(path), fname[0], profile);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }).whenComplete((_, _) -> {
+            profile.refreshMods();
+            ModPanelElement.redraw(profile);
+            getActiveDownloads(profile).remove(fname[0]);
             ModPanelElement.setProgressBar(profile);
             if (getActiveDownloads(profile).isEmpty())
                 activeDownloads.remove(profile);
         });
+        getActiveDownloads(profile).add(fname[0]);
+        ModPanelElement.setProgressBar(profile);
     }
     public static void downloadMod(ModData mod, Profile profile, boolean deps, boolean enabled){
         CompletableFuture<Void> download = CompletableFuture.runAsync(() -> {
