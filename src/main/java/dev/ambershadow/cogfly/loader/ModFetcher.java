@@ -94,21 +94,15 @@ public class ModFetcher {
                                 if (installedMods.contains(mod))
                                     continue;
                                 int matches = 0;
-                                if (author.equals(mod.getAuthor()))
-                                    matches++;
-                                if (description.equals(mod.getDescription()))
-                                    matches++;
+                                matches += check(author, mod.getAuthor());
+                                matches += check(description, mod.getDescription());
                                 if (mod.getWebsiteUrl() != null)
-                                    if (website.equals(mod.getWebsiteUrl().toString()))
-                                        matches++;
-                                if (name.equals(mod.getName()))
-                                    matches++;
-                                if (verion.equals(mod.getVersionNumber()))
-                                    matches++;
+                                    matches += check(website, mod.getWebsiteUrl().toString());
+                                matches += check(name, mod.getName());
+                                matches += check(verion, mod.getVersionNumber());
                                 boolean de = new HashSet<>(dependencies).equals(new HashSet<>(mod.getDependencies()));
                                 if (de && !mod.getDependencies().isEmpty())
                                     matches++;
-
                                 if (matches >= 3) {
                                     var installedVersion = get(object, "version_number");
                                     if (installedVersion.isEmpty()) {
@@ -149,6 +143,9 @@ public class ModFetcher {
         return installedMods;
     }
 
+    private static int check(Object val, Object md){
+        return val.equals(md) ? 1 : 0;
+    }
     private static String get(JsonObject obj, String key) {
         return obj.has(key) ? obj.get(key).getAsString() : "";
     }
