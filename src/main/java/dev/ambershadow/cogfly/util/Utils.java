@@ -381,6 +381,9 @@ public class Utils {
             currentDownloads.remove(download);
             ModPanelElement.setProgressBar(profile);
         });
+        download.exceptionally(e -> {
+            throw new RuntimeException(e);
+        });
     }
 
     public static void downloadModZipStream(InputStream stream, String fullName, Profile profile){

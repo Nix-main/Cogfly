@@ -339,7 +339,7 @@ public class ModPanelElement extends JPanel {
     private void filterButtons() {
         String query = searchField.getText().toLowerCase();
         List<ModData> filtered = new ArrayList<>();
-        for (ModData mod : Cogfly.getDisplayedMods(profile, showInstalled.isSelected())) {
+        for (ModData mod : Cogfly.sortList(current, currentDirection, profile, showInstalled.isSelected())) {
             if (mod.getName().replaceAll(" ", "")
                     .toLowerCase().contains(query.replaceAll(" ", ""))) {
                 filtered.add(mod);

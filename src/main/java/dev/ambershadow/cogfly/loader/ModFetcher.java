@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import dev.ambershadow.cogfly.Cogfly;
+import dev.ambershadow.cogfly.util.FrameManager;
 
 import javax.swing.*;
 import java.awt.*;
@@ -19,33 +20,46 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 
 public class ModFetcher {
     private static final String Url = "https://thunderstore.io/c/hollow-knight-silksong/api/v1/package-listing-index/";
+    private static Path cache = null;
     public static List<JsonObject> getAllMods() {
+        if (cache == null)
+            cache = Cogfly.localDataPath.resolve("mod_cache.json");
         List<JsonObject> all = new ArrayList<>();
         String content;
+        boolean found = false;
         try (GZIPInputStream gzip = new GZIPInputStream(URL.of(URI.create(Url), null).openStream());
              GZIPInputStream gzip1 = new GZIPInputStream(URL.of(URI.create(new String(gzip.readAllBytes()).split("\"")[1]), null).openStream())
         ) {
             content = new String(gzip1.readAllBytes());
+            found = true;
+            Files.writeString(cache, content);
         }
         catch (UnknownHostException unknown) {
             JOptionPane.showMessageDialog(
-                null,
-                "An UnknownHostException was thrown during mod discovery.\nMods will not show",
+                    FrameManager.getOrCreate().frame,
+                "An UnknownHostException was thrown during mod discovery.\nMods may not install properly.",
                 "No Internet?",
                 JOptionPane.WARNING_MESSAGE
             );
-
-            return new ArrayList<>();
+            if (!found && Files.exists(cache)) {
+                try {
+                    content = Files.readString(cache);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            } else {
+                return all;
+            }
         }
         catch (IOException e) {
-            return new ArrayList<>();
+            throw new RuntimeException(e);
         }
-
         JsonArray items = JsonParser.parseString(content).getAsJsonArray();
         for (JsonElement el : items)
             all.add(el.getAsJsonObject());
