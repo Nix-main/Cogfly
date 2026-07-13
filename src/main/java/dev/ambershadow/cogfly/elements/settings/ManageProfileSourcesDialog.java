@@ -23,7 +23,7 @@ public class ManageProfileSourcesDialog extends JDialog {
                 return false;
             }
         };
-        base.queuedProfileSources.forEach(
+        base.get(s -> s.profileSources).forEach(
                 source -> model.addRow(new Object[]{source}));
         JPanel tableWrapper = new JPanel(new FlowLayout(FlowLayout.CENTER));
         setResizable(false);
@@ -44,19 +44,19 @@ public class ManageProfileSourcesDialog extends JDialog {
         JPanel buttonWrapper = new JPanel(new FlowLayout(FlowLayout.CENTER));
         JButton button1 = new JButton("Add");
         button1.addActionListener(_ -> Utils.pickFolder((path) -> {
-            if (path.equals(Paths.get(base.queuedProfileSavePath)))
+            if (path.equals(Paths.get(base.<String>get(s -> s.profileSavePath))))
                 return;
             model.setRowCount(model.getRowCount() + 1);
             table.setModel(model);
             table.setValueAt(path.toString(), model.getRowCount()-1, 0);
-            base.queuedProfileSources.add(path.toString());
+            base.update(s -> s.profileSources.add(path.toString()));
         }));
         JButton button2 = new JButton("Remove");
         button2.setEnabled(table.getSelectedRow() != -1);
         button2.addActionListener(_ -> {
             int row = table.getSelectedRow();
-            if (row >= 0 && row < base.queuedProfileSources.size()) {
-                base.queuedProfileSources.remove(row);
+            if (row >= 0 && row < base.get(s -> s.profileSources).size()) {
+                base.update(s -> s.profileSources.remove(row));
                 model.removeRow(row);
                 table.setModel(model);
             }
@@ -67,13 +67,5 @@ public class ManageProfileSourcesDialog extends JDialog {
         buttonWrapper.add(Box.createHorizontalStrut(200));
         buttonWrapper.add(button2, BorderLayout.WEST);
         add(buttonWrapper, BorderLayout.SOUTH);
-
-
-        addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                base.updateProfileSources();
-            }
-        });
     }
 }

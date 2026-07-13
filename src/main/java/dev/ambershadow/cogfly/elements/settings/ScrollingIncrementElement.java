@@ -18,7 +18,7 @@ public class ScrollingIncrementElement extends SettingsElement {
         box.setSelectedItem(Cogfly.settings.scrollingIncrement);
         box.addActionListener(_ -> {
             @SuppressWarnings("DataFlowIssue") int n = (int)box.getSelectedItem();
-            parent.updateScrollIncrement(n);
+            parent.update(s -> s.scrollingIncrement = n);
         });
         label.setToolTipText("The amount of pixels that one notch on your scroll wheel moves the bar down. Alternatively, scroll speed.");
         add(label, box);

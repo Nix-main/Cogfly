@@ -15,7 +15,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+
 public class Settings {
+
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final String[] STATIC_PATHS = new String[]
     {
             "Program Files/Steam/steamapps/common/Hollow Knight Silksong",
@@ -45,7 +48,7 @@ public class Settings {
     public static Settings load(Path file) {
         Settings settings = null;
         if (Files.exists(file))
-            settings = new Gson().fromJson(getData(file), Settings.class);
+            settings = GSON.fromJson(getData(file), Settings.class);
         if (settings == null)
             settings = new Settings();
         settings.dataFile = file;
@@ -108,12 +111,21 @@ public class Settings {
 
     public void save(){
         try (Writer writer = Files.newBufferedWriter(dataFile)) {
-            new GsonBuilder().setPrettyPrinting().create()
-                    .toJson(this, writer);
+            GSON.toJson(this, writer);
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
         if (FrameManager.isCreated)
             FrameManager.getOrCreate().getCurrentPage().reload();
+    }
+
+    @Override
+    public int hashCode(){
+        return GSON.toJsonTree(this).hashCode();
+    }
+
+    @Override
+    public boolean equals(Object other){
+        return other instanceof Settings && GSON.toJsonTree(other).equals(GSON.toJsonTree(this));
     }
 }

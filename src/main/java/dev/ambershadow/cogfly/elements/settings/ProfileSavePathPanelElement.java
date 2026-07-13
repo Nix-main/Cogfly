@@ -15,7 +15,7 @@ public class ProfileSavePathPanelElement extends SettingsElement {
         button.addActionListener(_ -> Utils.pickFolder(path -> {
             String p = path.toFile().getAbsolutePath();
             button.setText(p);
-            parent.updateProfileSavePath(p);
+            parent.update(s -> s.profileSavePath = p);
         }));
         label.setToolTipText("The location to save newly created profiles.");
         add(label, button);

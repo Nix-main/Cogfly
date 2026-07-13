@@ -2,6 +2,7 @@ package dev.ambershadow.cogfly.elements.settings;
 
 import dev.ambershadow.cogfly.Cogfly;
 import dev.ambershadow.cogfly.elements.SettingsDialog;
+import dev.ambershadow.cogfly.util.Settings;
 import dev.ambershadow.cogfly.util.Utils;
 
 import javax.swing.*;
@@ -16,7 +17,7 @@ public class GamePathElement extends SettingsElement {
             String p = path.toFile()
                     .getParentFile().getAbsolutePath();
             button.setText(p);
-            parent.updateGamePath(p);
+            parent.update(s -> s.gamePath = p);
         }, "Hollow Knight Silksong", "exe", "app", ""));
         add(label, button);
     }

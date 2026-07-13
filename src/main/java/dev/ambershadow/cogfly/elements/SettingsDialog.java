@@ -6,6 +6,7 @@ import dev.ambershadow.cogfly.elements.profiles.ProfileCardElement;
 import dev.ambershadow.cogfly.elements.settings.*;
 import dev.ambershadow.cogfly.util.FrameManager;
 import dev.ambershadow.cogfly.util.ProfileManager;
+import dev.ambershadow.cogfly.util.Settings;
 
 import javax.swing.*;
 import java.awt.*;
@@ -13,13 +14,16 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class SettingsDialog extends JDialog {
 
     public final JButton saveButton;
+
+    private Settings initial;
+    private Settings queued;
+
     public SettingsDialog(Frame parent, String name, boolean modal) {
         super(parent, name, modal);
         resetQueue();
@@ -82,109 +86,18 @@ public class SettingsDialog extends JDialog {
         });
     }
 
-    private String initialTheme;
-    private String initialGamePath;
-    private List<String> initialProfileSources;
-    private String initialSavePath;
-    private boolean initialAutoNameSpacing;
-    private boolean initialBaseGameEnabled;
-    private int initialScrollIncrement;
-    private boolean initialRelativeTime;
-    private boolean initialPerProfilePaths;
-    private boolean initialLaunchWithSteam;
-    private boolean initialShowInstalledModsOnTop;
-    private boolean queuedSteamArgs;
-    private String queuedTheme;
-    private String queuedGamePath;
-    public List<String> queuedProfileSources;
-    public String queuedProfileSavePath;
-    private boolean queuedNameSpaceBool;
-    private boolean queuedBaseGameBool;
-    private int queuedScrollIncrement;
-    private boolean queuedRelativeTime;
-    private boolean queuedPerProfilePaths;
-    private boolean queuedLaunchWithSteam;
-    private boolean queuedShowInstalledModsOnTop;
-    private boolean initialSteamArgs;
-
-    public void updateTheme(UIManager.LookAndFeelInfo theme){
-        queuedTheme = theme.getClassName();
-        update();
+    public <T> T get(Function<Settings, T> func) {
+        return func.apply(queued);
     }
-    public void updateGamePath(String path){
-        queuedGamePath = path;
-        update();
-    }
-    public void updateProfileSavePath(String path){
-        queuedProfileSavePath = path;
-        update();
-    }
-
-    public void updateModNameSpacing(boolean spaces){
-        queuedNameSpaceBool = spaces;
-        update();
-    }
-
-    public void updateSteamLaunchArgs(boolean args){
-        queuedSteamArgs = args;
-        update();
-    }
-
-    public void updateRelativeTime(boolean relative){
-        queuedRelativeTime = relative;
-        update();
-    }
-    public void updateBaseGameModding(boolean allowed){
-        queuedBaseGameBool = allowed;
-        update();
-    }
-
-    public void updateScrollIncrement(int n){
-        queuedScrollIncrement = n;
-        update();
-    }
-
-    public void updatePerProfilePaths(boolean n){
-        queuedPerProfilePaths = n;
-        update();
-    }
-
-    public void updateLaunchWithSteam(boolean n){
-        queuedLaunchWithSteam = n;
-        update();
-    }
-
-    public void updateShowInstalledModsOnTop(boolean n){
-        queuedShowInstalledModsOnTop = n;
-        update();
-    }
-
-    public void updateProfileSources(){
-        update();
-    }
-
-    private void update() {
-        boolean dirty =
-                !Objects.equals(initialTheme, queuedTheme) ||
-                        !Objects.equals(initialGamePath, queuedGamePath) ||
-                        !Objects.equals(initialSavePath, queuedProfileSavePath) ||
-                        !Objects.equals(initialProfileSources, queuedProfileSources) ||
-                        initialAutoNameSpacing != queuedNameSpaceBool ||
-                        initialBaseGameEnabled != queuedBaseGameBool ||
-                        initialScrollIncrement != queuedScrollIncrement ||
-                        initialRelativeTime != queuedRelativeTime ||
-                        initialPerProfilePaths != queuedPerProfilePaths ||
-                        initialLaunchWithSteam != queuedLaunchWithSteam ||
-                        initialShowInstalledModsOnTop != queuedShowInstalledModsOnTop ||
-                        initialSteamArgs != queuedSteamArgs;
-
-        saveButton.setEnabled(dirty);
+    public void update(Consumer<Settings> v){
+        v.accept(queued);
+        saveButton.setEnabled(!initial.equals(queued));
     }
 
 
     private void applyAndSave(){
         try {
-            UIManager.setLookAndFeel(queuedTheme);
+            UIManager.setLookAndFeel(queued.theme);
         } catch (ClassNotFoundException | UnsupportedLookAndFeelException | InstantiationException |
                  IllegalAccessException e) {
             throw new RuntimeException(e);
@@ -193,24 +106,11 @@ public class SettingsDialog extends JDialog {
         ProfileCardElement.hover = UIManager.getColor("Button.pressedBackground");
         ProfileCardElement.hover = FlatLaf.isLafDark() ? ProfileCardElement.hover.brighter() : ProfileCardElement.hover.darker();
         FrameManager.getOrCreate().getCurrentPageButton().setBackground(ProfileCardElement.hover);
-
-        Cogfly.settings.profileSources = queuedProfileSources;
-        Cogfly.settings.modNameSpaces = queuedNameSpaceBool;
-        Cogfly.settings.baseGameEnabled = queuedBaseGameBool;
-        Cogfly.settings.profileSavePath = queuedProfileSavePath;
-        Cogfly.settings.gamePath = queuedGamePath;
-        Cogfly.settings.theme = queuedTheme;
-        Cogfly.settings.scrollingIncrement = queuedScrollIncrement;
-        Cogfly.settings.useRelativeTime = queuedRelativeTime;
-        Cogfly.settings.profileSpecificPaths = queuedPerProfilePaths;
-        Cogfly.settings.showInstalledModsOnTop = queuedShowInstalledModsOnTop;
-        Cogfly.settings.launchWithSteam = queuedLaunchWithSteam;
-        Cogfly.settings.acceptedSteamArgs = queuedSteamArgs;
-
-        if (!queuedProfileSources.equals(initialProfileSources))
+        Cogfly.settings = queued;
+        if (!queued.profileSources.equals(initial.profileSources))
             ProfileManager.loadProfiles();
-        if (queuedBaseGameBool)
-            Cogfly.downloadBepInEx(Path.of(queuedGamePath));
+        if (queued.baseGameEnabled)
+            Cogfly.downloadBepInEx(Path.of(queued.gamePath));
         SwingUtilities.invokeLater(ModPanelElement::redrawAll);
         SwingUtilities.updateComponentTreeUI(FrameManager.getOrCreate().frame);
         SwingUtilities.updateComponentTreeUI(this);
@@ -218,29 +118,7 @@ public class SettingsDialog extends JDialog {
     }
 
     private void resetQueue(){
-        queuedProfileSources = new ArrayList<>(Cogfly.settings.profileSources);
-        queuedNameSpaceBool = Cogfly.settings.modNameSpaces;
-        queuedBaseGameBool = Cogfly.settings.baseGameEnabled;
-        queuedProfileSavePath = Cogfly.settings.profileSavePath;
-        queuedGamePath = Cogfly.settings.gamePath;
-        queuedTheme = Cogfly.settings.theme;
-        queuedScrollIncrement = Cogfly.settings.scrollingIncrement;
-        queuedRelativeTime = Cogfly.settings.useRelativeTime;
-        queuedPerProfilePaths = Cogfly.settings.profileSpecificPaths;
-        queuedShowInstalledModsOnTop = Cogfly.settings.showInstalledModsOnTop;
-        queuedLaunchWithSteam = Cogfly.settings.launchWithSteam;
-        queuedSteamArgs = Cogfly.settings.acceptedSteamArgs;
-        initialAutoNameSpacing = Cogfly.settings.modNameSpaces;
-        initialBaseGameEnabled = Cogfly.settings.baseGameEnabled;
-        initialSavePath = Cogfly.settings.profileSavePath;
-        initialGamePath = Cogfly.settings.gamePath;
-        initialTheme = Cogfly.settings.theme;
-        initialScrollIncrement = Cogfly.settings.scrollingIncrement;
-        initialRelativeTime = Cogfly.settings.useRelativeTime;
-        initialPerProfilePaths = Cogfly.settings.profileSpecificPaths;
-        initialShowInstalledModsOnTop = Cogfly.settings.showInstalledModsOnTop;
-        initialProfileSources = Cogfly.settings.profileSources;
-        initialLaunchWithSteam = Cogfly.settings.launchWithSteam;
-        initialSteamArgs = Cogfly.settings.acceptedSteamArgs;
+        queued = Settings.load(Cogfly.dataJson);
+        initial = Settings.load(Cogfly.dataJson);
     }
 }
