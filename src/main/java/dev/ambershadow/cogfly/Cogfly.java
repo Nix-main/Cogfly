@@ -283,21 +283,27 @@ public class Cogfly {
         return exists;
     }
 
-    private static boolean setLaunchArgs(Path vdf, String args) throws IOException{
+    private static boolean setLaunchArgs(Path vdf, String args) throws IOException, InterruptedException {
+        if (!Files.exists(vdf))
+            return false;
         int silksongIndex = -1;
         int launchOptsIndex = -1;
         boolean isSilk = false;
         String launchOpts = "";
         List<String> lines = Files.readAllLines(vdf);
-        for (String line : lines){
+        for (int i = 0; i < lines.size(); i++) {
+            String line = lines.get(i);
             String val = line.trim().replaceAll("\"", "");
             if (val.matches("\\d+"))
                 isSilk = false;
-            if (val.equals("1030300"))
-                isSilk = (silksongIndex = lines.indexOf(line)) != -1;
+            if (val.equals("1030300")){
+                silksongIndex = i;
+                isSilk = true;
+            }
             if (val.startsWith("LaunchOptions") && isSilk) {
                 launchOpts = line;
-                launchOptsIndex = lines.indexOf(line);
+                launchOptsIndex = i;
+                logger.info("{}, {}", launchOptsIndex, launchOpts);
                 break;
             }
         }
@@ -317,6 +323,7 @@ public class Cogfly {
             if (opt == JOptionPane.YES_OPTION)
                 settings.acceptedSteamArgs = true;
             settings.finishedSteamPopup = true;
+            settings.save();
         }
         if (!settings.acceptedSteamArgs)
             return true;
@@ -334,22 +341,30 @@ public class Cogfly {
             if (vals.length > 3) {
                 if (vals[3].contains("%command%")) {
                     List<String> a = new ArrayList<>(Arrays.stream(vals[3].split("%command%")).toList());
-                    a.add(1, "v" + " %command%");
+                    a.add(1, args + " %command%");
                     a.add("\"");
                     vals[3] = String.join("", a);
                 }
                 else
-                    vals[3] = "v %command% " + vals[3] + "\"";
+                    vals[3] = args + " %command% " + vals[3] + "\"";
             }
             else
-                vals[2] = " \t\"v %command% \"";
+                vals[2] = " \t\"" + args + " %command% \"";
             lines.remove(launchOptsIndex);
             index = launchOptsIndex;
             val = String.join("\"", vals);
         }
-        logger.info(val);
+        Utils.openURI(URI.create("steam://exit"));
+        ProcessHandle.allProcesses()
+                .filter((p) ->
+                        p.info().command().map(cmd -> cmd.toLowerCase().endsWith("steam.exe")
+                                || cmd.toLowerCase().endsWith("steam")
+                        || cmd.toLowerCase().endsWith("steam_osx")).orElse(false))
+                .findFirst()
+                .ifPresentOrElse(steam -> steam.onExit().join(), () -> {});
         lines.add(index, String.join("\"", val));
         Files.write(vdf, lines);
+        logger.info(val);
         return true;
     }
 
@@ -418,7 +433,7 @@ public class Cogfly {
         return mds;
     }
 
-    private static void showEarlyDialogs() throws IOException {
+    private static void showEarlyDialogs() {
         if (settings.getData() != null && settings.getData().has("profileSavePath")) {
             Cogfly.settings.profileSavePath = settings.getData().get("profileSavePath").getAsString();
         } else {
@@ -636,6 +651,7 @@ public class Cogfly {
             String arg = String.join(" ", args);
             logger.info("Launch arguments: {}", arg);
             if (settings.launchWithSteam) {
+                arg = URLEncoder.encode(arg, StandardCharsets.UTF_8);
                 String cmd = "steam://rungameid/1030300//" + arg + "/";
                 if (!gamePath.equals(settings.gamePath)){
                     try {
@@ -653,9 +669,9 @@ public class Cogfly {
                         List<String> lines = Files.readAllLines(game.resolve("doorstop_config.ini"));
                         for (String line : lines) {
                             if (line.startsWith("enabled"))
-                                lines.set(lines.indexOf(line), "enabled = " + enabled);
+                                lines.set(lines.indexOf(line), "enabled=" + enabled);
                             if (line.startsWith("target_assembly"))
-                                lines.set(lines.indexOf(line), "target_assembly = " + Paths.get(path).resolve("core/BepInEx.Preloader.dll"));
+                                lines.set(lines.indexOf(line), "target_assembly=" + Paths.get(path).resolve("core/BepInEx.Preloader.dll"));
                         }
                         Files.write(game.resolve("doorstop_config.ini"), lines);
                     } catch (IOException e) {
@@ -667,19 +683,17 @@ public class Cogfly {
                         try {
                             for (Path config : getSteamFolders()) {
                                 Path vdf = config.resolve("localconfig.vdf");
-                                boolean argsSet = setLaunchArgs(vdf, game.resolve("run_bepinex.sh").toAbsolutePath().toString());
+                                boolean argsSet = setLaunchArgs(vdf, "/bin/sh \\\"" + game.resolve("run_bepinex.sh").toAbsolutePath() + "\\\"");
                                 if (argsSet)
                                     break;
                             }
-                        } catch (IOException e) {
+                        } catch (IOException | InterruptedException e) {
                             throw new RuntimeException(e);
                         }
                     }
                 }
                 logger.info("Launching with Steam Client. Command={}", cmd);
-                cmd = cmd.replace(" ", "%20")
-                        .replace("\\", "%5C")
-                        .replace("\"", "%22");
+                cmd = cmd.replace("+", "%20");
                 Utils.openURI(URI.create(cmd));
             } else {
                 List<String> cmds = new ArrayList<>();
@@ -708,20 +722,15 @@ public class Cogfly {
                 logger.info("Launching standalone. Command={}, Directory={}", String.join(" ", cmds), game);
                 try {
                     Process process = builder.start();
-                    CompletableFuture<String> stdoutFuture = CompletableFuture.supplyAsync(() -> {
-                        try {
-                            return new String(process.getInputStream().readAllBytes());
-                        } catch (IOException e) {
-                            return "";
-                        }
-                    });
-                    CompletableFuture<String> stderrFuture = CompletableFuture.supplyAsync(() -> {
+                    Supplier<String> supplier = () -> {
                         try {
                             return new String(process.getErrorStream().readAllBytes());
                         } catch (IOException e) {
                             return "";
                         }
-                    });
+                    };
+                    CompletableFuture<String> stdoutFuture = CompletableFuture.supplyAsync(supplier);
+                    CompletableFuture<String> stderrFuture = CompletableFuture.supplyAsync(supplier);
                     int exitCode = process.waitFor();
                     String stdout = stdoutFuture.join();
                     String stderr = stderrFuture.join();
