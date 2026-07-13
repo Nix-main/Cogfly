@@ -36,7 +36,7 @@ import java.util.stream.Stream;
 
 public class Cogfly {
 
-    public static String version = Cogfly.class.getPackage().getImplementationVersion() != null
+    public static final String version = Cogfly.class.getPackage().getImplementationVersion() != null
             ? Cogfly.class.getPackage().getImplementationVersion()
             : "";
 
@@ -47,7 +47,7 @@ public class Cogfly {
     }
 
     public static Logger logger;
-    public static List<String> excludedMods = new ArrayList<>(){
+    public static final List<String> excludedMods = new ArrayList<>(){
         {
             add("ebkr-r2modman");
             add("BepInEx-BepInExPack_Silksong");
@@ -288,7 +288,7 @@ public class Cogfly {
         return exists;
     }
 
-    private static boolean setLaunchArgs(Path vdf, String args) throws IOException, InterruptedException {
+    private static boolean setLaunchArgs(Path vdf, String args) throws IOException {
         if (!Files.exists(vdf))
             return false;
         int silksongIndex = -1;
@@ -644,9 +644,10 @@ public class Cogfly {
             List<String> args = new ArrayList<>();
             args.add("--doorstop-enabled");
             args.add(String.valueOf(enabled));
+            Path bix = Paths.get(path);
             if (enabled) {
                 args.add("--doorstop-target-assembly");
-                String target = Paths.get(path).resolve("core/BepInEx.Preloader.dll").toString();
+                String target = bix.resolve("core/BepInEx.Preloader.dll").toString();
                 target = Utils.OperatingSystem.current() == Utils.OperatingSystem.WINDOWS ? "\"" + target + "\"" : target;
                 if (settings.launchWithSteam)
                     target = target.replace("/", "%2F");
@@ -675,7 +676,7 @@ public class Cogfly {
                             if (line.startsWith("enabled"))
                                 lines.set(lines.indexOf(line), "enabled=" + enabled);
                             if (line.startsWith("target_assembly"))
-                                lines.set(lines.indexOf(line), "target_assembly=" + Paths.get(path).resolve("core/BepInEx.Preloader.dll"));
+                                lines.set(lines.indexOf(line), "target_assembly=" + bix.resolve("core/BepInEx.Preloader.dll"));
                         }
                         Files.write(game.resolve("doorstop_config.ini"), lines);
                     } catch (IOException e) {
@@ -691,7 +692,7 @@ public class Cogfly {
                                 if (argsSet)
                                     break;
                             }
-                        } catch (IOException | InterruptedException e) {
+                        } catch (IOException e) {
                             throw new RuntimeException(e);
                         }
                     }

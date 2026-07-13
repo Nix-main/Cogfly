@@ -385,9 +385,7 @@ public class Utils {
                 ModPanelElement.redraw(profile);
             });
         });
-        download.whenComplete((_, _) ->{
-            ModPanelElement.setProgressBar(profile);
-        });
+        download.whenComplete((_, _) -> ModPanelElement.setProgressBar(profile));
         download.exceptionally(e -> {
             throw new RuntimeException(e);
         });

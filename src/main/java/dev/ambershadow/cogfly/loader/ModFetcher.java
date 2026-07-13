@@ -9,7 +9,6 @@ import dev.ambershadow.cogfly.Cogfly;
 import dev.ambershadow.cogfly.util.FrameManager;
 
 import javax.swing.*;
-import java.awt.*;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;

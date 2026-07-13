@@ -4,7 +4,6 @@ import dev.ambershadow.cogfly.Cogfly;
 import dev.ambershadow.cogfly.elements.SettingsDialog;
 
 import javax.swing.*;
-import java.awt.*;
 
 public class ScrollingIncrementElement extends SettingsElement {
     public ScrollingIncrementElement(SettingsDialog parent) {

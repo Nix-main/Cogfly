@@ -29,7 +29,7 @@ import java.util.zip.ZipOutputStream;
 public class ProfileManager {
 
     public static Profile baseGame;
-    public static List<Profile> profiles = new ArrayList<>();
+    public final static List<Profile> profiles = new ArrayList<>();
     public static void createProfile(String name, String iconPath){
         Path profile = Paths.get(Cogfly.settings.profileSavePath).resolve(name);
         try {

@@ -5,7 +5,6 @@ import dev.ambershadow.cogfly.elements.SettingsDialog;
 import dev.ambershadow.cogfly.util.Utils;
 
 import javax.swing.*;
-import java.awt.*;
 
 public class ProfileSavePathPanelElement extends SettingsElement {
 

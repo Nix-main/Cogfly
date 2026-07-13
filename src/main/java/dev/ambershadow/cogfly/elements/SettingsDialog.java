@@ -19,7 +19,7 @@ import java.util.Objects;
 
 public class SettingsDialog extends JDialog {
 
-    public JButton saveButton;
+    public final JButton saveButton;
     public SettingsDialog(Frame parent, String name, boolean modal) {
         super(parent, name, modal);
         resetQueue();

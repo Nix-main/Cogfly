@@ -293,11 +293,8 @@ public class ModPanelElement extends JPanel {
                 });
 
                 entry.modPanel = modPanel;
-                entry.toggleButton = toggleButton;
                 entry.installButton = installButton;
                 entry.enableButton = enableButton;
-                entry.holderPanel = holderPanel;
-                entry.iconLabel = iconLabel;
 
                 update(mod, entry);
                 this.mods.put(mod, entry);
@@ -412,11 +409,8 @@ public class ModPanelElement extends JPanel {
 
     private static class Mod {
         JPanel modPanel;
-        JToggleButton toggleButton;
         JButton installButton;
         JToggleButton enableButton;
-        JPanel holderPanel;
-        JLabel iconLabel;
         JLabel created;
         JLabel updated;
     }

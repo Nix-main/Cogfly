@@ -12,7 +12,7 @@ import java.nio.file.Paths;
 
 public class ManageProfileSourcesDialog extends JDialog {
 
-    public JTable table;
+    public final JTable table;
     public ManageProfileSourcesDialog(SettingsDialog base) {
         super(base, "Manage Profile Sources", true);
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
