@@ -82,7 +82,7 @@ public class ModFetcher {
                             dependencies.add(dep.getAsString());
                         });
 
-                    for (ModData mod : Cogfly.mods) {
+                    for (ModData mod : Cogfly.mods.values()) {
                         if (installedMods.contains(mod))
                             continue;
                         int matches = 0;

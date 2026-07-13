@@ -43,7 +43,7 @@ public class ModData {
     }
 
     public static ModData getModByName(String name){
-        return Cogfly.mods.stream().filter(mod -> mod.getName().equals(name)).findFirst().orElse(null);
+        return Cogfly.mods.values().stream().filter(mod -> mod.getName().equals(name)).findFirst().orElse(null);
     }
 
     public static ModData getModAtVersion(String fullName, String version){
@@ -54,15 +54,11 @@ public class ModData {
     }
 
     public static ModData getMod(String fullName){
-        return Cogfly.mods.stream().filter(mod -> mod.getFullName().equals(fullName)).findFirst().orElse(null);
+        return Cogfly.mods.getOrDefault(fullName, null);
     }
 
     public static ModData getMod(ModData other){
-        return Cogfly.mods.stream().filter(
-                mod -> mod.getFullName().equals(other.getFullName())
-                        && mod.getAuthor().equals(other.getAuthor())
-                        && mod.getDescription().equals(other.getDescription())
-        ).findFirst().orElse(null);
+        return getMod(other.getFullName());
     }
 
     public static boolean containsOldFile(Path directory) {

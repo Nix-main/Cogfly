@@ -439,14 +439,9 @@ public class Utils {
     }
 
     private static ModData getModFromDependency(String dependency){
-        for (ModData mod : Cogfly.mods) {
-            String[] split = dependency.split("-");
-            String dep = split[0] + "-" + split[1];
-            if (dep.equals(mod.getFullName()))
-                return mod;
-
-        }
-        return null;
+        String[] split = dependency.split("-");
+        String dep = split[0] + "-" + split[1];
+        return ModData.getMod(dep);
     }
 
     public static void copyFile(Path path){

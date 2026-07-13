@@ -29,6 +29,7 @@ import java.time.Instant;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -54,7 +55,7 @@ public class Cogfly {
             add("Kesomannen-GaleModManager");
         }
     };
-    public static List<ModData> mods = new ArrayList<>();
+    public static Map<String, ModData> mods = new HashMap<>();
     public static Path localDataPath;
     public static Path roamingDataPath;
     public static File dataJson;
@@ -193,7 +194,12 @@ public class Cogfly {
                                     o -> o.getName().toLowerCase(),
                                     Comparator.nullsLast(Comparator.naturalOrder())
                             ));
-                    Cogfly.mods = data;
+                    Cogfly.mods = data.stream().collect(Collectors.toMap(
+                            ModData::getFullName,
+                            Function.identity(),
+                            (v, a) -> v,
+                            HashMap::new
+                    ));
                 }
         ).whenComplete((_, _) -> {
             long after = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
@@ -431,7 +437,7 @@ public class Cogfly {
         if (installedOnly)
             return profile.getInstalledMods();
         List<ModData> mds = new ArrayList<>(profile.getManualMods());
-        mds.addAll(mods);
+        mds.addAll(mods.values());
         return mds;
     }
 
