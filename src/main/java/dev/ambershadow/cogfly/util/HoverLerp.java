@@ -62,9 +62,9 @@ public  class HoverLerp {
     private static Color lerp(Color a, Color b, float t) {
         t = Math.clamp(t, 0, 1);
         return new Color(
-                a.getRed() + (b.getRed() - a.getRed()) * t,
-                a.getGreen() + (b.getGreen() - a.getGreen()) * t,
-                a.getBlue() + (b.getBlue() - a.getBlue()) * t
+                (int) (a.getRed() + (b.getRed() - a.getRed()) * t),
+                (int) (a.getGreen() + (b.getGreen() - a.getGreen()) * t),
+                (int) (a.getBlue() + (b.getBlue() - a.getBlue()) * t)
         );
     }
 }

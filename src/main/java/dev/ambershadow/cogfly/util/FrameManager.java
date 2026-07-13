@@ -17,10 +17,8 @@ import java.util.function.Consumer;
 public class FrameManager {
 
     public static FrameManager getOrCreate(){
-        isCreated = true;
         return instance != null ? instance : new FrameManager();
     }
-    public static boolean isCreated;
     private static FrameManager instance;
     public final JFrame frame;
     public final Dimension screenSize;
