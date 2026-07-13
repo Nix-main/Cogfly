@@ -9,7 +9,6 @@ import java.util.function.Supplier;
 public  class HoverLerp {
 
     private HoverLerp() {}
-
     public static void install(
             JComponent component,
             Supplier<Color> normal,
@@ -61,11 +60,11 @@ public  class HoverLerp {
     }
 
     private static Color lerp(Color a, Color b, float t) {
-        t = Math.max(0f, Math.min(1f, t));
+        t = Math.clamp(t, 0, 1);
         return new Color(
-                (int) (a.getRed()   + (b.getRed()   - a.getRed())   * t),
-                (int) (a.getGreen() + (b.getGreen() - a.getGreen()) * t),
-                (int) (a.getBlue()  + (b.getBlue()  - a.getBlue())  * t)
+                a.getRed() + (b.getRed() - a.getRed()) * t,
+                a.getGreen() + (b.getGreen() - a.getGreen()) * t,
+                a.getBlue() + (b.getBlue() - a.getBlue()) * t
         );
     }
 }
