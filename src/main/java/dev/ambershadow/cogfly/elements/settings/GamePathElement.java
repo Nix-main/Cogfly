@@ -2,7 +2,6 @@ package dev.ambershadow.cogfly.elements.settings;
 
 import dev.ambershadow.cogfly.Cogfly;
 import dev.ambershadow.cogfly.elements.SettingsDialog;
-import dev.ambershadow.cogfly.util.Settings;
 import dev.ambershadow.cogfly.util.Utils;
 
 import javax.swing.*;

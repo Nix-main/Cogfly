@@ -2,7 +2,6 @@ package dev.ambershadow.cogfly.elements.settings;
 
 import com.formdev.flatlaf.intellijthemes.FlatAllIJThemes;
 import dev.ambershadow.cogfly.elements.SettingsDialog;
-import dev.ambershadow.cogfly.util.Settings;
 
 import javax.swing.*;
 import java.awt.*;

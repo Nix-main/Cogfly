@@ -6,8 +6,6 @@ import dev.ambershadow.cogfly.util.Utils;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.nio.file.Paths;
 
 public class ManageProfileSourcesDialog extends JDialog {
