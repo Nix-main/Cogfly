@@ -639,6 +639,7 @@ public class Cogfly {
                 JsonObject message = JsonParser.parseString(response.body()).getAsJsonObject();
                 String content = message.get("content").getAsString();
                 if (!content.isBlank()){
+                    //noinspection MagicConstant
                     JOptionPane.showMessageDialog(
                             FrameManager.getOrCreate().frame,
                             content,
