@@ -149,27 +149,34 @@ public class ProfileCardElement extends JPanel {
             JDialog prompt = new JDialog(FrameManager.getOrCreate().frame);
             prompt.setTitle("Edit Profile - " + profile.getName());
             prompt.setModal(true);
-            prompt.setSize(new Dimension(400, 160));
             prompt.setResizable(false);
-            prompt.setLocationRelativeTo(null);
             prompt.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-            JPanel holder = new JPanel();
             JLabel name = new JLabel("Name: ");
             JTextField nameField = new JTextField(profile.getName());
             JLabel icon = new JLabel("Icon (optional): ");
             JButton button = new JButton("Click here to select a file");
             if (profile.getIconPath() != null)
                 button.setText(profile.getIconPath().toString());
-            JPanel extraHolder = new JPanel();
-            extraHolder.add(icon);
-            extraHolder.add(button);
-
             JButton create = new JButton("Update");
-            create.setPreferredSize(new Dimension(50, 20));
+
+            nameField.getDocument().addDocumentListener(new ProfilesScreenElement.NameDocumentListener(nameField, create));
+            button.addActionListener(_ -> Utils.pickFile((path) -> button.setText(path.toString()), "*", "png", "jpg", "jpeg", "gif"));
+
+            JLabel pth = new JLabel("Path: ");
+            JButton btn = new JButton(profile.getGamePath());
+            nameField.getDocument().addDocumentListener(new ProfilesScreenElement.NameDocumentListener(nameField, create));
+            button.addActionListener(_ -> Utils.pickFile((path) -> btn.setText(path.toString()), "Hollow Knight Silksong", "png", "jpg", "jpeg", "gif"));
+
             create.addActionListener(_ -> {
                 if ((profile.getIconPath() == null || !button.getText().equals(profile.getIconPath().toString()))
                 && !button.getText().equals("Click here to select a file")){
                     ProfileManager.changeIcon(profile, button.getText());
+                }
+                if (!btn.getText().equals(profile.getGamePath())) {
+                    profile.setGamePath(btn.getText());
+                }
+                if (btn.getText().equals(Cogfly.settings.gamePath)){
+                    profile.resetGamePath();
                 }
                 if (!nameField.getText().equals(profile.getName())){
                     try {
@@ -183,14 +190,34 @@ public class ProfileCardElement extends JPanel {
                 FrameManager.getOrCreate().getCurrentPage().reload();
                 prompt.dispose();
             });
-            nameField.getDocument().addDocumentListener(new ProfilesScreenElement.NameDocumentListener(nameField, create));
-            button.addActionListener(_ -> Utils.pickFile((path) -> button.setText(path.toString()), "*", "png", "jpg", "jpeg", "gif"));
             create.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+            create.setMaximumSize(new Dimension(Integer.MAX_VALUE, create.getPreferredSize().height));
+            create.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+            // lowkey this jpanel chain sucks but nothing else was working lol
+            JPanel e = new JPanel(new BorderLayout());
+            JPanel main = new JPanel();
+            main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
+            JPanel holder = new JPanel();
             holder.add(name, BorderLayout.WEST);
             holder.add(nameField, BorderLayout.EAST);
-            prompt.add(holder, BorderLayout.NORTH);
-            prompt.add(extraHolder, BorderLayout.CENTER);
-            prompt.add(create, BorderLayout.SOUTH);
+            JPanel extraHolder = new JPanel();
+            extraHolder.add(icon, BorderLayout.WEST);
+            extraHolder.add(button,  BorderLayout.EAST);
+            main.add(holder);
+            main.add(extraHolder);
+            if (Cogfly.settings.profileSpecificPaths) {
+                JPanel holder3 = new JPanel();
+                holder3.add(pth, BorderLayout.WEST);
+                holder3.add(btn, BorderLayout.EAST);
+                main.add(holder3);
+            }
+            main.add(Box.createVerticalStrut(10));
+            e.add(main, BorderLayout.CENTER);
+            e.add(create, BorderLayout.SOUTH);
+            prompt.setSize(new Dimension(500, 180));
+            prompt.setLocationRelativeTo(null);
+            prompt.setContentPane(e);
             prompt.setVisible(true);
         });
 

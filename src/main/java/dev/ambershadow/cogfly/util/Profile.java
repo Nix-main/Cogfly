@@ -23,7 +23,7 @@ public class Profile {
     private final String name;
     private String gamePath = Cogfly.settings.gamePath;
     private Icon icon;
-    private Path iconPath;
+    private final Path iconPath;
     public Profile(String name, Path path) {
         this(name, path, null, null);
     }
