@@ -30,9 +30,9 @@ jobs:
         shell: bash
         run: |
           if [ "${{ runner.os }}" == "Windows" ]; then
-            ./gradlew.bat clean shadowJar
+            ./gradlew.bat --console verbose -S clean shadowJar
           else
-            ./gradlew clean shadowJar
+            ./gradlew --console verbose -S clean shadowJar
           fi
 
       - name: Get version
