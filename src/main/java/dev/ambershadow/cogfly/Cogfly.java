@@ -68,6 +68,7 @@ public class Cogfly {
     public static Path pack;
     private static String oldPackVersion;
     public static boolean createdProfiles;
+    public static boolean showUnknownHost;
     public static @SuppressWarnings("unused") void main(String[] args) throws IOException {
         AppDirs dirs = AppDirsFactory.getInstance();
         localDataPath = Paths.get(dirs.getUserDataDir("Cogfly", null, ""));
@@ -650,6 +651,14 @@ public class Cogfly {
             } catch (IOException | InterruptedException e) {
                 throw new RuntimeException(e);
             }
+        }
+        if (showUnknownHost){
+            JOptionPane.showMessageDialog(
+                    FrameManager.getOrCreate().frame,
+                    "An UnknownHostException was thrown during mod discovery.\nMods may not install properly.",
+                    "No Internet?",
+                    JOptionPane.WARNING_MESSAGE
+            );
         }
     }
 

@@ -37,12 +37,7 @@ public class ModFetcher {
             Files.writeString(cache, content);
         }
         catch (UnknownHostException unknown) {
-            JOptionPane.showMessageDialog(
-                    FrameManager.getOrCreate().frame,
-                "An UnknownHostException was thrown during mod discovery.\nMods may not install properly.",
-                "No Internet?",
-                JOptionPane.WARNING_MESSAGE
-            );
+            Cogfly.showUnknownHost = true;
             if (!found && Files.exists(cache)) {
                 try {
                     content = Files.readString(cache);
