@@ -6,7 +6,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import dev.ambershadow.cogfly.Cogfly;
-import dev.ambershadow.cogfly.util.FrameManager;
 
 import javax.swing.*;
 import java.io.IOException;
