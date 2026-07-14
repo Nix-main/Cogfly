@@ -69,6 +69,7 @@ public class Cogfly {
     private static String oldPackVersion;
     public static boolean createdProfiles;
     public static boolean showUnknownHost;
+    private static String windowsSha256;
     public static @SuppressWarnings("unused") void main(String[] args) throws IOException {
         AppDirs dirs = AppDirsFactory.getInstance();
         localDataPath = Paths.get(dirs.getUserDataDir("Cogfly", null, ""));
@@ -240,7 +241,8 @@ public class Cogfly {
                 "-File",
                 localDataPath.resolve("updater", "updater.ps1").toString(),
                 ProcessHandle.current().pid() + "",
-                "https://ambershadow.dev/cogfly/download/Cogfly-latest.exe"
+                "https://github.com/Nix-main/Cogfly/releases/download/vver/Cogfly-ver-installer.exe".replaceAll("ver", version),
+                windowsSha256
         ).start();
         System.exit(0);
     }
@@ -580,7 +582,9 @@ public class Cogfly {
                         .build();
                 try {
                     HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-                    return JsonParser.parseString(response.body()).getAsJsonObject().get("version").getAsString();
+                    JsonObject obj = JsonParser.parseString(response.body()).getAsJsonObject();
+                    windowsSha256 = obj.get("windowsSha256").getAsString();
+                    return obj.get("version").getAsString();
                 } catch (IOException | InterruptedException e) {
                     if (e instanceof ConnectException)
                         return version;
