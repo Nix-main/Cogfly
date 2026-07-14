@@ -20,8 +20,10 @@ UninstallDisplayIcon={app}\{#exe}
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 DisableProgramGroupPage=yes
+UsePreviousTasks=yes
+UsePreviousLanguage=yes
+UsePreviousSetupType=yes
 LicenseFile=LICENSE
-PrivilegesRequired=admin
 SolidCompression=yes
 WizardStyle=modern dark
 
@@ -48,28 +50,21 @@ Root: HKCU; Subkey: "Software\Classes\cogfly\shell\open\command"; ValueType: str
 [Run]
 Filename: "{app}\{#exe}"; Description: "{cm:LaunchProgram,{#StringChange(app, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
-
 [Code]
 function PrepareToInstall(var NeedsRestart: Boolean): String;
 var
-  UninstallString: String;
+  ProductCode: String;
   ResultCode: Integer;
-  GuidStart: Integer;
-  KeyPath: String;
 begin
-  Result := '';
-  KeyPath := 'SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData\S-1-5-18\Products\04002929EE6BF9B378975A69111C6458\InstallProperties';
-  if not RegQueryStringValue(HKLM64, KeyPath, 'UninstallString', UninstallString) then
-    RegQueryStringValue(HKLM32, KeyPath, 'UninstallString', UninstallString);
-  if UninstallString <> '' then
+  if not Exec(
+    'msiexec.exe',
+    '/x "{5663C955-304C-31A7-AC38-758177E488E5}" /qn /norestart',
+    '',
+    SW_HIDE,
+    ewWaitUntilTerminated,
+    ResultCode) then
   begin
-    GuidStart := Pos('{', UninstallString);
-    if GuidStart > 0 then
-    begin
-      if not Exec('msiexec.exe',
-           '/x' + Copy(UninstallString, GuidStart, MaxInt) + ' /qn /norestart',
-           '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
-        Result := 'Could not uninstall automatically. Please uninstall Cogfly manually from "Add or Remove Programs" and run this exe again.';
-    end;
+    Result := 'Could not remove the previous installation.';
+    Exit;
   end;
 end;
