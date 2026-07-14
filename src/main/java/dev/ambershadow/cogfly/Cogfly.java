@@ -158,49 +158,47 @@ public class Cogfly {
                 throw new RuntimeException(e);
             }
         }
-        final long modStart = System.currentTimeMillis();
         CompletableFuture.runAsync(() -> {
-                    List<JsonObject> m = ModFetcher.getAllMods();
-                    List<ModData> data = new ArrayList<>();
-                    for (JsonObject object : m) {
-                        if (object.get("full_name").getAsString().equals("silksong_modding-BepInExPack_Silksong")) {
-                            JsonObject version = object.get("versions").getAsJsonArray().get(0).getAsJsonObject();
-                            try {
-                                packUrl = URL.of(URI.create(version.get("download_url").getAsString()), null);
-                            } catch (MalformedURLException e) {
-                                throw new RuntimeException(e);
-                            }
-                            latestPackVer = version.get("version_number").getAsString();
-                        }
-                        if (object.get("is_deprecated").getAsBoolean())
-                            continue;
-                        if (object.get("has_nsfw_content").getAsBoolean())
-                            continue;
-                        if (excludedMods.contains(object.get("full_name").getAsString()))
-                            continue;
-                        data.add(new ModData(object));
+            long start = System.currentTimeMillis();
+            List<JsonObject> m = ModFetcher.getAllMods();
+            List<ModData> data = new ArrayList<>();
+            for (JsonObject object : m) {
+                if (object.get("full_name").getAsString().equals("silksong_modding-BepInExPack_Silksong")) {
+                    JsonObject version = object.get("versions").getAsJsonArray().get(0).getAsJsonObject();
+                    try {
+                        packUrl = URL.of(URI.create(version.get("download_url").getAsString()), null);
+                    } catch (MalformedURLException e) {
+                        throw new RuntimeException(e);
                     }
-                    data.sort(
-                            Comparator.comparing(
-                                    o -> o.getName().toLowerCase(),
-                                    Comparator.nullsLast(Comparator.naturalOrder())
-                            ));
-                    Cogfly.mods = data.stream().collect(Collectors.toMap(
-                            ModData::getFullName,
-                            Function.identity(),
-                            (v, a) -> v,
-                            HashMap::new
-                    ));
+                    latestPackVer = version.get("version_number").getAsString();
                 }
-        ).whenComplete((_, _) -> {
-            long after = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
-            logger.info("Loaded and parsed mods in {} milliseconds", (System.currentTimeMillis() - modStart));
+                if (object.get("is_deprecated").getAsBoolean())
+                    continue;
+                if (object.get("has_nsfw_content").getAsBoolean())
+                    continue;
+                if (excludedMods.contains(object.get("full_name").getAsString()))
+                    continue;
+                data.add(new ModData(object));
+            }
+            data.sort(
+                    Comparator.comparing(
+                            o -> o.getName().toLowerCase(),
+                            Comparator.nullsLast(Comparator.naturalOrder())
+                    ));
+            Cogfly.mods = data.stream().collect(Collectors.toMap(
+                    ModData::getFullName,
+                    Function.identity(),
+                    (v, a) -> v,
+                    HashMap::new
+            ));
+            logger.info("Loaded and parsed mods in {} milliseconds", (System.currentTimeMillis() - start));
+            start = System.currentTimeMillis();
+            ProfileManager.loadProfiles();
+            logger.info("Loaded profiles in {} milliseconds", (System.currentTimeMillis() - start));
+            Cogfly.createdProfiles = true;
+        }).whenComplete((_, _) -> {
             SwingUtilities.invokeLater(() -> {
                 ModPanelElement.redrawAll();
-                long start = System.currentTimeMillis();
-                ProfileManager.loadProfiles();
-                logger.info("Loaded profiles in {} milliseconds", (System.currentTimeMillis() - start));
-                Cogfly.createdProfiles = true;
                 ProfilesScreenElement.queueRefresh();
                 FrameManager.getOrCreate().getCurrentPage().reload();
             });
