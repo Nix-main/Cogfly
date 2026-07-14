@@ -15,10 +15,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -149,92 +146,52 @@ public class ProfileCardElement extends JPanel {
 
         edit = new JButton();
         edit.addActionListener(_ -> {
-            JDialog dialog = new JDialog();
-            dialog.setTitle("Edit Profile - " + profile.getName());
-            dialog.setModal(true);
-            dialog.setAlwaysOnTop(true);
-            dialog.setLocationRelativeTo(null);
-            dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+            JDialog prompt = new JDialog(FrameManager.getOrCreate().frame);
+            prompt.setTitle("Edit Profile - " + profile.getName());
+            prompt.setModal(true);
+            prompt.setSize(new Dimension(400, 160));
+            prompt.setResizable(false);
+            prompt.setLocationRelativeTo(null);
+            prompt.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
             JPanel holder = new JPanel();
-            holder.setLayout(new BoxLayout(holder, BoxLayout.Y_AXIS));
+            JLabel name = new JLabel("Name: ");
+            JTextField nameField = new JTextField(profile.getName());
+            JLabel icon = new JLabel("Icon (optional): ");
+            JButton button = new JButton("Click here to select a file");
+            if (profile.getIconPath() != null)
+                button.setText(profile.getIconPath().toString());
+            JPanel extraHolder = new JPanel();
+            extraHolder.add(icon);
+            extraHolder.add(button);
 
-            if (Cogfly.settings.profileSpecificPaths) {
-                JButton setPath = new JButton("Set Custom Game Path");
-                setPath.addActionListener(_ -> {
-                    JDialog prompt = new JDialog(dialog);
-                    prompt.setModal(true);
-                    prompt.setSize(new Dimension(500, 125));
-                    prompt.setResizable(false);
-                    prompt.setLocationRelativeTo(null);
-                    prompt.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-                    JPanel content = new JPanel();
-                    content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
-                    prompt.setContentPane(content);
-                    JLabel current = new JLabel(profile.getGamePath());
-                    JButton customPathButton = new JButton("Select Game Path");
-                    JButton resetPathButton = new JButton("Reset Path");
-
-                    customPathButton.addActionListener(_ -> Utils.pickFile((path) -> {
-                        profile.setGamePath(path.toFile().getParentFile().getAbsolutePath());
-                        prompt.dispose();
-                    }, "Hollow Knight Silksong", "exe", "app", ""));
-                    resetPathButton.addActionListener(_ -> {
-                        profile.resetGamePath();
-                        prompt.dispose();
-                    });
-
-                    customPathButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-                    resetPathButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-                    current.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-                    content.add(current);
-                    content.add(Box.createVerticalStrut(5));
-                    content.add(customPathButton);
-                    content.add(Box.createVerticalStrut(5));
-                    content.add(resetPathButton);
-                    prompt.setVisible(true);
-                });
-                setPath.setAlignmentX(Component.CENTER_ALIGNMENT);
-                holder.add(setPath);
-            }
-            JButton changeProfileIcon = new JButton("Change Icon");
-            changeProfileIcon.addActionListener(_ -> {
-                JDialog prompt = new JDialog(dialog);
-                prompt.setModal(true);
-                prompt.setSize(new Dimension(300, 100));
-                prompt.setResizable(false);
-                prompt.setLocationRelativeTo(null);
-                prompt.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-                JPanel content = new JPanel();
-                prompt.setContentPane(content);
-                JButton customIconButton = new JButton("Select a file");
-                JButton defaultIconButton = new JButton("Reset Icon to Default");
-
-                customIconButton.addActionListener(_ -> Utils.pickFile((path) -> {
-                    ProfileManager.changeIcon(profile, path.toString());
-                    prompt.dispose();
-                    ProfilesScreenElement.queueRefresh();
-                }, "*", "png", "jpg", "jpeg", "gif"));
-                defaultIconButton.addActionListener(_ -> {
-                    ProfileManager.changeIcon(profile, "");
-                    prompt.dispose();
-                    ProfilesScreenElement.queueRefresh();
-                });
-
-                customIconButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-                defaultIconButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-                content.add(defaultIconButton, BorderLayout.NORTH);
-                content.add(Box.createVerticalStrut(5));
-                content.add(customIconButton, BorderLayout.CENTER);
-                prompt.setVisible(true);
+            JButton create = new JButton("Update");
+            create.setPreferredSize(new Dimension(50, 20));
+            create.addActionListener(_ -> {
+                if ((profile.getIconPath() == null || !button.getText().equals(profile.getIconPath().toString()))
+                && !button.getText().equals("Click here to select a file")){
+                    ProfileManager.changeIcon(profile, button.getText());
+                }
+                if (!nameField.getText().equals(profile.getName())){
+                    try {
+                        Files.move(profile.getPath(), Path.of(Cogfly.settings.profileSavePath).resolve(nameField.getText()), StandardCopyOption.ATOMIC_MOVE);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    ProfileManager.loadProfiles();
+                }
+                ProfilesScreenElement.queueRefresh();
+                FrameManager.getOrCreate().getCurrentPage().reload();
+                prompt.dispose();
             });
-            changeProfileIcon.setAlignmentX(Component.CENTER_ALIGNMENT);
-            holder.add(Box.createVerticalStrut(5));
-            holder.add(changeProfileIcon);
-            dialog.setContentPane(holder);
-            dialog.pack();
-            dialog.setVisible(true);
+            nameField.getDocument().addDocumentListener(new ProfilesScreenElement.NameDocumentListener(nameField, create));
+            button.addActionListener(_ -> Utils.pickFile((path) -> button.setText(path.toString()), "*", "png", "jpg", "jpeg", "gif"));
+            create.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+            holder.add(name, BorderLayout.WEST);
+            holder.add(nameField, BorderLayout.EAST);
+            prompt.add(holder, BorderLayout.NORTH);
+            prompt.add(extraHolder, BorderLayout.CENTER);
+            prompt.add(create, BorderLayout.SOUTH);
+            prompt.setVisible(true);
         });
 
         copy = new JButton();

@@ -37,6 +37,7 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
     public static void queueRefresh(){
         refreshQueued = true;
     }
+
     public static void createPrompt(BiConsumer<String, String> consumer, Runnable extra){
         JDialog prompt = new JDialog(FrameManager.getOrCreate().frame);
         prompt.setModal(true);
@@ -61,67 +62,7 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
             consumer.accept(nameField.getText(), button.getText());
             extra.run();
         });
-
-        nameField.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                updateValidity();
-            }
-
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                updateValidity();
-            }
-            @Override
-            public void changedUpdate(DocumentEvent e) {}
-
-            private void updateValidity(){
-                boolean valid = nameField.getText().matches("\\w+");
-                create.setEnabled(valid);
-                nameField.setToolTipText("Profile names can only contain letters, numbers, and underscores.");
-                forceTooltip(valid);
-                if (!valid)
-                    return;
-                boolean exists = Files.exists(Paths.get(Cogfly.settings.profileSavePath).resolve(nameField.getText()));
-                create.setEnabled(!exists);
-                nameField.setToolTipText("A profile with this name already exists in the profile save folder.");
-                forceTooltip(exists);
-            }
-
-            private void forceTooltip(boolean show){
-                if (show){
-                    ToolTipManager toolTipManager = ToolTipManager.sharedInstance();
-                    toolTipManager.setInitialDelay(0);
-                    MouseEvent phantomEvent = new MouseEvent(
-                            nameField,
-                            MouseEvent.MOUSE_MOVED,
-                            System.currentTimeMillis(),
-                            0,
-                            nameField.getWidth() / 2,
-                            nameField.getHeight() / 2,
-                            0,
-                            false
-                    );
-                    toolTipManager.mouseMoved(phantomEvent);
-                } else {
-                    ToolTipManager ttm = ToolTipManager.sharedInstance();
-
-                    MouseEvent exitEvent = new MouseEvent(
-                            nameField,
-                            MouseEvent.MOUSE_EXITED,
-                            System.currentTimeMillis(),
-                            0,
-                            -1,
-                            -1,
-                            0,
-                            false
-                    );
-
-                    ttm.mouseExited(exitEvent);
-                }
-            }
-        });
-
+        nameField.getDocument().addDocumentListener(new NameDocumentListener(nameField, create));
         button.addActionListener(_ -> Utils.pickFile((path) -> button.setText(path.toString()), "*", "png", "jpg", "jpeg", "gif"));
         create.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         holder.add(name, BorderLayout.WEST);
@@ -380,5 +321,76 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
             refreshQueued = false;
         }
         // speeds things up a ton to only refresh when needed
+    }
+
+    public static class NameDocumentListener implements DocumentListener {
+
+        private final JTextField nameField;
+        private final JButton finish;
+
+        public NameDocumentListener(JTextField field, JButton finish) {
+            this.nameField = field;
+            this.finish = finish;
+        }
+
+        @Override
+        public void insertUpdate(DocumentEvent e) {
+            updateValidity();
+        }
+
+        @Override
+        public void removeUpdate(DocumentEvent e) {
+            updateValidity();
+        }
+
+        @Override
+        public void changedUpdate(DocumentEvent e) {
+        }
+
+        private void updateValidity() {
+            boolean valid = nameField.getText().matches("\\w+");
+            finish.setEnabled(valid);
+            nameField.setToolTipText("Profile names can only contain letters, numbers, and underscores.");
+            forceTooltip(valid);
+            if (!valid)
+                return;
+            boolean exists = Files.exists(Paths.get(Cogfly.settings.profileSavePath).resolve(nameField.getText()));
+            finish.setEnabled(!exists);
+            nameField.setToolTipText("A profile with this name already exists in the profile save folder.");
+            forceTooltip(exists);
+        }
+
+        private void forceTooltip(boolean show) {
+            if (show) {
+                ToolTipManager toolTipManager = ToolTipManager.sharedInstance();
+                toolTipManager.setInitialDelay(0);
+                MouseEvent phantomEvent = new MouseEvent(
+                        nameField,
+                        MouseEvent.MOUSE_MOVED,
+                        System.currentTimeMillis(),
+                        0,
+                        nameField.getWidth() / 2,
+                        nameField.getHeight() / 2,
+                        0,
+                        false
+                );
+                toolTipManager.mouseMoved(phantomEvent);
+            } else {
+                ToolTipManager ttm = ToolTipManager.sharedInstance();
+
+                MouseEvent exitEvent = new MouseEvent(
+                        nameField,
+                        MouseEvent.MOUSE_EXITED,
+                        System.currentTimeMillis(),
+                        0,
+                        -1,
+                        -1,
+                        0,
+                        false
+                );
+
+                ttm.mouseExited(exitEvent);
+            }
+        }
     }
 }

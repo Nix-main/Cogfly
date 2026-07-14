@@ -23,13 +23,15 @@ public class Profile {
     private final String name;
     private String gamePath = Cogfly.settings.gamePath;
     private Icon icon;
+    private Path iconPath;
     public Profile(String name, Path path) {
-        this(name, path, null);
+        this(name, path, null, null);
     }
-    public Profile(String name, Path path, Icon icon) {
+    public Profile(String name, Path path, Path iconPath, Icon icon) {
         this.path = path;
         this.name = name;
         this.icon = icon;
+        this.iconPath = iconPath;
     }
 
     public Path getPath() {
@@ -42,6 +44,10 @@ public class Profile {
 
     public Path getPluginsPath(){
         return getBepInExPath().resolve("plugins");
+    }
+
+    public Path getIconPath(){
+        return iconPath;
     }
     public List<ModData> getInstalledMods() {
         return installedMods.values().stream().toList();

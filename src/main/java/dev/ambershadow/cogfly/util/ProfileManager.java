@@ -44,11 +44,12 @@ public class ProfileManager {
         } else {
             icon = new ImageIcon(iconPath);
         }
-        Profile prof = new Profile(name, profile, icon);
+        Path source = Paths.get(iconPath);
+        Path ia = profile.resolve("icon." + source.getFileName().toString()
+                .split("\\.")[1]);
+        Profile prof = new Profile(name, profile, ia, icon);
         try {
-            Path source = Paths.get(iconPath);
-            Files.copy(source, prof.getPath().resolve("icon." + source.getFileName().toString()
-                            .split("\\.")[1]));
+            Files.copy(source, ia);
         } catch (IOException e) {
             throw new RuntimeException(e);
         } catch (ArrayIndexOutOfBoundsException ignored) {
@@ -133,16 +134,18 @@ public class ProfileManager {
                 throw new RuntimeException(e);
             }
         }
-        baseGame = new Profile("Base Game", Paths.get(Cogfly.settings.gamePath), Assets.silksongIcon.getAsIcon());
+        baseGame = new Profile("Base Game", Paths.get(Cogfly.settings.gamePath), null, Assets.silksongIcon.getAsIcon());
         baseGame.refreshMods();
     }
 
     public static Profile loadProfile(Path path){
         String[] extensions = {"png", "jpeg", "jpg", "gif"};
         ImageIcon icon = null;
+        Path imagePath = null;
         for (String extension : extensions) {
             Path path2 = path.resolve("icon." + extension);
             if (Files.exists(path2)){
+                imagePath = path2;
                 icon = new ImageIcon(path2.toString());
                 break;
             }
@@ -160,7 +163,7 @@ public class ProfileManager {
                 throw new RuntimeException(e);
             }
         }
-        Profile profile = new Profile(path.getFileName().toString(), path.toAbsolutePath(), icon);
+        Profile profile = new Profile(path.getFileName().toString(), path.toAbsolutePath(), imagePath, icon);
         if (!gamePath.isEmpty())
             profile.setGamePath(Paths.get(gamePath).toString());
         Cogfly.logger.info("Read path {} for profile {}.", gamePath, profile.getName());
