@@ -108,6 +108,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           mkdir -p output/appimage
+          mkdir -p output/${{ runner.os }}
           jpackage \
             --input build/libs \
             --main-jar Cogfly-${{ env.ver }}.jar \
@@ -127,7 +128,6 @@ jobs:
           exec "$HERE/bin/Cogfly" "$@"
           EOF
           chmod +x output/appimage/Cogfly/AppRun
-          sudo apt update
           wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O appimagetool
           chmod +x appimagetool
           ls -l output/appimage/Cogfly
