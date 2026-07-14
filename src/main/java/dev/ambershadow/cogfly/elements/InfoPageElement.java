@@ -113,6 +113,12 @@ public class InfoPageElement extends JPanel implements ReloadablePage {
                 BorderFactory.createEmptyBorder(0, 300, 0, 300)
         );
 
+        UIManager.addPropertyChangeListener(e -> {
+            if ("lookAndFeel".equals(e.getPropertyName())) {
+                SwingUtilities.invokeLater(this::reload);
+            }
+        });
+
         return buttons;
     }
 

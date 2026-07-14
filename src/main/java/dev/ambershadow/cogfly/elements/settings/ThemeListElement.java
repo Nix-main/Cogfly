@@ -1,6 +1,7 @@
 package dev.ambershadow.cogfly.elements.settings;
 
 import com.formdev.flatlaf.intellijthemes.FlatAllIJThemes;
+import dev.ambershadow.cogfly.Cogfly;
 import dev.ambershadow.cogfly.elements.SettingsDialog;
 
 import javax.swing.*;
@@ -35,6 +36,15 @@ public class ThemeListElement extends SettingsElement {
             if (Objects.equals(info.getClassName(), UIManager.getLookAndFeel().getClass().getName()))
                 return;
             parent.update(s -> s.theme = info.getClassName());
+            String theme = Cogfly.settings.theme;
+            try {
+                UIManager.setLookAndFeel(info.getClassName());
+                SwingUtilities.updateComponentTreeUI(parent);
+                UIManager.setLookAndFeel(theme);
+            } catch (ClassNotFoundException | UnsupportedLookAndFeelException | InstantiationException |
+                     IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
         });
 
         LookAndFeel currentLaf = UIManager.getLookAndFeel();
