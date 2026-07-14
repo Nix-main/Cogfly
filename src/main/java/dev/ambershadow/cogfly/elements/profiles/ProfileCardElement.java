@@ -100,7 +100,7 @@ public class ProfileCardElement extends JPanel {
             } catch (URISyntaxException e) {
                 throw new RuntimeException(e);
             }
-            svg.setPreferredSize(new Dimension(15, 0));
+            svg.setPreferredSize(new Dimension(Cogfly.settings.profileButtonSize, 0));
             svg.setAutosize(SVGIcon.AUTOSIZE_HORIZ);
             svg.setAntiAlias(true);
             icons[i] = svg;

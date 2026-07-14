@@ -81,6 +81,7 @@ public class Settings {
     public boolean dontShowPatreonAgain = false;
     public boolean finishedSteamPopup = false;
     public boolean acceptedSteamArgs = false;
+    public int profileButtonSize = 15;
 
     private Settings(){}
     private transient Path dataFile;
