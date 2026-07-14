@@ -13,5 +13,5 @@ if ($v -ne $sha.ToUpper())
     exit 1
 }
 echo "Hash matched."
-Start-Process $exe
-Remove-Item $exe
+Start-Process $exe -ArgumentList "/SILENT /NORESTART" -Wait
+Remove-Item $exe -Force

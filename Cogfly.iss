@@ -24,6 +24,7 @@ UsePreviousTasks=yes
 UsePreviousLanguage=yes
 UsePreviousSetupType=yes
 LicenseFile=LICENSE
+PrivilegesRequired=lowest
 SolidCompression=yes
 WizardStyle=modern dark
 
@@ -56,15 +57,21 @@ var
   ProductCode: String;
   ResultCode: Integer;
 begin
-  if not Exec(
-    'msiexec.exe',
-    '/x "{5663C955-304C-31A7-AC38-758177E488E5}" /qn /norestart',
-    '',
-    SW_HIDE,
-    ewWaitUntilTerminated,
-    ResultCode) then
+  if RegKeyExists(
+      HKLM,
+      'Software\Microsoft\Windows\CurrentVersion\Uninstall\{5663C955-304C-31A7-AC38-758177E488E5}'
+    ) then
   begin
-    Result := 'Could not remove the previous installation.';
-    Exit;
-  end;
+    if not ShellExec(
+      'runas',
+      'msiexec.exe',
+      '/x "{5663C955-304C-31A7-AC38-758177E488E5}" /qn /norestart',
+      '',
+      SW_HIDE,
+      ewWaitUntilTerminated,
+      ResultCode) then
+    begin
+      Result := 'Could not remove the previous installation.';
+      Exit;
+    end;
 end;
