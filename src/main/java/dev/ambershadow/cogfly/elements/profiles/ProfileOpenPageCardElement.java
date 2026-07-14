@@ -1,32 +1,20 @@
 package dev.ambershadow.cogfly.elements.profiles;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import dev.ambershadow.cogfly.Cogfly;
 import dev.ambershadow.cogfly.elements.ModPanelElement;
 import dev.ambershadow.cogfly.loader.ModData;
 import dev.ambershadow.cogfly.util.*;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 public class ProfileOpenPageCardElement extends JPanel {
 
     private final Profile profile;
     private final JButton updateAll;
-    private final JButton remove;
-    private final JButton setPath;
     private final JProgressBar progressBar;
     public void setBar(boolean val){
         progressBar.setVisible(val);
@@ -111,93 +99,6 @@ public class ProfileOpenPageCardElement extends JPanel {
         JButton openFileLocation = new JButton("Open Profile Folder");
         openFileLocation.addActionListener(_ -> Utils.openProfilePath(profile));
 
-        remove = new JButton("Remove Profile");
-        remove.addActionListener(_ -> {
-            int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this profile? This will delete this folder: " + profile.getPath(),
-                    "Confirm Profile Deletion", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-            if (confirm == JOptionPane.YES_OPTION) {
-                ProfileManager.removeProfile(profile);
-                FrameManager.getOrCreate().setPage(
-                        FrameManager.CogflyPage.PROFILES,
-                        FrameManager.getOrCreate().profilesPageButton
-                );
-                ProfilesScreenElement.queueRefresh();
-            }
-        });
-        if (profile.getPath().equals(Paths.get(Cogfly.settings.gamePath))){
-            remove.setEnabled(false);
-        }
-
-        JButton changeProfileIcon = new JButton("Change Icon");
-        changeProfileIcon.addActionListener(_ -> {
-            JDialog prompt = new JDialog(FrameManager.getOrCreate().frame);
-            prompt.setModal(true);
-            prompt.setSize(new Dimension(300, 100));
-            prompt.setResizable(false);
-            prompt.setLocationRelativeTo(null);
-            prompt.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-            JPanel content = new JPanel();
-            content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
-            prompt.setContentPane(content);
-            JButton customIconButton = new JButton("Select a file");
-            JButton defaultIconButton = new JButton("Reset Icon to Default");
-
-            customIconButton.addActionListener(_ -> Utils.pickFile((path) -> {
-                ProfileManager.changeIcon(profile, path.toString());
-                prompt.dispose();
-                ProfilesScreenElement.queueRefresh();
-            }, "*", "png", "jpg", "jpeg", "gif"));
-            defaultIconButton.addActionListener(_ -> {
-                ProfileManager.changeIcon(profile, "");
-                prompt.dispose();
-                ProfilesScreenElement.queueRefresh();
-            });
-
-            customIconButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-            defaultIconButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-            content.add(defaultIconButton);
-            content.add(Box.createVerticalStrut(5));
-            content.add(customIconButton);
-            prompt.setVisible(true);
-        });
-
-        setPath = new JButton("Set Custom Game Path");
-        setPath.addActionListener(_ -> {
-            JDialog prompt = new JDialog(FrameManager.getOrCreate().frame);
-            prompt.setModal(true);
-            prompt.setSize(new Dimension(500, 125));
-            prompt.setResizable(false);
-            prompt.setLocationRelativeTo(null);
-            prompt.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-            JPanel content = new JPanel();
-            content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
-            prompt.setContentPane(content);
-            JLabel current = new JLabel(profile.getGamePath());
-            JButton customPathButton = new JButton("Select Game Path");
-            JButton resetPathButton = new JButton("Reset Path");
-
-            customPathButton.addActionListener(_ -> Utils.pickFile((path) -> {
-                profile.setGamePath(path.toFile().getParentFile().getAbsolutePath());
-                prompt.dispose();
-            }, "Hollow Knight Silksong", "exe", "app", ""));
-            resetPathButton.addActionListener(_ -> {
-                profile.resetGamePath();
-                prompt.dispose();
-            });
-
-            customPathButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-            resetPathButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-            current.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-            content.add(current);
-            content.add(Box.createVerticalStrut(5));
-            content.add(customPathButton);
-            content.add(Box.createVerticalStrut(5));
-            content.add(resetPathButton);
-            prompt.setVisible(true);
-        });
-
         JButton refresh = new JButton("Refresh");
         refresh.addActionListener(_ -> {
             profile.refreshMods();
@@ -213,9 +114,6 @@ public class ProfileOpenPageCardElement extends JPanel {
         upperPanel.add(exportAsId);
         upperPanel.add(exportAsFile);
         upperPanel.add(openFileLocation);
-        upperPanel.add(changeProfileIcon);
-        upperPanel.add(setPath);
-        upperPanel.add(remove);
         upperPanel.add(refresh);
         upperPanel.add(install);
 
@@ -237,10 +135,6 @@ public class ProfileOpenPageCardElement extends JPanel {
                 .stream().anyMatch(mod -> mod.isOutdated(profile));
         updateAll.setEnabled(anyOutdated);
         ModPanelElement.redraw(profile);
-        if (profile.getPath().equals(Paths.get(Cogfly.settings.gamePath))){
-            remove.setEnabled(false);
-        }
-        setPath.setVisible(Cogfly.settings.profileSpecificPaths);
         progressBar.setVisible(Utils.isDownloading(profile));
     }
 }

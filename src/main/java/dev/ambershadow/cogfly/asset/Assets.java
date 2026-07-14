@@ -14,4 +14,9 @@ public class Assets {
     private static final CogflyAsset patreon = getAsset("PATREON_SYMBOL_1_WHITE_RGB.svg");
     public static final CogflyAsset[] linkIcons = {discord, github, patreon};
     public static final CogflyAsset silksongIcon = getAsset("silksong64x64.png");
+    private static final CogflyAsset play = getAsset("profile/play.svg");
+    private static final CogflyAsset edit = getAsset("profile/edit.svg");
+    private static final CogflyAsset copy = getAsset("profile/copy.svg");
+    private static final CogflyAsset delete = getAsset("profile/delete.svg");
+    public static final CogflyAsset[] profileIcons = {play, edit, copy, delete};
 }

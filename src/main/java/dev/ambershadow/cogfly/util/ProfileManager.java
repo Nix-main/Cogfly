@@ -29,7 +29,7 @@ import java.util.zip.ZipOutputStream;
 public class ProfileManager {
 
     public static Profile baseGame;
-    public final static List<Profile> profiles = new ArrayList<>();
+    public static final List<Profile> profiles = new ArrayList<>();
     public static void createProfile(String name, String iconPath){
         Path profile = Paths.get(Cogfly.settings.profileSavePath).resolve(name);
         try {
@@ -234,6 +234,16 @@ public class ProfileManager {
                 (List<Map<String, Object>>) data.get("mods");
         List<ModData> outdatedMods = new ArrayList<>();
         Profile profile = new Profile(profileName, Paths.get(Cogfly.settings.profileSavePath + "/" + profileName));
+        try {
+            Files.writeString(profile.getPath().resolve("cogfly_data.json"), cogflyData);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        String gamePath = "";
+        if (!cogflyData.isEmpty())
+            gamePath = JsonParser.parseString(cogflyData).getAsJsonObject().get("gamePath").getAsString();
+        if (!gamePath.isEmpty())
+            profile.setGamePath(Paths.get(gamePath).toString());
         FrameManager.getOrCreate().setPage(FrameManager.CogflyPage.PROFILES,
                 FrameManager.getOrCreate().profilesPageButton);
         if (Paths.get(Cogfly.settings.profileSavePath).resolve(profileName).toFile().exists()) {

@@ -23,16 +23,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BiConsumer;
 
 public class ProfilesScreenElement extends JPanel implements ReloadablePage {
 
     public static final Icon icon = UIManager.getIcon("OptionPane.informationIcon");
-
+    public static final BiConsumer<String, String> defaultCallback = (name, path) -> {
+        ProfileManager.createProfile(name,
+                path.equals("Click here to select a file") ? "" : path);
+        FrameManager.getOrCreate().getCurrentPage().reload();
+    };
     private static boolean refreshQueued = false;
     public static void queueRefresh(){
         refreshQueued = true;
     }
-    public static void createPrompt(Runnable callback){
+    public static void createPrompt(BiConsumer<String, String> consumer, Runnable extra){
         JDialog prompt = new JDialog(FrameManager.getOrCreate().frame);
         prompt.setModal(true);
         prompt.setSize(new Dimension(300, 150));
@@ -53,11 +58,8 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
         create.setPreferredSize(new Dimension(50, 20));
         create.addActionListener(_ -> {
             prompt.dispose();
-            ProfileManager.createProfile(nameField.getText(),
-                    button.getText().equals("Click here to select a file") ? "" :
-                            button.getText());
-            FrameManager.getOrCreate().getCurrentPage().reload();
-            callback.run();
+            consumer.accept(nameField.getText(), button.getText());
+            extra.run();
         });
 
         nameField.getDocument().addDocumentListener(new DocumentListener() {
@@ -215,7 +217,7 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
 
 
         JButton createProfile = new JButton("Create Profile");
-        createProfile.addActionListener(_ -> createPrompt(() -> {}));
+        createProfile.addActionListener(_ -> createPrompt(defaultCallback, () -> {}));
 
         JButton createShortcut = new JButton("Create Shortcut");
         createShortcut.addActionListener(_ -> {
@@ -332,7 +334,6 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
     }
 
     public void drawProfiles(){
-        parentPanel.removeAll();
         if (!Cogfly.createdProfiles)
             return;
         int maxPerRow = 5;
@@ -346,7 +347,7 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
         parentPanel.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
 
         JPanel rowPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 16, 16));
-
+        parentPanel.removeAll();
         for (int i = 1; i <= totalProfiles; i++) {
             Icon icon = ProfilesScreenElement.icon;
             if (profiles.get(i-1).getIcon() != null)

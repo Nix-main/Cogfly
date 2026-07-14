@@ -565,7 +565,7 @@ public class Cogfly {
                         FrameManager.CogflyPage.PROFILES,
                         FrameManager.getOrCreate().profilesPageButton
                 );
-                ProfilesScreenElement.createPrompt(() -> JOptionPane.showMessageDialog(
+                ProfilesScreenElement.createPrompt(ProfilesScreenElement.defaultCallback, () -> JOptionPane.showMessageDialog(
                         FrameManager.getOrCreate().frame,
                         "Congratulations on creating your first profile! Click on its icon to manage it and install mods!",
                         "Profile Onboarding",

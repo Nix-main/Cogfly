@@ -48,7 +48,7 @@ public class InfoPageElement extends JPanel implements ReloadablePage {
         JPanel panel = new JPanel();
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < Assets.linkIcons.length; i++) {
             SVGIcon icon = new SVGIcon();
             try {
                 icon.setSvgURI(Assets.linkIcons[i].url().toURI());
