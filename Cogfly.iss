@@ -74,4 +74,5 @@ begin
       Result := 'Could not remove the previous installation.';
       Exit;
     end;
+  end;
 end;
