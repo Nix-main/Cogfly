@@ -29,6 +29,7 @@ dependencies {
 
 val compileWinFolderPicker by tasks.registering(Exec::class) {
     workingDir = projectDir
+    doFirst { mkdir("${layout.buildDirectory.get()}/native") }
     commandLine(
         "g++",
         "-shared",
@@ -41,6 +42,7 @@ val compileWinFolderPicker by tasks.registering(Exec::class) {
 }
 
 val compileTinyFileDialogs by tasks.registering(Exec::class) {
+    doFirst { mkdir("${layout.buildDirectory.get()}/native") }
     workingDir = projectDir
     commandLine(
         "gcc",
@@ -60,10 +62,6 @@ tasks.register("ver") {
         println(project.version)
     }
 }
-val compileNative by tasks.registering {
-    mkdir("${layout.buildDirectory.get()}/native")
-    dependsOn(compileWinFolderPicker, compileTinyFileDialogs)
-}
 
 tasks.withType<JavaCompile>().configureEach {
     options.compilerArgs.add("--enable-preview")
@@ -75,7 +73,7 @@ tasks.withType<JavaExec>().configureEach {
 
 if (System.getProperty("os.name").lowercase().contains("windows")) {
     tasks.processResources {
-        dependsOn(compileNative)
+        dependsOn(compileWinFolderPicker, compileTinyFileDialogs)
     }
 }
 
