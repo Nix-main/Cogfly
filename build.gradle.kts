@@ -73,8 +73,10 @@ tasks.withType<JavaExec>().configureEach {
     jvmArgs("--enable-preview")
 }
 
-tasks.processResources {
-    dependsOn(compileNative)
+if (System.getProperty("os.name").lowercase().contains("windows")) {
+    tasks.processResources {
+        dependsOn(compileNative)
+    }
 }
 
 tasks.shadowJar {

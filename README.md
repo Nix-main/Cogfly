@@ -35,12 +35,17 @@ https://github.com/nix-main/Cogfly/issues
 Please submit actual information about the bug experienced. Please also submit your log file. There is an "Open Logs Folder" button on the info page.
 
 ## Building
-The latest CI build can be retreived from the workflow but for those that want to build manually, it's very simple.
+If you're just looking for a jar file, it can be found in the release artifacts.
+The latest CI build can be retrieved from the workflow, but building manually is very simple.
+
 
 Windows:
+To build Cogfly on Windows, you'll need both GCC and G++ in your PATH, as they are invoked to compile the windows file dialog libraries.
+I personally use https://www.mingw-w64.org/
+These are not built on Unix.
 `.\gradlew.bat clean shadowJar`
 
-Unix/OSX
+Unix/OSX:
 `./gradlew clean shadowJar`
 
 The output will be in /build/libs
