@@ -71,7 +71,11 @@ jobs:
             --app-version ${{ env.ver }} `
             --dest output/${{ runner.os }} `
             --verbose
-          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "/DCogflyVersion=""${{ env.ver }}""" Cogfly.iss
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "/Dver=""${{ env.ver }}""" Cogfly.iss
+          Remove-Item -Recurse -Force "output\Windows"
+          New-Item -ItemType Directory -Force -Path "output\Windows"
+          Copy-Item -Recurse -Force "Output\Cogfly-${{ env.ver }}-installer.exe" "output\Windows\"
+
       - name: Build DEB
         if: runner.os == 'Linux'
         run: |
