@@ -59,7 +59,6 @@ jobs:
       - name: Build Windows EXE
         if: runner.os == 'Windows'
         run: |
-          choco install innosetup --no-progress -y
           jpackage `
             --input build/libs `
             --main-jar Cogfly-${{ env.ver }}.jar `
@@ -71,8 +70,7 @@ jobs:
             --app-version ${{ env.ver }} `
             --dest output/${{ runner.os }} `
             --verbose
-          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "/Dver=${{ env.ver }}" Cogfly.iss
-
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /Dver="${{ env.ver }}" Cogfly.iss
       - name: Build DEB
         if: runner.os == 'Linux'
         run: |
