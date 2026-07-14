@@ -6,7 +6,7 @@
 AppId={{CFE1E633-FC42-4E59-A82F-87A66DA6B009}
 AppName={#app}
 AppVerName={#app}
-AppVersion={#ver}
+AppVersion={#cgver}
 UsePreviousAppDir=yes
 DisableDirPage=auto
 SetupIconFile=icons\icon.ico
@@ -14,7 +14,7 @@ AppPublisher="Ambershadowo"
 AppPublisherURL={#link}
 AppSupportURL={#link}
 AppUpdatesURL={#link}
-OutputBaseFilename=Cogfly-{#ver}-installer
+OutputBaseFilename=Cogfly-{#cgver}-installer
 DefaultDirName={autopf}\{#app}
 UninstallDisplayIcon={app}\{#exe}
 ArchitecturesAllowed=x64compatible
