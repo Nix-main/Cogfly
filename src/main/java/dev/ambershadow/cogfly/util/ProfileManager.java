@@ -166,7 +166,7 @@ public class ProfileManager {
         Profile profile = new Profile(path.getFileName().toString(), path.toAbsolutePath(), imagePath, icon);
         if (!gamePath.isEmpty())
             profile.setGamePath(Paths.get(gamePath).toString());
-        Cogfly.logger.info("Read path {} for profile {}.", gamePath, profile.getName());
+        Cogfly.logger.info("Read path {} for profile {}.", profile.getGamePath(), profile.getName());
         return profile;
     }
 

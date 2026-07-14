@@ -107,7 +107,19 @@ public class Cogfly {
                 }
                 if (profile[0] != null){
                     Profile f = ProfileManager.loadProfile(Paths.get(profile[0]));
-                    launchGameAsync(true, f.getPath().toString(), f.getGamePath());
+                    if (Files.exists(localDataPath.resolve("doorstop")))
+                        doorstop = localDataPath.resolve("doorstop");
+                    else {
+                        List<JsonObject> m = new ArrayList<>(ModFetcher.getAllMods());
+                        for (JsonObject object : m) {
+                            if (object.get("full_name").getAsString().equals("silksong_modding-BepInExPack_Silksong")) {
+                                JsonObject version = object.get("versions").getAsJsonArray().get(0).getAsJsonObject();
+                                packUrl = URL.of(URI.create(version.get("download_url").getAsString()), null);
+                                latestPackVer = version.get("version_number").getAsString();
+                            }
+                        }
+                    }
+                    Utils.launchModdedGame(f);
                 } else {
                     JOptionPane.showMessageDialog(null, "This profile does not exist.", "Error", JOptionPane.ERROR_MESSAGE);
                 }
@@ -693,7 +705,8 @@ public class Cogfly {
 
     public static void launchGameAsync(boolean enabled, String path, String gamePath){
         CompletableFuture.runAsync(() -> {
-            logger.info("Launching game. OS: {}, BepInExPath: {}, GamePath: {}", Utils.OperatingSystem.current(), path, gamePath);            Path game = Paths.get(gamePath);
+            logger.info("Launching game. OS: {}, BepInExPath: {}, GamePath: {}", Utils.OperatingSystem.current(), path, gamePath);
+            Path game = Paths.get(gamePath);
             if (enabled)
                 downloadDoorstop(game);
             List<String> args = new ArrayList<>();
