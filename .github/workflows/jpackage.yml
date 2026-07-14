@@ -39,6 +39,7 @@ jobs:
         shell: bash
         run: |
           echo "ver=$(./gradlew -q ver)" >> "$GITHUB_ENV"
+          echo ${{ env.ver }}
 
       - name: Build macOS dmg
         if: runner.os == 'macOS'
@@ -70,7 +71,7 @@ jobs:
             --app-version ${{ env.ver }} `
             --dest output/${{ runner.os }} `
             --verbose
-          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /Dver="${{ env.ver }}" Cogfly.iss
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "/DCogflyVersion=""${{ env.ver }}""" Cogfly.iss
       - name: Build DEB
         if: runner.os == 'Linux'
         run: |
