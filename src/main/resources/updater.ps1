@@ -4,7 +4,7 @@ echo "Waiting for Cogfly to close..."
 Wait-Process -Id $a -ErrorAction SilentlyContinue
 echo "Download Cogfly exe..."
 Start-BitsTransfer -Source $url -Destination $exe -DisplayName "Downloading file"
-echo "Downloaded!"
+echo "Expecting hash " + $sha
 $v = (Get-FileHash -Path $exe -Algorithm SHA256).Hash
 if ($v -ne $sha.ToUpper())
 {
@@ -12,5 +12,6 @@ if ($v -ne $sha.ToUpper())
     Remove-Item $exe -Force
     exit 1
 }
+echo "Hash matched."
 Start-Process $exe
 Remove-Item $exe
