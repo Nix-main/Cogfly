@@ -1,5 +1,6 @@
 package dev.ambershadow.cogfly.asset;
 
+import com.formdev.flatlaf.FlatLaf;
 import dev.ambershadow.cogfly.Cogfly;
 public class Assets {
     private static CogflyAsset getAsset(String path) {
@@ -18,5 +19,15 @@ public class Assets {
     private static final CogflyAsset edit = getAsset("profile/edit.svg");
     private static final CogflyAsset copy = getAsset("profile/copy.svg");
     private static final CogflyAsset delete = getAsset("profile/delete.svg");
-    public static final CogflyAsset[] profileIcons = {play, edit, copy, delete};
+    private static final CogflyAsset play_dark = getAsset("profile/play_dark.svg");
+    private static final CogflyAsset edit_dark = getAsset("profile/edit_dark.svg");
+    private static final CogflyAsset copy_dark = getAsset("profile/copy_dark.svg");
+    private static final CogflyAsset delete_dark = getAsset("profile/delete_dark.svg");
+    public static CogflyAsset[] getProfileIcons(){
+        if (FlatLaf.isLafDark()){
+            return new CogflyAsset[]{play, edit, copy, delete};
+        } else {
+            return new CogflyAsset[]{play_dark, edit_dark, copy_dark, delete_dark};
+        }
+    }
 }

@@ -4,19 +4,22 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.Arrays;
+import java.util.List;
 import java.util.function.Supplier;
 
-public  class HoverLerp {
+public class HoverLerp {
 
     private HoverLerp() {}
     public static void install(
-            JComponent component,
             Supplier<Color> normal,
-            Supplier<Color> hover
+            Supplier<Color> hover,
+            JComponent... components
     ) {
         float[] progress = { 0f };
         Timer[] timer = { null };
-        component.setBackground(normal.get());
+        List<JComponent> c = Arrays.stream(components).toList();
+        c.forEach(a -> a.setBackground(normal.get()));
         MouseAdapter adapter = new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
@@ -39,24 +42,27 @@ public  class HoverLerp {
                         progress[0] = Math.min(target, progress[0] + speed);
                     else
                         progress[0] = Math.max(target, progress[0] - speed);
+                    c.forEach(component -> {
+                        component.setBackground(
+                                lerp(normal.get(), hover.get(), progress[0])
+                        );
+                        component.repaint();
 
-                    component.setBackground(
-                            lerp(normal.get(), hover.get(), progress[0])
-                    );
-                    component.repaint();
-
-                    if (progress[0] == target)
-                        ((Timer) ev.getSource()).stop();
+                        if (progress[0] == target)
+                            ((Timer) ev.getSource()).stop();
+                    });
                 });
                 timer[0].start();
             }
         };
 
-        component.addMouseListener(adapter);
+        c.forEach(component -> {
+            component.addMouseListener(adapter);
 
-        for (Component c : component.getComponents()) {
-            c.addMouseListener(adapter);
-        }
+            for (Component v : component.getComponents()) {
+                v.addMouseListener(adapter);
+            }
+        });
     }
 
     private static Color lerp(Color a, Color b, float t) {

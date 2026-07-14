@@ -4,6 +4,7 @@ import com.formdev.flatlaf.FlatLaf;
 import com.kitfox.svg.app.beans.SVGIcon;
 import dev.ambershadow.cogfly.Cogfly;
 import dev.ambershadow.cogfly.asset.Assets;
+import dev.ambershadow.cogfly.asset.CogflyAsset;
 import dev.ambershadow.cogfly.elements.SelectedPageButtonElement;
 import dev.ambershadow.cogfly.loader.ModData;
 import dev.ambershadow.cogfly.util.*;
@@ -27,13 +28,21 @@ public class ProfileCardElement extends JPanel {
 
     public static Color normal = UIManager.getColor("Button.background").darker();
     public static Color hover = UIManager.getColor("Button.pressedBackground");
+
+    private JPanel buttonPanel;
+    private JPanel south;
+    private JButton launch;
+    private JButton edit;
+    private JButton copy;
+    private JButton remove;
+    private final Profile profile;
     public ProfileCardElement(Profile profile, Icon icon) {
         setPreferredSize(new Dimension(200, 160));
         setLayout(new BorderLayout(8, 8));
         ProfileOpenPageCardElement panel = new ProfileOpenPageCardElement(profile);
         panel.setName(profile.getName());
         FrameManager.getOrCreate().getPagePanel().add(panel, profile.getName());
-
+        this.profile = profile;
         setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(Color.DARK_GRAY),
                 BorderFactory.createEmptyBorder(12, 12, 12, 12)
@@ -41,13 +50,53 @@ public class ProfileCardElement extends JPanel {
 
         JLabel iconLabel = new JLabel(icon, JLabel.CENTER);
         JLabel nameLabel = new JLabel(profile.getName(), JLabel.CENTER);
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
-        SVGIcon[] icons = new SVGIcon[Assets.profileIcons.length];
-        for (int i = 0; i < Assets.profileIcons.length; i++) {
+        add(iconLabel, BorderLayout.CENTER);
+        add(nameLabel, BorderLayout.NORTH);
+        createButtons();
+
+        setBackground(normal);
+        MouseAdapter mouseHandler = new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (SwingUtilities.isDescendingFrom(
+                        e.getComponent(), buttonPanel)) {
+                    return;
+                }
+                JPanel pages = FrameManager.getOrCreate().getPagePanel();
+                ProfileOpenPageCardElement panel = new ProfileOpenPageCardElement(profile);
+                panel.setName(profile.getName());
+                FrameManager.getOrCreate().getPagePanel().add(panel, profile.getName());
+                panel.reload();
+                ((CardLayout)pages.getLayout()).show(pages, profile.getName());
+                SelectedPageButtonElement button = FrameManager.getOrCreate().getCurrentPageButton();
+                button.setBackground(UIManager.getColor("Button.background"));
+                button.selected = false;
+            }
+        };
+
+        addMouseListener(mouseHandler);
+
+        for (Component c : getComponents()) {
+            c.addMouseListener(mouseHandler);
+        }
+
+        updateColors();
+
+        UIManager.addPropertyChangeListener(e -> {
+            if ("lookAndFeel".equals(e.getPropertyName())) {
+                SwingUtilities.invokeLater(this::updateColors);
+            }
+        });
+        HoverLerp.install(() -> normal, () -> hover, this, south, buttonPanel);
+    }
+
+    private void updateIcons(){
+        CogflyAsset[] profileIcons = Assets.getProfileIcons();
+        SVGIcon[] icons = new SVGIcon[profileIcons.length];
+        for (int i = 0; i < profileIcons.length; i++) {
             SVGIcon svg = new SVGIcon();
             try {
-                svg.setSvgURI(Assets.profileIcons[i].url().toURI());
+                svg.setSvgURI(profileIcons[i].url().toURI());
             } catch (URISyntaxException e) {
                 throw new RuntimeException(e);
             }
@@ -56,7 +105,15 @@ public class ProfileCardElement extends JPanel {
             svg.setAntiAlias(true);
             icons[i] = svg;
         }
-        JButton launch = new JButton(icons[0]);
+        launch.setIcon(icons[0]);
+        edit.setIcon(icons[1]);
+        copy.setIcon(icons[2]);
+        remove.setIcon(icons[3]);
+    }
+
+    private void createButtons(){
+        buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
+        launch = new JButton();
         launch.addActionListener(_ -> {
             List<ModData> outdated = profile.getInstalledMods().stream().filter(mod -> mod.isOutdated(profile)).toList();
             if (!outdated.isEmpty()) {
@@ -90,7 +147,7 @@ public class ProfileCardElement extends JPanel {
             Utils.launchModdedGame(profile);
         });
 
-        JButton edit = new JButton(icons[1]);
+        edit = new JButton();
         edit.addActionListener(_ -> {
             JDialog dialog = new JDialog();
             dialog.setTitle("Edit Profile - " + profile.getName());
@@ -180,7 +237,7 @@ public class ProfileCardElement extends JPanel {
             dialog.setVisible(true);
         });
 
-        JButton copy = new JButton(icons[2]);
+        copy = new JButton();
         copy.addActionListener(_ -> ProfilesScreenElement.createPrompt((name, icn) -> CompletableFuture.runAsync(() -> {
             try (Stream<Path> files = Files.walk(profile.getPath())) {
                 Files.createDirectory(Path.of(Cogfly.settings.profileSavePath).resolve(name));
@@ -212,7 +269,7 @@ public class ProfileCardElement extends JPanel {
             FrameManager.getOrCreate().getCurrentPage().reload();
         }), () -> {}));
 
-        JButton remove = new JButton(icons[3]);
+        remove = new JButton();
         remove.addActionListener(_ -> {
             int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this profile? This will delete this folder: " + profile.getPath(),
                     "Confirm Profile Deletion", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
@@ -232,45 +289,10 @@ public class ProfileCardElement extends JPanel {
         buttonPanel.add(edit);
         buttonPanel.add(copy);
         buttonPanel.add(remove);
-        buttonPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        add(iconLabel, BorderLayout.CENTER);
-        add(nameLabel, BorderLayout.NORTH);
-        add(buttonPanel, BorderLayout.SOUTH);
-
-        setBackground(normal);
-        MouseAdapter mouseHandler = new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (SwingUtilities.isDescendingFrom(
-                        e.getComponent(), buttonPanel)) {
-                    return;
-                }
-                JPanel pages = FrameManager.getOrCreate().getPagePanel();
-                ProfileOpenPageCardElement panel = new ProfileOpenPageCardElement(profile);
-                panel.setName(profile.getName());
-                FrameManager.getOrCreate().getPagePanel().add(panel, profile.getName());
-                panel.reload();
-                ((CardLayout)pages.getLayout()).show(pages, profile.getName());
-                SelectedPageButtonElement button = FrameManager.getOrCreate().getCurrentPageButton();
-                button.setBackground(UIManager.getColor("Button.background"));
-                button.selected = false;
-            }
-        };
-
-        addMouseListener(mouseHandler);
-
-        for (Component c : getComponents()) {
-            c.addMouseListener(mouseHandler);
-        }
-
-        updateColors();
-
-        UIManager.addPropertyChangeListener(e -> {
-            if ("lookAndFeel".equals(e.getPropertyName())) {
-                SwingUtilities.invokeLater(this::updateColors);
-            }
-        });
-        HoverLerp.install(this, () -> normal, () -> hover);
+        south = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+        south.add(buttonPanel);
+        updateIcons();
+        add(south, BorderLayout.SOUTH);
     }
 
     void updateColors() {
@@ -278,5 +300,9 @@ public class ProfileCardElement extends JPanel {
         Color base = UIManager.getColor("Button.pressedBackground");
         hover = FlatLaf.isLafDark() ? base.brighter() : base.darker();
         setBackground(normal);
+        south.setBackground(normal);
+        buttonPanel.setBackground(normal);
+        updateIcons();
+        repaint();
     }
 }

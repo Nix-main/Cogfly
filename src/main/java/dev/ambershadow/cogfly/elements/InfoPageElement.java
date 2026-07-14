@@ -65,7 +65,7 @@ public class InfoPageElement extends JPanel implements ReloadablePage {
                 buttons[i].setToolTipText(links[i]);
                 final String link = links[i];
                 buttons[i].addActionListener(_ -> Utils.openURI(URI.create(link)));
-                HoverLerp.install(buttons[i], () -> ProfileCardElement.normal, () -> ProfileCardElement.hover);
+                HoverLerp.install(() -> ProfileCardElement.normal, () -> ProfileCardElement.hover, buttons[i]);
                 panel.add(buttons[i]);
             } catch (URISyntaxException e){
                 throw new RuntimeException(e);
