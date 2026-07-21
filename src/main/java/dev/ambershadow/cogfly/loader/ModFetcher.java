@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -28,11 +29,16 @@ public class ModFetcher {
         List<JsonObject> all = new ArrayList<>();
         String content;
         boolean found = false;
-        try (GZIPInputStream gzip = new GZIPInputStream(URL.of(URI.create(Url), null).openStream());
-             GZIPInputStream gzip1 = new GZIPInputStream(URL.of(URI.create(new String(gzip.readAllBytes()).split("\"")[1]), null).openStream())
-        ) {
-            content = new String(gzip1.readAllBytes());
+        try (GZIPInputStream gz = new GZIPInputStream(URL.of(URI.create(Url), null).openStream())) {
+            StringBuilder v = new StringBuilder();
+            JsonArray links = JsonParser.parseString(new String(gz.readAllBytes(), StandardCharsets.UTF_8)).getAsJsonArray();
+            for (JsonElement link : links){
+                try(GZIPInputStream a = new GZIPInputStream(URL.of(URI.create(link.getAsString()), null).openStream())){
+                    v.append(new String(a.readAllBytes(), StandardCharsets.UTF_8));
+                }
+            }
             found = true;
+            content = v.toString();
             Files.writeString(cache, content);
         }
         catch (UnknownHostException unknown) {
