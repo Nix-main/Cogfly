@@ -38,22 +38,22 @@ public class ProfileManager {
             throw new RuntimeException(e);
         }
         Cogfly.downloadBepInEx(profile);
-        Icon icon;
+        Profile prof;
         if (iconPath.isEmpty()) {
-            icon = UIManager.getIcon("OptionPane.informationIcon");
+            Icon icon = UIManager.getIcon("OptionPane.informationIcon");
+            prof = new Profile(name, profile, null, icon);
         } else {
-            icon = new ImageIcon(iconPath);
-        }
-        Path source = Paths.get(iconPath);
-        Path ia = profile.resolve("icon." + source.getFileName().toString()
-                .split("\\.")[1]);
-        Profile prof = new Profile(name, profile, ia, icon);
-        try {
-            Files.copy(source, ia);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (ArrayIndexOutOfBoundsException ignored) {
-            // ignore. No icon was specified.
+            Path source = Paths.get(iconPath);
+            String fileName = source.getFileName().toString();
+            int dot = fileName.lastIndexOf('.');
+            String extension = (dot == -1) ? "" : fileName.substring(dot + 1);
+            Path ia = profile.resolve("icon." + extension);
+            prof = new Profile(name, profile, ia, new ImageIcon(iconPath));
+            try {
+                Files.copy(source, ia);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
         profiles.add(prof);
         ProfilesScreenElement.queueRefresh();
