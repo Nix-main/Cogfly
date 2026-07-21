@@ -35,13 +35,13 @@ public class InfoPageElement extends JPanel implements ReloadablePage {
 
     public JScrollPane createLinks(){
         String[] text = {
-                "Source Code",
                 "Modding Discord",
+                "Source Code",
                 "My Patreon"
         };
         String[] links = {
-                "https://github.com/nix-main/Cogfly",
                 "https://discord.gg/VDsg3HmWuB",
+                "https://github.com/Nix-main/Cogfly",
                 "https://patreon.com/c/AmberShadowo"
         };
         Dimension size = new Dimension(150, 125);
