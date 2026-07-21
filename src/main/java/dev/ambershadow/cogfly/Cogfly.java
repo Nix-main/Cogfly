@@ -171,6 +171,20 @@ public class Cogfly {
                 throw new RuntimeException(e);
             }
         }
+        else if (Utils.OperatingSystem.current() == Utils.OperatingSystem.LINUX) {
+            if (System.getenv("APPIMAGE") != null){
+                Files.createDirectories(localDataPath.resolve("updater"));
+                try(InputStream stream = getResource("/updater.sh").openStream()) {
+                    Files.write(localDataPath.resolve("updater","updater.sh"), stream.readAllBytes());
+                }
+                Path updater = localDataPath.resolve("appimageupdatetool-x86_64.appimage");
+                if (!Files.exists(updater)){
+                    try(InputStream stream = URL.of(URI.create("https://github.com/AppImageCommunity/AppImageUpdate/releases/latest/download/appimageupdatetool-x86_64.AppImage"), null).openStream()) {
+                        Files.copy(stream, updater);
+                    }
+                }
+            }
+        }
         CompletableFuture.runAsync(() -> {
             long start = System.currentTimeMillis();
             List<JsonObject> m = ModFetcher.getAllMods();
@@ -255,6 +269,15 @@ public class Cogfly {
                 ProcessHandle.current().pid() + "",
                 "https://github.com/Nix-main/Cogfly/releases/download/vver/Cogfly-ver-installer.exe".replaceAll("ver", version),
                 windowsSha256
+        ).start();
+        System.exit(0);
+    }
+
+    private static void autoUpdateAppImage() throws IOException {
+        new ProcessBuilder(
+                "bash", localDataPath.resolve("updater.sh").toString(),
+                ProcessHandle.current().pid() + "",
+                localDataPath.resolve("appimageupdatetool-x86_64.appimage").toString()
         ).start();
         System.exit(0);
     }
@@ -620,7 +643,13 @@ public class Cogfly {
                     "Update Automatically"
             );
             if (update == JOptionPane.YES_OPTION){
-                autoUpdateWindows();
+                switch (Utils.OperatingSystem.current()){
+                    case WINDOWS -> autoUpdateWindows();
+                    case LINUX -> {
+                        if (System.getenv("APPIMAGE") != null)
+                            autoUpdateAppImage();
+                    }
+                }
             }
             if (update == JOptionPane.NO_OPTION) {
                 Utils.openURI(URI.create("https://github.com/nix-main/Cogfly/releases/latest"));
