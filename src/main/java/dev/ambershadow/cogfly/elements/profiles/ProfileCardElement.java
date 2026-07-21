@@ -131,7 +131,7 @@ public class ProfileCardElement extends JPanel {
                 if (result == JOptionPane.YES_OPTION) {
                     List<CompletableFuture<Void>> voids = new ArrayList<>();
                     for (ModData modData : outdated) {
-                        voids.add(CompletableFuture.runAsync(() -> Utils.downloadLatestMod(
+                        voids.add(Utils.runAsync(() -> Utils.downloadLatestMod(
                                 ModData.getMod(modData.getFullName()),
                                 profile,
                                 false
@@ -222,7 +222,7 @@ public class ProfileCardElement extends JPanel {
         });
 
         copy = new JButton();
-        copy.addActionListener(_ -> ProfilesScreenElement.createPrompt((name, icn) -> CompletableFuture.runAsync(() -> {
+        copy.addActionListener(_ -> ProfilesScreenElement.createPrompt((name, icn) -> Utils.runAsync(() -> {
             try (Stream<Path> files = Files.walk(profile.getPath())) {
                 Files.createDirectory(Path.of(Cogfly.settings.profileSavePath).resolve(name));
                 Path source = Paths.get(icn);

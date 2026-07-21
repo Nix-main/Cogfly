@@ -185,7 +185,7 @@ public class Cogfly {
                 }
             }
         }
-        CompletableFuture.runAsync(() -> {
+        Utils.runAsync(() -> {
             long start = System.currentTimeMillis();
             List<JsonObject> m = ModFetcher.getAllMods();
             List<ModData> data = new ArrayList<>();

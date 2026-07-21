@@ -101,7 +101,7 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
                 if (result == JOptionPane.YES_OPTION) {
                     List<CompletableFuture<Void>> voids = new ArrayList<>();
                     for (ModData modData : outdated) {
-                        voids.add(CompletableFuture.runAsync(() -> Utils.downloadLatestMod(
+                        voids.add(Utils.runAsync(() -> Utils.downloadLatestMod(
                                 ModData.getMod(modData.getFullName()),
                                 profile,
                                 false
@@ -135,7 +135,7 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
                     if (result == JOptionPane.YES_OPTION) {
                         List<CompletableFuture<Void>> voids = new ArrayList<>();
                         for (ModData modData : outdated) {
-                            voids.add(CompletableFuture.runAsync(() -> Utils.downloadLatestMod(
+                            voids.add(Utils.runAsync(() -> Utils.downloadLatestMod(
                                     ModData.getMod(modData.getFullName()),
                                     profile,
                                     false

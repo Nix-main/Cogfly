@@ -47,7 +47,7 @@ public class ProfileOpenPageCardElement extends JPanel {
                 if (result == JOptionPane.YES_OPTION) {
                     List<CompletableFuture<Void>> voids = new ArrayList<>();
                     for (ModData modData : outdated) {
-                        voids.add(CompletableFuture.runAsync(() -> Utils.downloadLatestMod(
+                        voids.add(Utils.runAsync(() -> Utils.downloadLatestMod(
                                 ModData.getMod(modData.getFullName()),
                                 profile,
                                 false
@@ -66,7 +66,7 @@ public class ProfileOpenPageCardElement extends JPanel {
             updateAll.setEnabled(false);
             for (ModData modData : profile.getInstalledMods()) {
                 if (!modData.isOutdated(profile)) continue;
-                CompletableFuture.runAsync(() -> Utils.downloadLatestMod(
+                Utils.runAsync(() -> Utils.downloadLatestMod(
                         ModData.getMod(modData.getFullName()),
                         profile,
                         false

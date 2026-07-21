@@ -26,6 +26,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 
 public class Utils {
@@ -344,7 +345,7 @@ public class Utils {
     }
     public static void downloadManualMod(Path path, Profile profile, boolean copy){
         final String[] fname = {""};
-        CompletableFuture.runAsync(() -> {
+        runAsync(() -> {
             try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(path))) {
                 String fullName = "";
                 String name = "";
@@ -408,7 +409,7 @@ public class Utils {
         ModPanelElement.setProgressBar(profile);
     }
     public static void downloadMod(ModData mod, Profile profile, boolean deps, boolean enabled){
-        CompletableFuture<Void> download = CompletableFuture.runAsync(() -> {
+        CompletableFuture<Void> download = runAsync(() -> {
             String fn = mod.getFullName();
             if (!getActiveDownloads(profile).add(fn)) {
                 return;
@@ -444,64 +445,72 @@ public class Utils {
             });
         });
         download.whenComplete((_, _) -> ModPanelElement.setProgressBar(profile));
-        download.exceptionally(e -> {
-            throw new RuntimeException(e);
-        });
     }
 
-    public static void downloadModZipStream(InputStream stream, String fullName, Profile profile){
+    public static void downloadModZipStream(InputStream is, String fullName, Profile profile) throws IOException {
         Path bepinexRoot = profile.getBepInExPath();
-        try (ZipInputStream zis = new ZipInputStream(stream)) {
-            ZipEntry entry;
 
-            while ((entry = zis.getNextEntry()) != null) {
+        Path temp = Files.createTempFile(fullName, ".zip");
+        Files.write(temp, is.readAllBytes());
+        try (ZipFile zipFile = new ZipFile(temp.toFile(), StandardCharsets.ISO_8859_1)) {
+            int total = 0;
+            int extracted = 0;
+
+            Enumeration<? extends ZipEntry> entries = zipFile.entries();
+            while (entries.hasMoreElements()) {
+                ZipEntry entry = entries.nextElement();
+                total++;
                 if (entry.getName().isBlank()) continue;
 
                 Path zipPath = Path.of(entry.getName()).normalize();
-
                 if (zipPath.isAbsolute() || zipPath.startsWith("..")) {
-                    throw new IOException("Bad zip entry: " + entry.getName());
+                    Cogfly.logger.warn("Bad zip entry, skipping: {}", entry.getName());
+                    continue;
                 }
+                if (zipPath.getNameCount() == 0) continue;
 
                 Path targetBase;
                 Path relativeInsideMod;
+                String root = zipPath.getName(0).toString();
 
-                if (zipPath.getNameCount() > 0) {
-                    String root = zipPath.getName(0).toString();
-
-                    switch (root) {
-                        case "monomod", "patchers", "plugins", "core" -> {
-                            targetBase = bepinexRoot.resolve(root).resolve(fullName);
-                            if (zipPath.getNameCount() > 1) {
-                                relativeInsideMod = zipPath.subpath(1, zipPath.getNameCount());
-                            } else {
-                                continue;
-                            }
-                        }
-                        default -> {
-                            targetBase = bepinexRoot.resolve("plugins").resolve(fullName);
-                            relativeInsideMod = zipPath;
-                        }
+                switch (root) {
+                    case "monomod", "patchers", "plugins", "core" -> {
+                        if (zipPath.getNameCount() == 1) continue;
+                        targetBase = bepinexRoot.resolve(root).resolve(fullName);
+                        relativeInsideMod = zipPath.subpath(1, zipPath.getNameCount());
                     }
-                } else
-                    continue;
-
-                Path outputPath = targetBase.resolve(relativeInsideMod).normalize();
-
-                if (!outputPath.startsWith(targetBase))
-                    throw new IOException("Zip traversal detected: " + entry.getName());
-
-                if (entry.isDirectory())
-                    Files.createDirectories(outputPath);
-                else {
-                    Files.createDirectories(outputPath.getParent());
-                    try (OutputStream os = Files.newOutputStream(outputPath)) {
-                        zis.transferTo(os);
+                    default -> {
+                        targetBase = bepinexRoot.resolve("plugins").resolve(fullName);
+                        relativeInsideMod = zipPath;
                     }
                 }
-                zis.closeEntry();
+
+                Path outputPath = targetBase.resolve(relativeInsideMod).normalize();
+                if (!outputPath.startsWith(targetBase)) {
+                    Cogfly.logger.warn("Zip traversal detected, skipping: {}", entry.getName());
+                    continue;
+                }
+
+                try {
+                    if (entry.isDirectory()) {
+                        Files.createDirectories(outputPath);
+                    } else {
+                        Files.createDirectories(outputPath.getParent());
+                        try (InputStream in = zipFile.getInputStream(entry);
+                             OutputStream os = Files.newOutputStream(outputPath)) {
+                            in.transferTo(os);
+                        }
+                    }
+                    extracted++;
+                } catch (IOException e) {
+                    Cogfly.logger.warn("Failed to extract entry '{}': {}", entry.getName(), e.getMessage());
+                }
             }
-        } catch (IOException ignored){}
+
+            Cogfly.logger.info("Extracted {}/{} entries for {}", extracted, total, fullName);
+        } finally {
+            Files.delete(temp);
+        }
     }
 
     private static ModData getModFromDependency(String dependency){
@@ -571,6 +580,14 @@ public class Utils {
         }
 
         return matches;
+    }
+
+    public static CompletableFuture<Void> runAsync(Runnable runnable){
+        CompletableFuture<Void> future = CompletableFuture.runAsync(runnable);
+        future.exceptionally(f -> {
+            throw new RuntimeException(f);
+        });
+        return future;
     }
 
     public static void throwNonFatalError(Throwable e){
