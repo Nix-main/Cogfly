@@ -85,10 +85,11 @@ public class Utils {
     }
 
     public static void openURI(URI uri){
-        if (!(Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)))
-            return;
         try {
-            Desktop.getDesktop().browse(uri);
+            if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE))
+                Desktop.getDesktop().browse(uri);
+            else
+                new ProcessBuilder("xdg-open", uri.toString()).start();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
