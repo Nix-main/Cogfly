@@ -123,8 +123,8 @@ public class Cogfly {
                 } else {
                     JOptionPane.showMessageDialog(null, "This profile does not exist.", "Error", JOptionPane.ERROR_MESSAGE);
                 }
+                return;
             }
-            return;
         }
         logger.info("Loaded settings");
         if (Utils.OperatingSystem.current() == Utils.OperatingSystem.WINDOWS){

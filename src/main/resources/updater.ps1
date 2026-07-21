@@ -15,3 +15,4 @@ if ($v -ne $sha.ToUpper())
 echo "Hash matched."
 Start-Process $exe -ArgumentList "/SILENT /NORESTART" -Wait
 Remove-Item $exe -Force
+start "cogfly://launch"
