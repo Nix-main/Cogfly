@@ -717,8 +717,6 @@ public class Cogfly {
                 args.add("--doorstop-target-assembly");
                 String target = bix.resolve("core/BepInEx.Preloader.dll").toString();
                 target = Utils.OperatingSystem.current() == Utils.OperatingSystem.WINDOWS ? "\"" + target + "\"" : target;
-                if (settings.launchWithSteam)
-                    target = target.replace("/", "%2F");
                 args.add(target);
             }
             String arg = String.join(" ", args);
