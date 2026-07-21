@@ -793,15 +793,8 @@ public class Cogfly {
                 logger.info("Launching standalone. Command={}, Directory={}", String.join(" ", cmds), game);
                 try {
                     Process process = builder.start();
-                    Supplier<String> supplier = () -> {
-                        try {
-                            return new String(process.getErrorStream().readAllBytes());
-                        } catch (IOException e) {
-                            return "";
-                        }
-                    };
-                    CompletableFuture<String> stdoutFuture = CompletableFuture.supplyAsync(supplier);
-                    CompletableFuture<String> stderrFuture = CompletableFuture.supplyAsync(supplier);
+                    CompletableFuture<String> stdoutFuture = CompletableFuture.supplyAsync(getSupplier(process::getInputStream));
+                    CompletableFuture<String> stderrFuture = CompletableFuture.supplyAsync(getSupplier(process::getErrorStream));
                     int exitCode = process.waitFor();
                     String stdout = stdoutFuture.join();
                     String stderr = stderrFuture.join();
@@ -828,6 +821,16 @@ public class Cogfly {
             );
             return null;
         });
+    }
+
+    private static Supplier<String> getSupplier(Supplier<InputStream> stream){
+        return () -> {
+            try {
+                return new String(stream.get().readAllBytes());
+            } catch (IOException e) {
+                return "";
+            }
+        };
     }
 
     private static List<Path> getSteamFolders() throws IOException {
