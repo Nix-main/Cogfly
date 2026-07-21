@@ -238,11 +238,15 @@ public class Cogfly {
                 downloadBepInEx(Path.of(settings.gamePath));
             queuedPaths.forEach(Cogfly::downloadBepInEx);
             queuedPaths = null;
+            try {
+                showEarlyDialogs();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         });
         UIManager.put("TextComponent.arc", 5);
         logger.info("Showing UI");
         FrameManager.getOrCreate().frame.setVisible(true);
-        showEarlyDialogs();
     }
 
     private static void extractIcons() throws IOException {
