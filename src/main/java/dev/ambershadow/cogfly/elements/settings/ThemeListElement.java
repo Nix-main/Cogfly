@@ -41,6 +41,7 @@ public class ThemeListElement extends SettingsElement {
                 UIManager.setLookAndFeel(info.getClassName());
                 SwingUtilities.updateComponentTreeUI(parent);
                 UIManager.setLookAndFeel(theme);
+                parent.pack();
             } catch (ClassNotFoundException | UnsupportedLookAndFeelException | InstantiationException |
                      IllegalAccessException e) {
                 throw new RuntimeException(e);
