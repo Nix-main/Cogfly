@@ -97,7 +97,7 @@ public class FrameManager {
             }
             currentPageButton = button;
             currentPageButton.selected = true;
-            currentPageButton.setBackground(ProfileCardElement.hover);
+            currentPageButton.setBackground(ProfileCardElement.hover.get());
         }
     }
     public enum CogflyPage {

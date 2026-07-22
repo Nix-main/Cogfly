@@ -16,43 +16,43 @@ public class HoverLerp {
             Supplier<Color> hover,
             JComponent... components
     ) {
-        float[] progress = { 0f };
-        Timer[] timer = { null };
         List<JComponent> c = Arrays.stream(components).toList();
         c.forEach(a -> a.setBackground(normal.get()));
+        Timer timer = new Timer(16, null);
+        float[] progress = { 0f };
+        float[] target = {0f};
+        Color[] n = {normal.get()};
+        Color[] h = {hover.get()};
+        timer.addActionListener(_ -> {
+            float speed = 0.12f;
+
+            if (progress[0] < target[0])
+                progress[0] = Math.min(target[0], progress[0] + speed);
+            else
+                progress[0] = Math.max(target[0], progress[0] - speed);
+            c.forEach(component -> {
+                component.setBackground(
+                        lerp(n[0], h[0], progress[0])
+                );
+                component.repaint();
+            });
+            if (progress == target)
+                timer.stop();
+        });
+        timer.start();
         MouseAdapter adapter = new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
-                animateTo(1f);
+                n[0] = normal.get();
+                h[0] = hover.get();
+                target[0] = 1;
+                if (!timer.isRunning())
+                    timer.start();
             }
 
             @Override
             public void mouseExited(MouseEvent e) {
-                animateTo(0f);
-            }
-
-            private void animateTo(float target) {
-                if (timer[0] != null && timer[0].isRunning())
-                    timer[0].stop();
-
-                timer[0] = new Timer(16, ev -> {
-                    float speed = 0.12f;
-
-                    if (progress[0] < target)
-                        progress[0] = Math.min(target, progress[0] + speed);
-                    else
-                        progress[0] = Math.max(target, progress[0] - speed);
-                    c.forEach(component -> {
-                        component.setBackground(
-                                lerp(normal.get(), hover.get(), progress[0])
-                        );
-                        component.repaint();
-
-                        if (progress[0] == target)
-                            ((Timer) ev.getSource()).stop();
-                    });
-                });
-                timer[0].start();
+                target[0] = 0;
             }
         };
 
@@ -61,6 +61,17 @@ public class HoverLerp {
 
             for (Component v : component.getComponents()) {
                 v.addMouseListener(adapter);
+            }
+        });
+
+        UIManager.addPropertyChangeListener(e -> {
+            if ("lookAndFeel".equals(e.getPropertyName())) {
+                n[0] = normal.get();
+                h[0] = hover.get();
+                SwingUtilities.invokeLater(() -> c.forEach(a -> {
+                    a.setBackground(normal.get());
+                    a.repaint();
+                }));
             }
         });
     }

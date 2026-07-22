@@ -104,10 +104,8 @@ public class SettingsDialog extends JDialog {
                  IllegalAccessException e) {
             throw new RuntimeException(e);
         }
-        ProfileCardElement.normal = UIManager.getColor("Button.background").darker();
-        ProfileCardElement.hover = UIManager.getColor("Button.pressedBackground");
-        ProfileCardElement.hover = FlatLaf.isLafDark() ? ProfileCardElement.hover.brighter() : ProfileCardElement.hover.darker();
-        FrameManager.getOrCreate().getCurrentPageButton().setBackground(ProfileCardElement.hover);
+        ProfileCardElement.hover = FlatLaf.isLafDark() ? () -> UIManager.getColor("Button.pressedBackground").brighter() : () -> UIManager.getColor("Button.pressedBackground").darker();
+        FrameManager.getOrCreate().getCurrentPageButton().setBackground(ProfileCardElement.hover.get());
         Cogfly.settings = queued;
         if (!queued.profileSources.equals(initial.profileSources))
             ProfileManager.loadProfiles();

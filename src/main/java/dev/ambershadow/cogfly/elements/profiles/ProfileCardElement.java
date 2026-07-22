@@ -23,12 +23,13 @@ import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public class ProfileCardElement extends JPanel {
 
-    public static Color normal = UIManager.getColor("Button.background").darker();
-    public static Color hover = UIManager.getColor("Button.pressedBackground");
+    public static Supplier<Color> normal = () -> UIManager.getColor("Button.background").darker();
+    public static Supplier<Color> hover = () -> UIManager.getColor("Button.pressedBackground");
 
     private JPanel buttonPanel;
     private JPanel south;
@@ -55,7 +56,7 @@ public class ProfileCardElement extends JPanel {
         add(nameLabel, BorderLayout.NORTH);
         createButtons();
 
-        setBackground(normal);
+        setBackground(normal.get());
         MouseAdapter mouseHandler = new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -88,7 +89,7 @@ public class ProfileCardElement extends JPanel {
                 SwingUtilities.invokeLater(this::updateColors);
             }
         });
-        HoverLerp.install(() -> normal, () -> hover, this, south, buttonPanel);
+        HoverLerp.install(normal, hover, this, south, buttonPanel);
     }
 
     private void updateIcons(){
@@ -286,12 +287,11 @@ public class ProfileCardElement extends JPanel {
     }
 
     void updateColors() {
-        normal = UIManager.getColor("Button.background").darker();
         Color base = UIManager.getColor("Button.pressedBackground");
-        hover = FlatLaf.isLafDark() ? base.brighter() : base.darker();
-        setBackground(normal);
-        south.setBackground(normal);
-        buttonPanel.setBackground(normal);
+        hover = FlatLaf.isLafDark() ? base::brighter : base::darker;
+        setBackground(normal.get());
+        south.setBackground(normal.get());
+        buttonPanel.setBackground(normal.get());
         updateIcons();
         repaint();
     }
