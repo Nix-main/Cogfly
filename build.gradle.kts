@@ -47,7 +47,7 @@ val compileWinFolderPicker by tasks.registering(Exec::class) {
         "-shared",
         "-o",
         "${layout.buildDirectory.get()}/native/winfolderpicker.dll",
-        "libs/folderpicker.cpp",
+        "resources/libs/folderpicker.cpp",
         "-lole32",
         "-luuid"
     )
@@ -61,7 +61,7 @@ val compileTinyFileDialogs by tasks.registering(Exec::class) {
         "-shared",
         "-o",
         "${layout.buildDirectory.get()}/native/wintinyfiledialogs.dll",
-        "libs/tinyfiledialogs.c",
+        "resources/libs/tinyfiledialogs.c",
         "-lole32",
         "-lcomdlg32",
         "-lshell32",

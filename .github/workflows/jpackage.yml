@@ -51,10 +51,10 @@ jobs:
               --name "Cogfly" \
               --type dmg \
               --vendor "Ambershadow" \
-              --icon ./icons/icon.icns \
+              --icon ./resources/icons/icon.icns \
               --app-version ${{ env.ver }} \
               --dest output/${{ runner.os }} \
-              --resource-dir plist \
+              --resource-dir resources/mac \
               --verbose
 
       - name: Build Windows EXE
@@ -67,7 +67,7 @@ jobs:
             --name Cogfly `
             --type app-image `
             --vendor "Ambershadow" `
-            --icon ./icons/icon.ico `
+            --icon ./resources/icons/icon.ico `
             --app-version ${{ env.ver }} `
             --dest output/${{ runner.os }} `
             --verbose
@@ -86,10 +86,10 @@ jobs:
             --name Cogfly \
             --type deb \
             --vendor "Ambershadow" \
-            --icon ./icons/icon.png \
+            --icon ./resources/icons/icon.png \
             --app-version ${{ env.ver }} \
             --dest output/${{ runner.os }} \
-            --resource-dir desktop \
+            --resource-dir resources/linux \
             --verbose
 
       - name: Build RPM
@@ -102,10 +102,10 @@ jobs:
             --name Cogfly \
             --type rpm \
             --vendor "Ambershadow" \
-            --icon ./icons/icon.png \
+            --icon ./resources/icons/icon.png \
             --app-version ${{ env.ver }} \
             --dest output/${{ runner.os }} \
-            --resource-dir desktop \
+            --resource-dir resources/linux \
             --verbose
 
       - name: Build APPIMAGE
@@ -120,12 +120,12 @@ jobs:
             --name Cogfly \
             --type app-image \
             --vendor "Ambershadow" \
-            --icon ./icons/icon.png \
+            --icon ./resources/icons/icon.png \
             --app-version ${{ env.ver }} \
             --dest output/appimage \
             --verbose 
-          cp ./icons/icon.png output/appimage/Cogfly/
-          cp ./desktop/Cogfly_appimage.desktop output/appimage/Cogfly/Cogfly.desktop
+          cp ./resources/icons/icon.png output/appimage/Cogfly/
+          cp ./resources/linux/Cogfly_appimage.desktop output/appimage/Cogfly/Cogfly.desktop
           cat > output/appimage/Cogfly/AppRun << 'EOF'
           #!/bin/sh
           export _JAVA_AWT_WM_NONREPARENTING=1
