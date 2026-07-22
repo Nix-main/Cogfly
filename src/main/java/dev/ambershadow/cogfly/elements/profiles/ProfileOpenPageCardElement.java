@@ -1,5 +1,6 @@
 package dev.ambershadow.cogfly.elements.profiles;
 
+import dev.ambershadow.cogfly.Cogfly;
 import dev.ambershadow.cogfly.elements.ModPanelElement;
 import dev.ambershadow.cogfly.loader.ModData;
 import dev.ambershadow.cogfly.profile.Profile;
@@ -50,7 +51,7 @@ public class ProfileOpenPageCardElement extends JPanel {
                 if (result == JOptionPane.YES_OPTION) {
                     List<CompletableFuture<Void>> voids = new ArrayList<>();
                     for (ModData modData : outdated) {
-                        voids.add(ModUtils.runAsync(() -> ModUtils.downloadLatestMod(
+                        voids.add(Cogfly.runAsync(() -> ModUtils.downloadLatestMod(
                                 ModData.getMod(modData.getFullName()),
                                 profile,
                                 false
@@ -69,7 +70,7 @@ public class ProfileOpenPageCardElement extends JPanel {
             updateAll.setEnabled(false);
             for (ModData modData : profile.getInstalledMods()) {
                 if (!modData.isOutdated(profile)) continue;
-                ModUtils.runAsync(() -> ModUtils.downloadLatestMod(
+                Cogfly.runAsync(() -> ModUtils.downloadLatestMod(
                         ModData.getMod(modData.getFullName()),
                         profile,
                         false
@@ -80,14 +81,14 @@ public class ProfileOpenPageCardElement extends JPanel {
         JButton copyLogToClipboard = new JButton("Copy Log To Clipboard");
         copyLogToClipboard.addActionListener(_ -> {
             if (Files.exists(profile.getBepInExPath().resolve("LogOutput.log"))){
-                ModUtils.copyFile(profile.getBepInExPath().resolve("LogOutput.log"));
+                Cogfly.copyFile(profile.getBepInExPath().resolve("LogOutput.log"));
             }
         });
 
         JButton exportAsId = new JButton("Export As Code");
         exportAsId.addActionListener(_ -> {
             String id = ProfileManager.toId(profile);
-            ModUtils.copyString(id);
+            Cogfly.copyString(id);
             JOptionPane.showMessageDialog(
                 null, 
                 "Your code: " + id + " has been copied to your clipboard!", 

@@ -18,15 +18,19 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.io.*;
 import java.net.*;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.time.Instant;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -75,7 +79,7 @@ public class Cogfly {
 
         Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
             logger.error("Uncaught exception in thread {}", thread.getName(), throwable);
-            ModUtils.throwNonFatalError(throwable);
+            throwNonFatalError(throwable);
         });
         dataJson = localDataPath.resolve("settings.json");
         Files.createDirectories(dataJson.getParent());
@@ -138,7 +142,7 @@ public class Cogfly {
                 }
             }
         }
-        ModUtils.runAsync(() -> {
+        runAsync(() -> {
             long start = System.currentTimeMillis();
             List<JsonObject> m = ModFetcher.getAllMods();
             List<ModData> data = new ArrayList<>();
@@ -464,6 +468,58 @@ public class Cogfly {
         JPanel confirmPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         confirmPanel.add(confirm);
         prompt.add(confirmPanel, BorderLayout.SOUTH);
+    }
+
+    public static void copyFile(Path path){
+        try {
+            copyString(Files.readString(path, StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void copyString(String text) {
+        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+        StringSelection selection = new StringSelection(text);
+        clipboard.setContents(selection, null);
+    }
+
+
+
+    public static CompletableFuture<Void> runAsync(Runnable runnable){
+        CompletableFuture<Void> future = CompletableFuture.runAsync(runnable);
+        future.exceptionally(f -> {
+            throw new RuntimeException(f);
+        });
+        return future;
+    }
+
+    public static void throwNonFatalError(Throwable e){
+        StringWriter sw = new StringWriter();
+        e.printStackTrace(new PrintWriter(sw));
+        String[] lines = sw.toString().split("\\R");
+        int maxLines = 15;
+
+        String stackTrace = String.join(
+                System.lineSeparator(),
+                Arrays.copyOfRange(lines, 0, Math.min(lines.length, maxLines))
+        );
+        if (lines.length > maxLines) {
+            stackTrace += System.lineSeparator()
+                    + "... (" + (lines.length - maxLines) + " more lines)";
+        }
+        int val = JOptionPane.showOptionDialog(
+                FrameManager.getOrCreate().frame,
+                stackTrace,
+                "An error has occurred!",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.ERROR_MESSAGE,
+                null,
+                new Object[]{"Copy To Clipboard", "Close"},
+                0);
+        if (val == JOptionPane.YES_OPTION) {
+            copyString(sw.toString());
+        }
     }
 
     public static boolean isWindows(){
