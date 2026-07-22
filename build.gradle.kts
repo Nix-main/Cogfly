@@ -1,7 +1,6 @@
 plugins {
     id("java")
     id("com.gradleup.shadow") version "9.3.0"
-    id("maven-publish")
 }
 
 group = "dev.ambershadow"
@@ -14,17 +13,6 @@ repositories {
 sourceSets {
     main {
         resources.srcDir(layout.buildDirectory.dir("native"))
-    }
-}
-
-publishing {
-    publications {
-        create<MavenPublication>("mavenJava") {
-            from(components["java"])
-            groupId = "dev.ambershadow"
-            artifactId = "Cogfly"
-            version = project.version as String
-        }
     }
 }
 
