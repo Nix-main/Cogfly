@@ -1,4 +1,4 @@
-package dev.ambershadow.cogfly.util;
+package dev.ambershadow.cogfly.profile;
 
 import com.google.gson.stream.JsonWriter;
 import dev.ambershadow.cogfly.Cogfly;

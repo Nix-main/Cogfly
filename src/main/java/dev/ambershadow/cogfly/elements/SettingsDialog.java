@@ -4,8 +4,9 @@ import com.formdev.flatlaf.FlatLaf;
 import dev.ambershadow.cogfly.Cogfly;
 import dev.ambershadow.cogfly.elements.profiles.ProfileCardElement;
 import dev.ambershadow.cogfly.elements.settings.*;
-import dev.ambershadow.cogfly.util.FrameManager;
-import dev.ambershadow.cogfly.util.ProfileManager;
+import dev.ambershadow.cogfly.util.GameUtils;
+import dev.ambershadow.cogfly.util.swing.FrameManager;
+import dev.ambershadow.cogfly.profile.ProfileManager;
 import dev.ambershadow.cogfly.util.Settings;
 
 import javax.swing.*;
@@ -111,7 +112,7 @@ public class SettingsDialog extends JDialog {
         if (!queued.profileSources.equals(initial.profileSources))
             ProfileManager.loadProfiles();
         if (queued.baseGameEnabled)
-            Cogfly.downloadBepInEx(Path.of(queued.gamePath));
+            GameUtils.downloadBepInEx(Path.of(queued.gamePath));
         SwingUtilities.invokeLater(ModPanelElement::redrawAll);
         SwingUtilities.updateComponentTreeUI(FrameManager.getOrCreate().frame);
         SwingUtilities.updateComponentTreeUI(this);

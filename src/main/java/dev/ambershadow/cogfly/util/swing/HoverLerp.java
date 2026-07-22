@@ -1,4 +1,4 @@
-package dev.ambershadow.cogfly.util;
+package dev.ambershadow.cogfly.util.swing;
 
 import javax.swing.*;
 import java.awt.*;

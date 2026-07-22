@@ -1,7 +1,7 @@
 package dev.ambershadow.cogfly.elements.settings;
 
 import dev.ambershadow.cogfly.elements.SettingsDialog;
-import dev.ambershadow.cogfly.util.Utils;
+import dev.ambershadow.cogfly.util.FileUtils;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -41,7 +41,7 @@ public class ManageProfileSourcesDialog extends JDialog {
 
         JPanel buttonWrapper = new JPanel(new FlowLayout(FlowLayout.CENTER));
         JButton button1 = new JButton("Add");
-        button1.addActionListener(_ -> Utils.pickFolder((path) -> {
+        button1.addActionListener(_ -> FileUtils.pickFolder((path) -> {
             if (path.equals(Paths.get(base.<String>get(s -> s.profileSavePath))))
                 return;
             model.setRowCount(model.getRowCount() + 1);

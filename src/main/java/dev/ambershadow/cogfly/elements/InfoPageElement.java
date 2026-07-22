@@ -4,9 +4,10 @@ import com.kitfox.svg.app.beans.SVGIcon;
 import dev.ambershadow.cogfly.Cogfly;
 import dev.ambershadow.cogfly.asset.Assets;
 import dev.ambershadow.cogfly.elements.profiles.ProfileCardElement;
-import dev.ambershadow.cogfly.util.HoverLerp;
-import dev.ambershadow.cogfly.util.ReloadablePage;
-import dev.ambershadow.cogfly.util.Utils;
+import dev.ambershadow.cogfly.util.FileUtils;
+import dev.ambershadow.cogfly.util.GameUtils;
+import dev.ambershadow.cogfly.util.swing.HoverLerp;
+import dev.ambershadow.cogfly.util.swing.ReloadablePage;
 
 import javax.swing.*;
 import java.awt.*;
@@ -64,7 +65,7 @@ public class InfoPageElement extends JPanel implements ReloadablePage {
                 buttons[i].setPreferredSize(size);
                 buttons[i].setToolTipText(links[i]);
                 final String link = links[i];
-                buttons[i].addActionListener(_ -> Utils.openURI(URI.create(link)));
+                buttons[i].addActionListener(_ -> FileUtils.openURI(URI.create(link)));
                 HoverLerp.install(() -> ProfileCardElement.normal, () -> ProfileCardElement.hover, buttons[i]);
                 panel.add(buttons[i]);
             } catch (URISyntaxException e){
@@ -83,20 +84,20 @@ public class InfoPageElement extends JPanel implements ReloadablePage {
         savesButton.setHorizontalAlignment(SwingConstants.LEFT);
         savesButton.setPreferredSize(dim);
         savesButton.setMaximumSize(max);
-        savesButton.addActionListener(_ -> Utils.openSavePath());
+        savesButton.addActionListener(_ -> FileUtils.openSavePath());
 
         JButton logsButton = new JButton("Open Logs Folder");
         logsButton.setIcon(Assets.openSaves.getAsIconWithColor(Color.BLUE));
         logsButton.setHorizontalAlignment(SwingConstants.LEFT);
         logsButton.setPreferredSize(dim);
         logsButton.setMaximumSize(max);
-        logsButton.addActionListener(_ -> Utils.openPath(Cogfly.localDataPath.resolve("logs")));
+        logsButton.addActionListener(_ -> FileUtils.openPath(Cogfly.localDataPath.resolve("logs")));
 
         JButton launchVanilla = new JButton("Launch Vanilla Game");
         launchVanilla.setHorizontalAlignment(SwingConstants.CENTER);
         launchVanilla.setPreferredSize(dim);
         launchVanilla.setMaximumSize(max);
-        launchVanilla.addActionListener(_ -> Cogfly.launchGameAsync(false, "", Cogfly.settings.gamePath));
+        launchVanilla.addActionListener(_ -> GameUtils.launchGameAsync(false, "", Cogfly.settings.gamePath));
 
         JPanel buttons = new JPanel();
         buttons.setLayout(new BoxLayout(buttons, BoxLayout.X_AXIS));

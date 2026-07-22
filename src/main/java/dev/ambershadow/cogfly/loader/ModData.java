@@ -4,7 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import dev.ambershadow.cogfly.Cogfly;
-import dev.ambershadow.cogfly.util.Profile;
+import dev.ambershadow.cogfly.profile.Profile;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;

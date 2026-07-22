@@ -2,7 +2,10 @@ package dev.ambershadow.cogfly.elements.profiles;
 
 import dev.ambershadow.cogfly.elements.ModPanelElement;
 import dev.ambershadow.cogfly.loader.ModData;
+import dev.ambershadow.cogfly.profile.Profile;
+import dev.ambershadow.cogfly.profile.ProfileManager;
 import dev.ambershadow.cogfly.util.*;
+import dev.ambershadow.cogfly.util.swing.FrameManager;
 
 import javax.swing.*;
 import java.awt.*;
@@ -47,17 +50,17 @@ public class ProfileOpenPageCardElement extends JPanel {
                 if (result == JOptionPane.YES_OPTION) {
                     List<CompletableFuture<Void>> voids = new ArrayList<>();
                     for (ModData modData : outdated) {
-                        voids.add(Utils.runAsync(() -> Utils.downloadLatestMod(
+                        voids.add(ModUtils.runAsync(() -> ModUtils.downloadLatestMod(
                                 ModData.getMod(modData.getFullName()),
                                 profile,
                                 false
                         )));
                     }
-                    CompletableFuture.allOf(voids.toArray(CompletableFuture[]::new)).thenRun(() -> Utils.launchModdedGame(profile)).join();
+                    CompletableFuture.allOf(voids.toArray(CompletableFuture[]::new)).thenRun(() -> GameUtils.launchModdedGame(profile)).join();
                     return;
                 }
             }
-            Utils.launchModdedGame(profile);
+            GameUtils.launchModdedGame(profile);
         });
 
         updateAll = new JButton("Update All");
@@ -66,7 +69,7 @@ public class ProfileOpenPageCardElement extends JPanel {
             updateAll.setEnabled(false);
             for (ModData modData : profile.getInstalledMods()) {
                 if (!modData.isOutdated(profile)) continue;
-                Utils.runAsync(() -> Utils.downloadLatestMod(
+                ModUtils.runAsync(() -> ModUtils.downloadLatestMod(
                         ModData.getMod(modData.getFullName()),
                         profile,
                         false
@@ -77,14 +80,14 @@ public class ProfileOpenPageCardElement extends JPanel {
         JButton copyLogToClipboard = new JButton("Copy Log To Clipboard");
         copyLogToClipboard.addActionListener(_ -> {
             if (Files.exists(profile.getBepInExPath().resolve("LogOutput.log"))){
-                Utils.copyFile(profile.getBepInExPath().resolve("LogOutput.log"));
+                ModUtils.copyFile(profile.getBepInExPath().resolve("LogOutput.log"));
             }
         });
 
         JButton exportAsId = new JButton("Export As Code");
         exportAsId.addActionListener(_ -> {
             String id = ProfileManager.toId(profile);
-            Utils.copyString(id);
+            ModUtils.copyString(id);
             JOptionPane.showMessageDialog(
                 null, 
                 "Your code: " + id + " has been copied to your clipboard!", 
@@ -94,10 +97,10 @@ public class ProfileOpenPageCardElement extends JPanel {
         });
 
         JButton exportAsFile = new JButton("Export As File");
-        exportAsFile.addActionListener(_ -> Utils.pickFolder(path -> ProfileManager.toFile(profile, path)));
+        exportAsFile.addActionListener(_ -> FileUtils.pickFolder(path -> ProfileManager.toFile(profile, path)));
 
         JButton openFileLocation = new JButton("Open Profile Folder");
-        openFileLocation.addActionListener(_ -> Utils.openProfilePath(profile));
+        openFileLocation.addActionListener(_ -> FileUtils.openProfilePath(profile));
 
         JButton refresh = new JButton("Refresh");
         refresh.addActionListener(_ -> {
@@ -106,7 +109,7 @@ public class ProfileOpenPageCardElement extends JPanel {
         });
 
         JButton install = new JButton("Install Manually");
-        install.addActionListener(_ -> Utils.pickFile((path) -> Utils.downloadManualMod(path, profile, true), "*", "zip", "dll"));
+        install.addActionListener(_ -> FileUtils.pickFile((path) -> ModUtils.downloadManualMod(path, profile, true), "*", "zip", "dll"));
 
         upperPanel.add(launch);
         upperPanel.add(updateAll);
@@ -135,6 +138,6 @@ public class ProfileOpenPageCardElement extends JPanel {
                 .stream().anyMatch(mod -> mod.isOutdated(profile));
         updateAll.setEnabled(anyOutdated);
         ModPanelElement.redraw(profile);
-        progressBar.setVisible(Utils.isDownloading(profile));
+        progressBar.setVisible(ModUtils.isDownloading(profile));
     }
 }

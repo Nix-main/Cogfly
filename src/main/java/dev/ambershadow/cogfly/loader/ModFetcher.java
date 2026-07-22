@@ -7,7 +7,6 @@ import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import dev.ambershadow.cogfly.Cogfly;
 
-import javax.swing.*;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
@@ -16,7 +15,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.List;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 

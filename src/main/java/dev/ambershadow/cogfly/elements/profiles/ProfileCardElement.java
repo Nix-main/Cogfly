@@ -7,7 +7,11 @@ import dev.ambershadow.cogfly.asset.Assets;
 import dev.ambershadow.cogfly.asset.CogflyAsset;
 import dev.ambershadow.cogfly.elements.SelectedPageButtonElement;
 import dev.ambershadow.cogfly.loader.ModData;
+import dev.ambershadow.cogfly.profile.Profile;
+import dev.ambershadow.cogfly.profile.ProfileManager;
 import dev.ambershadow.cogfly.util.*;
+import dev.ambershadow.cogfly.util.swing.FrameManager;
+import dev.ambershadow.cogfly.util.swing.HoverLerp;
 
 import javax.swing.*;
 import java.awt.*;
@@ -131,17 +135,17 @@ public class ProfileCardElement extends JPanel {
                 if (result == JOptionPane.YES_OPTION) {
                     List<CompletableFuture<Void>> voids = new ArrayList<>();
                     for (ModData modData : outdated) {
-                        voids.add(Utils.runAsync(() -> Utils.downloadLatestMod(
+                        voids.add(ModUtils.runAsync(() -> ModUtils.downloadLatestMod(
                                 ModData.getMod(modData.getFullName()),
                                 profile,
                                 false
                         )));
                     }
-                    CompletableFuture.allOf(voids.toArray(CompletableFuture[]::new)).thenRun(() -> Utils.launchModdedGame(profile)).join();
+                    CompletableFuture.allOf(voids.toArray(CompletableFuture[]::new)).thenRun(() -> GameUtils.launchModdedGame(profile)).join();
                     return;
                 }
             }
-            Utils.launchModdedGame(profile);
+            GameUtils.launchModdedGame(profile);
         });
 
         edit = new JButton();
@@ -160,12 +164,12 @@ public class ProfileCardElement extends JPanel {
             JButton create = new JButton("Update");
 
             nameField.getDocument().addDocumentListener(new ProfilesScreenElement.NameDocumentListener(nameField, create));
-            button.addActionListener(_ -> Utils.pickFile((path) -> button.setText(path.toString()), "*", "png", "jpg", "jpeg", "gif"));
+            button.addActionListener(_ -> FileUtils.pickFile((path) -> button.setText(path.toString()), "*", "png", "jpg", "jpeg", "gif"));
 
             JLabel pth = new JLabel("Path: ");
             JButton btn = new JButton(profile.getGamePath());
             nameField.getDocument().addDocumentListener(new ProfilesScreenElement.NameDocumentListener(nameField, create));
-            button.addActionListener(_ -> Utils.pickFile((path) -> btn.setText(path.toString()), "Hollow Knight Silksong", "png", "jpg", "jpeg", "gif"));
+            button.addActionListener(_ -> FileUtils.pickFile((path) -> btn.setText(path.toString()), "Hollow Knight Silksong", "png", "jpg", "jpeg", "gif"));
 
             create.addActionListener(_ -> {
                 if ((profile.getIconPath() == null || !button.getText().equals(profile.getIconPath().toString()))
@@ -222,7 +226,7 @@ public class ProfileCardElement extends JPanel {
         });
 
         copy = new JButton();
-        copy.addActionListener(_ -> ProfilesScreenElement.createPrompt((name, icn) -> Utils.runAsync(() -> {
+        copy.addActionListener(_ -> ProfilesScreenElement.createPrompt((name, icn) -> ModUtils.runAsync(() -> {
             try (Stream<Path> files = Files.walk(profile.getPath())) {
                 Files.createDirectory(Path.of(Cogfly.settings.profileSavePath).resolve(name));
                 Path source = Paths.get(icn);
@@ -246,7 +250,7 @@ public class ProfileCardElement extends JPanel {
         }).whenComplete((_, e) -> {
             if (e != null) {
                 Cogfly.logger.error("", e);
-                Utils.throwNonFatalError(e);
+                ModUtils.throwNonFatalError(e);
             }
             ProfileManager.loadProfiles();
             ProfilesScreenElement.queueRefresh();

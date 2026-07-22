@@ -2,7 +2,11 @@ package dev.ambershadow.cogfly.elements.profiles;
 
 import dev.ambershadow.cogfly.Cogfly;
 import dev.ambershadow.cogfly.loader.ModData;
+import dev.ambershadow.cogfly.profile.Profile;
+import dev.ambershadow.cogfly.profile.ProfileManager;
 import dev.ambershadow.cogfly.util.*;
+import dev.ambershadow.cogfly.util.swing.FrameManager;
+import dev.ambershadow.cogfly.util.swing.ReloadablePage;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -63,7 +67,7 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
             extra.run();
         });
         nameField.getDocument().addDocumentListener(new NameDocumentListener(nameField, create));
-        button.addActionListener(_ -> Utils.pickFile((path) -> button.setText(path.toString()), "*", "png", "jpg", "jpeg", "gif"));
+        button.addActionListener(_ -> FileUtils.pickFile((path) -> button.setText(path.toString()), "*", "png", "jpg", "jpeg", "gif"));
         create.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         holder.add(name, BorderLayout.WEST);
         holder.add(nameField, BorderLayout.EAST);
@@ -79,10 +83,10 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
         upperPanel.setPreferredSize(new Dimension(getWidth(), 30));
 
         JButton launchVanilla = new JButton("Launch Vanilla Game");
-        launchVanilla.addActionListener(_ -> Cogfly.launchGameAsync(false, "", Cogfly.settings.gamePath));
+        launchVanilla.addActionListener(_ -> GameUtils.launchGameAsync(false, "", Cogfly.settings.gamePath));
 
         JButton importFromFile = new JButton("Import From File");
-        importFromFile.addActionListener(_ -> Utils.pickFile((path) -> ProfileManager.fromFile(path, (profile, outdated) -> {
+        importFromFile.addActionListener(_ -> FileUtils.pickFile((path) -> ProfileManager.fromFile(path, (profile, outdated) -> {
             if (outdated.length > 0) {
                 List<Object> msg = new ArrayList<>();
                 msg.add("This profile has outdated mods.");
@@ -101,7 +105,7 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
                 if (result == JOptionPane.YES_OPTION) {
                     List<CompletableFuture<Void>> voids = new ArrayList<>();
                     for (ModData modData : outdated) {
-                        voids.add(Utils.runAsync(() -> Utils.downloadLatestMod(
+                        voids.add(ModUtils.runAsync(() -> ModUtils.downloadLatestMod(
                                 ModData.getMod(modData.getFullName()),
                                 profile,
                                 false
@@ -135,7 +139,7 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
                     if (result == JOptionPane.YES_OPTION) {
                         List<CompletableFuture<Void>> voids = new ArrayList<>();
                         for (ModData modData : outdated) {
-                            voids.add(Utils.runAsync(() -> Utils.downloadLatestMod(
+                            voids.add(ModUtils.runAsync(() -> ModUtils.downloadLatestMod(
                                     ModData.getMod(modData.getFullName()),
                                     profile,
                                     false
@@ -168,14 +172,14 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
             List<Profile> profiles = new ArrayList<>(ProfileManager.profiles);
             JComboBox<String> profileComboBox = new JComboBox<>();
             profiles.forEach(profile -> profileComboBox.addItem(profile.getName() + " (" + profile.getPath() + ")"));
-            String def = switch(Utils.OperatingSystem.current()) {
+            String def = switch(Cogfly.getOs()) {
                 case WINDOWS -> FileSystemView.getFileSystemView().getHomeDirectory().getAbsolutePath();
                 case MAC -> Paths.get(System.getProperty("user.home"), "Desktop").toAbsolutePath().toString();
                 case LINUX -> Paths.get(System.getProperty("user.home"), ".local/share/applications").toAbsolutePath().toString();
                 case OTHER -> "";
             };
             JButton path = new JButton(def);
-            path.addActionListener(_ -> Utils.pickFolder((folder) ->
+            path.addActionListener(_ -> FileUtils.pickFolder((folder) ->
                 path.setText(folder.toAbsolutePath().toString())));
             JButton create = new JButton("Create");
             create.addActionListener(_ -> {
@@ -183,7 +187,7 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
                 Profile profile = profiles.get(profileComboBox.getSelectedIndex());
                 Path loc = Path.of(path.getText());
                 try {
-                    switch (Utils.OperatingSystem.current()){
+                    switch (Cogfly.getOs()){
                         case WINDOWS -> {
                             String cmd =
                                     String.format("$s=(New-Object -COM WScript.Shell).CreateShortcut('%s');" +
@@ -323,74 +327,66 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
         // speeds things up a ton to only refresh when needed
     }
 
-    public static class NameDocumentListener implements DocumentListener {
-
-        private final JTextField nameField;
-        private final JButton finish;
-
-        public NameDocumentListener(JTextField field, JButton finish) {
-            this.nameField = field;
-            this.finish = finish;
-        }
+    public record NameDocumentListener(JTextField nameField, JButton finish) implements DocumentListener {
 
         @Override
-        public void insertUpdate(DocumentEvent e) {
-            updateValidity();
-        }
+            public void insertUpdate(DocumentEvent e) {
+                updateValidity();
+            }
 
-        @Override
-        public void removeUpdate(DocumentEvent e) {
-            updateValidity();
-        }
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                updateValidity();
+            }
 
-        @Override
-        public void changedUpdate(DocumentEvent e) {
-        }
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+            }
 
-        private void updateValidity() {
-            boolean valid = nameField.getText().matches("\\w+");
-            finish.setEnabled(valid);
-            nameField.setToolTipText("Profile names can only contain letters, numbers, and underscores.");
-            forceTooltip(valid);
-            if (!valid)
-                return;
-            boolean exists = Files.exists(Paths.get(Cogfly.settings.profileSavePath).resolve(nameField.getText()));
-            finish.setEnabled(!exists);
-            nameField.setToolTipText("A profile with this name already exists in the profile save folder.");
-            forceTooltip(exists);
-        }
+            private void updateValidity() {
+                boolean valid = nameField.getText().matches("\\w+");
+                finish.setEnabled(valid);
+                nameField.setToolTipText("Profile names can only contain letters, numbers, and underscores.");
+                forceTooltip(valid);
+                if (!valid)
+                    return;
+                boolean exists = Files.exists(Paths.get(Cogfly.settings.profileSavePath).resolve(nameField.getText()));
+                finish.setEnabled(!exists);
+                nameField.setToolTipText("A profile with this name already exists in the profile save folder.");
+                forceTooltip(exists);
+            }
 
-        private void forceTooltip(boolean show) {
-            if (show) {
-                ToolTipManager toolTipManager = ToolTipManager.sharedInstance();
-                toolTipManager.setInitialDelay(0);
-                MouseEvent phantomEvent = new MouseEvent(
-                        nameField,
-                        MouseEvent.MOUSE_MOVED,
-                        System.currentTimeMillis(),
-                        0,
-                        nameField.getWidth() / 2,
-                        nameField.getHeight() / 2,
-                        0,
-                        false
-                );
-                toolTipManager.mouseMoved(phantomEvent);
-            } else {
-                ToolTipManager ttm = ToolTipManager.sharedInstance();
+            private void forceTooltip(boolean show) {
+                if (show) {
+                    ToolTipManager toolTipManager = ToolTipManager.sharedInstance();
+                    toolTipManager.setInitialDelay(0);
+                    MouseEvent phantomEvent = new MouseEvent(
+                            nameField,
+                            MouseEvent.MOUSE_MOVED,
+                            System.currentTimeMillis(),
+                            0,
+                            nameField.getWidth() / 2,
+                            nameField.getHeight() / 2,
+                            0,
+                            false
+                    );
+                    toolTipManager.mouseMoved(phantomEvent);
+                } else {
+                    ToolTipManager ttm = ToolTipManager.sharedInstance();
 
-                MouseEvent exitEvent = new MouseEvent(
-                        nameField,
-                        MouseEvent.MOUSE_EXITED,
-                        System.currentTimeMillis(),
-                        0,
-                        -1,
-                        -1,
-                        0,
-                        false
-                );
+                    MouseEvent exitEvent = new MouseEvent(
+                            nameField,
+                            MouseEvent.MOUSE_EXITED,
+                            System.currentTimeMillis(),
+                            0,
+                            -1,
+                            -1,
+                            0,
+                            false
+                    );
 
-                ttm.mouseExited(exitEvent);
+                    ttm.mouseExited(exitEvent);
+                }
             }
         }
-    }
 }

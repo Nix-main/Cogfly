@@ -97,13 +97,13 @@ public class Settings {
                 }
             }
         }
-        if (Utils.OperatingSystem.current() == Utils.OperatingSystem.MAC){
+        if (Cogfly.isMac()){
             String path = AppDirsFactory.getInstance().getUserDataDir
                     ("Steam", null, "Steam")
                     + "/steamapps/common/Hollow Knight Silksong/";
             return Files.isDirectory(Paths.get(path)) ? path : "";
         }
-        if (Utils.OperatingSystem.current() == Utils.OperatingSystem.LINUX){
+        if (Cogfly.isLinux()){
             String path = System.getProperty("user.home") + "/.local/share/Steam/steamapps/common/Hollow Knight Silksong/";
             return Files.isDirectory(Paths.get(path)) ? path : "";
         }

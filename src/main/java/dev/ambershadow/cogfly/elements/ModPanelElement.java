@@ -3,8 +3,9 @@ package dev.ambershadow.cogfly.elements;
 import dev.ambershadow.cogfly.Cogfly;
 import dev.ambershadow.cogfly.elements.profiles.ProfileOpenPageCardElement;
 import dev.ambershadow.cogfly.loader.ModData;
-import dev.ambershadow.cogfly.util.Profile;
-import dev.ambershadow.cogfly.util.Utils;
+import dev.ambershadow.cogfly.profile.Profile;
+import dev.ambershadow.cogfly.util.FileUtils;
+import dev.ambershadow.cogfly.util.ModUtils;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -244,11 +245,11 @@ public class ModPanelElement extends JPanel {
                 }
 
                 JButton open = new JButton("Open Thunderstore Page");
-                open.addActionListener(_ -> Utils.openURI(mod.getPackageUrl()));
+                open.addActionListener(_ -> FileUtils.openURI(mod.getPackageUrl()));
                 JButton openWebsite = new JButton("Open Project Website");
                 if (mod.getWebsiteUrl() != null)
                     openWebsite.setToolTipText(mod.getWebsiteUrl().toString());
-                openWebsite.addActionListener(_ -> Utils.openURI(mod.getWebsiteUrl()));
+                openWebsite.addActionListener(_ -> FileUtils.openURI(mod.getWebsiteUrl()));
 
                 Box buttonBox = Box.createHorizontalBox();
                 if (mod.getPackageUrl() != null)
@@ -286,8 +287,8 @@ public class ModPanelElement extends JPanel {
                 });
 
                 installButton.addActionListener(_ -> {
-                    if (mod.isInstalled(profile) && !mod.isOutdated(profile)) Utils.removeMod(mod, profile);
-                    else Utils.downloadMod(mod, profile, true);
+                    if (mod.isInstalled(profile) && !mod.isOutdated(profile)) ModUtils.removeMod(mod, profile);
+                    else ModUtils.downloadMod(mod, profile, true);
                     update(mod, ModPanelElement.this.mods.get(mod));
                     filterButtons();
                 });
@@ -361,7 +362,7 @@ public class ModPanelElement extends JPanel {
     }
 
     private void setProgressBar(){
-        card.setBar(Utils.isDownloading(profile));
+        card.setBar(ModUtils.isDownloading(profile));
     }
 
 

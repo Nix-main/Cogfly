@@ -1,4 +1,4 @@
-package dev.ambershadow.cogfly.util;
+package dev.ambershadow.cogfly.profile;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -7,6 +7,9 @@ import dev.ambershadow.cogfly.Cogfly;
 import dev.ambershadow.cogfly.asset.Assets;
 import dev.ambershadow.cogfly.elements.profiles.ProfilesScreenElement;
 import dev.ambershadow.cogfly.loader.ModData;
+import dev.ambershadow.cogfly.util.GameUtils;
+import dev.ambershadow.cogfly.util.swing.FrameManager;
+import dev.ambershadow.cogfly.util.ModUtils;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
@@ -37,7 +40,7 @@ public class ProfileManager {
         } catch (IOException e){
             throw new RuntimeException(e);
         }
-        Cogfly.downloadBepInEx(profile);
+        GameUtils.downloadBepInEx(profile);
         Profile prof;
         if (iconPath.isEmpty()) {
             Icon icon = UIManager.getIcon("OptionPane.informationIcon");
@@ -261,7 +264,7 @@ public class ProfileManager {
             loadProfiles();
         }
         profiles.add(profile);
-        Cogfly.downloadBepInEx(profile.getPath());
+        GameUtils.downloadBepInEx(profile.getPath());
         mods.forEach(mod -> {
             String name = mod.get("name").toString();
             if (Cogfly.excludedMods.contains(name))
@@ -276,7 +279,7 @@ public class ProfileManager {
                 if (d.isOutdated(profile)) {
                     outdatedMods.add(d);
                 }
-                Utils.downloadMod(d, profile, false, false);
+                ModUtils.downloadMod(d, profile, false, false);
             }
         });
 
@@ -289,7 +292,7 @@ public class ProfileManager {
                 Files.createDirectories(profile.getPath().resolve("manual"));
             for (String key : manualData.keySet()) {
                 Files.write(profile.getPath().resolve(key), manualData.get(key), StandardOpenOption.CREATE_NEW);
-                Utils.downloadManualMod(profile.getPath().resolve(key), profile, false);
+                ModUtils.downloadManualMod(profile.getPath().resolve(key), profile, false);
             }
         } catch (IOException e){
             throw new RuntimeException(e);
@@ -331,7 +334,7 @@ public class ProfileManager {
         Map<String, Object> pack = new LinkedHashMap<>();
         pack.put("name", "silksong_modding-BepInExPack_Silksong");
         Map<String, Integer> version = new LinkedHashMap<>();
-        String[] v = Cogfly.latestPackVer.split("\\.");
+        String[] v = GameUtils.latestPackVer.split("\\.");
         version.put("major", Integer.parseInt(v[0]));
         version.put("minor", Integer.parseInt(v[1]));
         version.put("patch", Integer.parseInt(v[2]));
