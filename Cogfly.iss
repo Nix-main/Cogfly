@@ -9,7 +9,7 @@ AppVerName={#app}
 AppVersion={#cgver}
 UsePreviousAppDir=yes
 DisableDirPage=auto
-SetupIconFile=icons\icon.ico
+SetupIconFile=resources\icons\icon.ico
 AppPublisher="Ambershadowo"
 AppPublisherURL={#link}
 AppSupportURL={#link}
@@ -37,7 +37,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 [Files]
 Source: "output\Windows\Cogfly\{#exe}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "output\Windows\Cogfly\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "icons\icon.ico"; DestDir: "{app}"; Flags: ignoreversion
+Source: "resources\icons\icon.ico"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{autoprograms}\{#app}"; Filename: "{app}\{#exe}"
