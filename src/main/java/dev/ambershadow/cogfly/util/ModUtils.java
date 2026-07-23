@@ -61,15 +61,19 @@ public class ModUtils {
         downloadMod(mod, profile, deps, true);
     }
     public static boolean isDownloading(Profile profile) {
-        return !getActiveDownloads(profile).isEmpty();
+        return activeDownloads.containsKey(profile);
     }
-    private static final Map<Profile, Set<String>> activeDownloads =
+    private static final Map<Profile, Integer> activeDownloads =
             new ConcurrentHashMap<>();
 
-    private static Set<String> getActiveDownloads(Profile profile) {
+    public static int getDownloadCount(Profile profile){
+        return activeDownloads.getOrDefault(profile, 0);
+    }
+
+    private static int getActiveDownloads(Profile profile) {
         return activeDownloads.computeIfAbsent(
                 profile,
-                _ -> ConcurrentHashMap.newKeySet()
+                _ -> 0
         );
     }
     public static void downloadManualMod(Path path, Profile profile, boolean copy){
@@ -129,21 +133,15 @@ public class ModUtils {
         }).whenComplete((_, _) -> {
             profile.refreshMods();
             ModPanelElement.redraw(profile);
-            getActiveDownloads(profile).remove(fname[0]);
             ModPanelElement.setProgressBar(profile);
-            if (getActiveDownloads(profile).isEmpty())
+            if (getActiveDownloads(profile) == 0)
                 activeDownloads.remove(profile);
         });
-        getActiveDownloads(profile).add(fname[0]);
         ModPanelElement.setProgressBar(profile);
     }
     public static void downloadMod(ModData mod, Profile profile, boolean deps, boolean enabled){
         CompletableFuture<Void> download = Cogfly.runAsync(() -> {
             String fn = mod.getFullName();
-            if (!getActiveDownloads(profile).add(fn)) {
-                return;
-            }
-            SwingUtilities.invokeLater(() -> ModPanelElement.setProgressBar(profile));
             try(InputStream is = mod.getDownloadUrl().openStream()) {
                 if (mod.isInstalled(profile) && !mod.isOutdated(profile))
                     return;
@@ -163,12 +161,12 @@ public class ModUtils {
                 throw new RuntimeException(e);
             }
             finally {
-                getActiveDownloads(profile).remove(mod.getFullName());
-                if (getActiveDownloads(profile).isEmpty())
+                if (getActiveDownloads(profile) == 0)
                     activeDownloads.remove(profile);
             }
             mod.setEnabled(profile, enabled);
             SwingUtilities.invokeLater(() -> {
+                SwingUtilities.invokeLater(() -> ModPanelElement.setProgressBar(profile));
                 profile.addMod(mod);
                 ModPanelElement.redraw(profile);
             });
@@ -186,10 +184,12 @@ public class ModUtils {
             int extracted = 0;
 
             Enumeration<? extends ZipEntry> entries = zipFile.entries();
+            activeDownloads.put(profile, getActiveDownloads(profile) + zipFile.size());
+            SwingUtilities.invokeLater(() -> ModPanelElement.setProgressBar(profile));
             while (entries.hasMoreElements()) {
                 ZipEntry entry = entries.nextElement();
-                total++;
                 if (entry.getName().isBlank()) continue;
+                total++;
 
                 Path zipPath = Path.of(entry.getName()).normalize();
                 if (zipPath.isAbsolute() || zipPath.startsWith("..")) {
@@ -231,11 +231,13 @@ public class ModUtils {
                         }
                     }
                     extracted++;
+                    activeDownloads.put(profile, getActiveDownloads(profile) - 1);
+                    SwingUtilities.invokeLater(() -> ModPanelElement.setProgressBar(profile));
                 } catch (IOException e) {
                     Cogfly.logger.error("Failed to extract entry '{}'", entry.getName(), e);
                 }
             }
-
+            activeDownloads.put(profile, getActiveDownloads(profile) - (total - extracted));
             Cogfly.logger.info("Extracted {}/{} entries for {}", extracted, total, fullName);
         } finally {
             Files.delete(temp);

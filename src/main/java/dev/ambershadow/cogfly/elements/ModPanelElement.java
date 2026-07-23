@@ -210,7 +210,7 @@ public class ModPanelElement extends JPanel {
                 infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
                 infoPanel.add(new JLabel("Description: " + mod.getDescription()));
                 infoPanel.add(new JLabel("Author: " + mod.getAuthor()));
-                JLabel versionLabel = new JLabel("Latest version: " + ModData.getMod(mod).getVersionNumber());
+                JLabel versionLabel = new JLabel("Latest version: " + mod.getVersionNumber());
                 JLabel installedVersionLabel = new JLabel("Installed version: " + mod.getVersionNumber());
                 infoPanel.add(versionLabel);
                 if (mod.isInstalled(profile))
