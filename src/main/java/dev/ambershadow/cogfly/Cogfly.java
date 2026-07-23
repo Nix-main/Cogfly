@@ -67,6 +67,7 @@ public class Cogfly {
     public static boolean createdProfiles;
     public static boolean showUnknownHost;
     private static String windowsSha256;
+    private static String macSha256;
 
     public static Path tempDir;
     
@@ -130,23 +131,30 @@ public class Cogfly {
             }
         }
         logger.info("Loaded settings");
-        if (isWindows()){
-            WinUtils.init();
-        }
-        else if (isLinux()) {
-            if (System.getenv("APPIMAGE") != null){
-                Files.createDirectories(localDataPath.resolve("updater"));
-                try(InputStream stream = getResource("/updater.sh").openStream()) {
-                    Files.write(localDataPath.resolve("updater","updater.sh"), stream.readAllBytes());
-                }
-                Path updater = localDataPath.resolve("appimageupdatetool-x86_64.appimage");
-                if (!Files.exists(updater)){
-                    try(InputStream stream = URL.of(URI.create("https://github.com/AppImageCommunity/AppImageUpdate/releases/latest/download/appimageupdatetool-x86_64.AppImage"), null).openStream()) {
-                        Files.copy(stream, updater);
+        switch (getOs()){
+            case WINDOWS -> WinUtils.init();
+            case LINUX -> {
+                if (System.getenv("APPIMAGE") != null) {
+                    Files.createDirectories(localDataPath.resolve("updater"));
+                    try (InputStream stream = getResource("/updater.sh").openStream()) {
+                        Files.write(localDataPath.resolve("updater", "updater.sh"), stream.readAllBytes());
+                    }
+                    Path updater = localDataPath.resolve("appimageupdatetool-x86_64.appimage");
+                    if (!Files.exists(updater)) {
+                        try (InputStream stream = URL.of(URI.create("https://github.com/AppImageCommunity/AppImageUpdate/releases/latest/download/appimageupdatetool-x86_64.AppImage"), null).openStream()) {
+                            Files.copy(stream, updater);
+                        }
                     }
                 }
             }
+            case MAC -> {
+                Files.createDirectories(localDataPath.resolve("updater"));
+                try (InputStream stream = getResource("/updater_mac.sh").openStream()) {
+                    Files.write(localDataPath.resolve("updater", "updater_mac.sh"), stream.readAllBytes());
+                }
+            }
         }
+
         runAsync(() -> {
             long start = System.currentTimeMillis();
             List<JsonObject> m = ModFetcher.getAllMods();
@@ -216,7 +224,7 @@ public class Cogfly {
             }
     }
 
-    private static void autoUpdateWindows() throws IOException {
+    private static void autoUpdateWindows(String version) throws IOException {
         new ProcessBuilder(
                 "cmd.exe",
                 "/c",
@@ -226,7 +234,7 @@ public class Cogfly {
                 "-File",
                 localDataPath.resolve("updater", "updater.ps1").toString(),
                 ProcessHandle.current().pid() + "",
-                "https://github.com/Nix-main/Cogfly/releases/download/vver/Cogfly-ver-installer.exe".replaceAll("ver", version),
+                "https://github.com/Nix-main/Cogfly/releases/latest/download/Cogfly-ver-installer.exe".replace("ver", version),
                 windowsSha256
         ).start();
         System.exit(0);
@@ -237,6 +245,16 @@ public class Cogfly {
                 "bash", localDataPath.resolve("updater.sh").toString(),
                 ProcessHandle.current().pid() + "",
                 localDataPath.resolve("appimageupdatetool-x86_64.appimage").toString()
+        ).start();
+        System.exit(0);
+    }
+
+    private static void autoUpdateMac() throws IOException {
+        new ProcessBuilder(
+                localDataPath.resolve("updater_mac.sh").toString(),
+                ProcessHandle.current().pid() + "",
+                "https://github.com/Nix-main/Cogfly/releases/latest/download/Cogfly-ver.dmg".replace("ver", version),
+                macSha256
         ).start();
         System.exit(0);
     }
@@ -355,6 +373,7 @@ public class Cogfly {
                     HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
                     JsonObject obj = JsonParser.parseString(response.body()).getAsJsonObject();
                     windowsSha256 = obj.get("windowsSha256").getAsString();
+                    macSha256 = obj.get("macSha256").getAsString();
                     return obj.get("version").getAsString();
                 } catch (IOException | InterruptedException e) {
                     if (e instanceof ConnectException)
@@ -380,11 +399,12 @@ public class Cogfly {
             );
             if (update == JOptionPane.YES_OPTION){
                 switch (getOs()){
-                    case WINDOWS -> autoUpdateWindows();
+                    case WINDOWS -> autoUpdateWindows(latestVer);
                     case LINUX -> {
                         if (System.getenv("APPIMAGE") != null)
                             autoUpdateAppImage();
                     }
+                    case MAC -> autoUpdateMac();
                 }
             }
             if (update == JOptionPane.NO_OPTION) {

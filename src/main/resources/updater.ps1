@@ -2,7 +2,7 @@ param([int]$a, [string]$url, [string]$sha)
 $exe = (Join-Path $PSScriptRoot "Cogfly-installer.exe")
 Write-Output "Waiting for Cogfly to close..."
 Wait-Process -Id $a -ErrorAction SilentlyContinue
-Write-Output "Download Cogfly exe..."
+Write-Output "Downloading Cogfly exe..."
 Start-BitsTransfer -Source $url -Destination $exe -DisplayName "Downloading file"
 Write-Output "Expecting hash " + $sha
 $v = (Get-FileHash -Path $exe -Algorithm SHA256).Hash
