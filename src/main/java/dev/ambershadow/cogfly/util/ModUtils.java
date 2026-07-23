@@ -232,7 +232,7 @@ public class ModUtils {
                     }
                     extracted++;
                 } catch (IOException e) {
-                    Cogfly.logger.warn("Failed to extract entry '{}': {}", entry.getName(), e.getMessage());
+                    Cogfly.logger.error("Failed to extract entry '{}'", entry.getName(), e);
                 }
             }
 
