@@ -8,6 +8,7 @@ import dev.ambershadow.cogfly.elements.ModPanelElement;
 import dev.ambershadow.cogfly.loader.ModData;
 import dev.ambershadow.cogfly.profile.Profile;
 
+import javax.net.ssl.HttpsURLConnection;
 import javax.swing.*;
 import java.awt.*;
 import java.io.*;
@@ -17,6 +18,7 @@ import java.util.*;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
@@ -63,19 +65,40 @@ public class ModUtils {
     public static boolean isDownloading(Profile profile) {
         return activeDownloads.containsKey(profile);
     }
-    private static final Map<Profile, Integer> activeDownloads =
-            new ConcurrentHashMap<>();
 
-    public static int getDownloadCount(Profile profile){
-        return activeDownloads.getOrDefault(profile, 0);
+    private static final Map<Profile, AtomicLong> activeDownloads = new ConcurrentHashMap<>();
+    private static final Map<Profile, AtomicLong> totalDownloads = new ConcurrentHashMap<>();
+    private static final Map<Profile, Set<String>> downloads = new ConcurrentHashMap<>();
+
+    public static long getDownloadCount(Profile profile){
+        return activeDownloads.containsKey(profile) ? activeDownloads.get(profile).get() : 0L;
     }
 
-    private static int getActiveDownloads(Profile profile) {
+    public static long getTotalDownloadCount(Profile profile){
+        return totalDownloads.containsKey(profile) ? totalDownloads.get(profile).get() : 0L;
+    }
+
+    private static AtomicLong getActiveDownloads(Profile profile) {
         return activeDownloads.computeIfAbsent(
                 profile,
-                _ -> 0
+                _ -> new AtomicLong(0L)
         );
     }
+
+    private static AtomicLong getTotalDownloads(Profile profile) {
+        return totalDownloads.computeIfAbsent(
+                profile,
+                _ -> new AtomicLong(0L)
+        );
+    }
+
+    private static Set<String> getDownloads(Profile profile){
+        return downloads.computeIfAbsent(
+                profile,
+                _ -> ConcurrentHashMap.newKeySet()
+        );
+    }
+
     public static void downloadManualMod(Path path, Profile profile, boolean copy){
         final String[] fname = {""};
         Cogfly.runAsync(() -> {
@@ -126,7 +149,7 @@ public class ModUtils {
                             fname[0] = name;
                     } else
                         fname[0] = path.getFileName().toString();
-                downloadModZipStream(Files.newInputStream(path), fname[0], profile);
+                downloadModZipStream(Files.newInputStream(path), fname[0], profile, Files.size(path));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -134,35 +157,44 @@ public class ModUtils {
             profile.refreshMods();
             ModPanelElement.redraw(profile);
             ModPanelElement.setProgressBar(profile);
-            if (getActiveDownloads(profile) == 0)
+            if (activeDownloads.containsKey(profile) && activeDownloads.get(profile).get() == 0)
                 activeDownloads.remove(profile);
+            if (totalDownloads.containsKey(profile) && totalDownloads.get(profile).get() == 0)
+                totalDownloads.remove(profile);
         });
         ModPanelElement.setProgressBar(profile);
     }
     public static void downloadMod(ModData mod, Profile profile, boolean deps, boolean enabled){
         CompletableFuture<Void> download = Cogfly.runAsync(() -> {
             String fn = mod.getFullName();
-            try(InputStream is = mod.getDownloadUrl().openStream()) {
-                if (mod.isInstalled(profile) && !mod.isOutdated(profile))
-                    return;
-                Cogfly.logger.info("Attempting to download {} at version {} for profile {}.", fn, mod.getVersionNumber(), profile.getName());
-                profile.removeMod(mod);
-                for (String dep : mod.getDependencies()) {
-                    if (dep.contains("BepInExPack"))
-                        continue;
-                    ModData m = getModFromDependency(dep);
-                    if (m != null) {
-                        if (!m.isInstalled(profile) || (deps && m.isOutdated(profile))) // install new dependencies when updating a mod
-                            downloadMod(m, profile, true);
+            if (!getDownloads(profile).add(fn))
+                return;
+            try {
+                HttpsURLConnection connection = (HttpsURLConnection) mod.getDownloadUrl().openConnection();
+                try(InputStream is = connection.getInputStream()) {
+                    if (mod.isInstalled(profile) && !mod.isOutdated(profile))
+                        return;
+                    Cogfly.logger.info("Attempting to download {} at version {} for profile {}.", fn, mod.getVersionNumber(), profile.getName());
+                    profile.removeMod(mod);
+                    for (String dep : mod.getDependencies()) {
+                        if (dep.contains("BepInExPack"))
+                            continue;
+                        ModData m = getModFromDependency(dep);
+                        if (m != null) {
+                            if (!m.isInstalled(profile) || (deps && m.isOutdated(profile))) // install new dependencies when updating a mod
+                                downloadMod(m, profile, true);
+                        }
                     }
+                    downloadModZipStream(is, fn, profile, connection.getContentLengthLong());
                 }
-                downloadModZipStream(is, fn, profile);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
             finally {
-                if (getActiveDownloads(profile) == 0)
+                if (activeDownloads.containsKey(profile) && activeDownloads.get(profile).get() == 0)
                     activeDownloads.remove(profile);
+                if (totalDownloads.containsKey(profile) && totalDownloads.get(profile).get() == 0)
+                    totalDownloads.remove(profile);
             }
             mod.setEnabled(profile, enabled);
             SwingUtilities.invokeLater(() -> {
@@ -174,17 +206,31 @@ public class ModUtils {
         download.whenComplete((_, _) -> ModPanelElement.setProgressBar(profile));
     }
 
-    public static void downloadModZipStream(InputStream is, String fullName, Profile profile) throws IOException {
+    public static void downloadModZipStream(InputStream is, String fullName, Profile profile, long totalBytes) throws IOException {
         Path bepinexRoot = profile.getBepInExPath();
 
+        getActiveDownloads(profile).addAndGet(totalBytes);
+        getTotalDownloads(profile).addAndGet(totalBytes);
+        SwingUtilities.invokeLater(() -> ModPanelElement.setProgressBar(profile));
         Path temp = Files.createTempFile(fullName, ".zip");
-        Files.write(temp, is.readAllBytes());
+        Cogfly.logger.info("Downloading {} ({} bytes) to {}", fullName, totalBytes, temp);
+        byte[] buffer = new byte[8192];
+        int n;
+        try (OutputStream os = Files.newOutputStream(temp)) {
+            while ((n = is.read(buffer)) != -1) {
+                os.write(buffer, 0, n);
+                getActiveDownloads(profile).getAndAdd(-n);
+                SwingUtilities.invokeLater(() -> ModPanelElement.setProgressBar(profile));
+            }
+        }
+        getTotalDownloads(profile).getAndAdd(-totalBytes);
         try (ZipFile zipFile = new ZipFile(temp.toFile(), StandardCharsets.ISO_8859_1)) {
             int total = 0;
             int extracted = 0;
 
             Enumeration<? extends ZipEntry> entries = zipFile.entries();
-            activeDownloads.put(profile, getActiveDownloads(profile) + zipFile.size());
+            getActiveDownloads(profile).addAndGet(zipFile.size());
+            getTotalDownloads(profile).addAndGet(zipFile.size());
             SwingUtilities.invokeLater(() -> ModPanelElement.setProgressBar(profile));
             while (entries.hasMoreElements()) {
                 ZipEntry entry = entries.nextElement();
@@ -231,13 +277,14 @@ public class ModUtils {
                         }
                     }
                     extracted++;
-                    activeDownloads.put(profile, getActiveDownloads(profile) - 1);
+                    getActiveDownloads(profile).getAndAdd(-1);
                     SwingUtilities.invokeLater(() -> ModPanelElement.setProgressBar(profile));
                 } catch (IOException e) {
                     Cogfly.logger.error("Failed to extract entry '{}'", entry.getName(), e);
                 }
             }
-            activeDownloads.put(profile, getActiveDownloads(profile) - (total - extracted));
+            getActiveDownloads(profile).getAndAdd(-(total - extracted));
+            getTotalDownloads(profile).addAndGet(-zipFile.size());
             Cogfly.logger.info("Extracted {}/{} entries for {}", extracted, total, fullName);
         } finally {
             Files.delete(temp);

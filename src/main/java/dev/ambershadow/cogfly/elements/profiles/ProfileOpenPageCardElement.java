@@ -22,8 +22,11 @@ public class ProfileOpenPageCardElement extends JPanel {
     private final JProgressBar progressBar;
     public void setBar(boolean val){
         progressBar.setVisible(val);
-        if (ModUtils.getDownloadCount(profile) > 0)
-            progressBar.setValue(Math.round((float) 100 / ModUtils.getDownloadCount(profile)));
+        long total = ModUtils.getTotalDownloadCount(profile);
+        long remaining = ModUtils.getDownloadCount(profile);
+        progressBar.setMinimum(0);
+        progressBar.setMaximum((int) total);
+        progressBar.setValue((int) (total - remaining));
     }
     public ProfileOpenPageCardElement(Profile profile) {
         super(new BorderLayout());
