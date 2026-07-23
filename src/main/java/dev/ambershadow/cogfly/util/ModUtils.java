@@ -145,7 +145,7 @@ public class ModUtils {
             }
             SwingUtilities.invokeLater(() -> ModPanelElement.setProgressBar(profile));
             try(InputStream is = mod.getDownloadUrl().openStream()) {
-                if (mod.isInstalled(profile))
+                if (mod.isInstalled(profile) && !mod.isOutdated(profile))
                     return;
                 Cogfly.logger.info("Attempting to download {} at version {} for profile {}.", fn, mod.getVersionNumber(), profile.getName());
                 profile.removeMod(mod);

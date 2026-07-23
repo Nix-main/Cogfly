@@ -210,7 +210,11 @@ public class ModPanelElement extends JPanel {
                 infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
                 infoPanel.add(new JLabel("Description: " + mod.getDescription()));
                 infoPanel.add(new JLabel("Author: " + mod.getAuthor()));
-                infoPanel.add(new JLabel("Latest version: " + mod.getVersionNumber()));
+                JLabel versionLabel = new JLabel("Latest version: " + ModData.getMod(mod).getVersionNumber());
+                JLabel installedVersionLabel = new JLabel("Installed version: " + mod.getVersionNumber());
+                infoPanel.add(versionLabel);
+                if (mod.isInstalled(profile))
+                    infoPanel.add(installedVersionLabel);
                 infoPanel.add(new JLabel("Total downloads: " + mod.getTotalDownloads()));
                 Instant created = Instant.parse(mod.getDateCreated());
                 ZoneId userZone = ZoneId.systemDefault();
@@ -296,6 +300,7 @@ public class ModPanelElement extends JPanel {
                 entry.modPanel = modPanel;
                 entry.installButton = installButton;
                 entry.enableButton = enableButton;
+                entry.version = installedVersionLabel;
 
                 update(mod, entry);
                 this.mods.put(mod, entry);
@@ -318,7 +323,11 @@ public class ModPanelElement extends JPanel {
         entry.enableButton.setSelected(enabled);
         entry.enableButton.setText(enabled ? "On" : "Off");
         entry.enableButton.setEnabled(installedNow);
-
+        entry.version.setText("Installed version: " + mod.getVersionNumber());
+        if (mod.isInstalled(profile))
+            entry.version.setText("Installed version: " + mod.getVersionNumber());
+        else
+            entry.version.setText("");
         Instant created = Instant.parse(mod.getDateCreated());
         ZoneId userZone = ZoneId.systemDefault();
         ZonedDateTime localCreated = created.atZone(userZone);
@@ -414,5 +423,6 @@ public class ModPanelElement extends JPanel {
         JToggleButton enableButton;
         JLabel created;
         JLabel updated;
+        JLabel version;
     }
 }
