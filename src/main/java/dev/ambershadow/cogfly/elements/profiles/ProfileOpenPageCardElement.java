@@ -11,6 +11,7 @@ import dev.ambershadow.cogfly.util.swing.FrameManager;
 import javax.swing.*;
 import java.awt.*;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -117,6 +118,15 @@ public class ProfileOpenPageCardElement extends JPanel {
         JButton install = new JButton("Install Manually");
         install.addActionListener(_ -> FileUtils.pickFile((path) -> ModUtils.downloadManualMod(path, profile, true), "*", "zip", "dll"));
 
+        JButton copyLaunchArgs = new JButton("Copy Launch Arguments");
+        copyLaunchArgs.addActionListener(_ -> {
+            if (Cogfly.isWindows()){
+                Cogfly.copyString("--doorstop-enabled true --doorstop-target-assembly \"" + profile.getBepInExPath().resolve("core", "BepInEx.Preloader.dll") + "\"");
+            } else {
+                Cogfly.copyString(Paths.get(profile.getGamePath()).resolve("run_bepinex.sh") + " %command% --doorstop_enabled true --doorstop_target_assembly " + profile.getBepInExPath().resolve("core", "BepInEx.Preloader.dll"));
+            }
+        });
+
         upperPanel.add(launch);
         upperPanel.add(updateAll);
         upperPanel.add(copyLogToClipboard);
@@ -124,6 +134,7 @@ public class ProfileOpenPageCardElement extends JPanel {
         upperPanel.add(exportAsFile);
         upperPanel.add(openFileLocation);
         upperPanel.add(refresh);
+        upperPanel.add(copyLaunchArgs);
         upperPanel.add(install);
 
         JPanel centerPanel = new JPanel();
