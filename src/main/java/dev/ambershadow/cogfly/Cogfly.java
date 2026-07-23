@@ -67,11 +67,16 @@ public class Cogfly {
     public static boolean createdProfiles;
     public static boolean showUnknownHost;
     private static String windowsSha256;
+
+    public static Path tempDir;
     
     static @SuppressWarnings("unused") void main(String[] args) throws IOException {
         AppDirs dirs = AppDirsFactory.getInstance();
         localDataPath = Paths.get(dirs.getUserDataDir("Cogfly", null, ""));
         roamingDataPath = Paths.get(dirs.getUserDataDir("Cogfly", null, "", true));
+        tempDir = Paths.get(System.getProperty("java.io.tmpdir"), "cogfly-downloads");
+        FileUtils.deleteFolder(tempDir);
+        Files.createDirectory(tempDir);
         System.setProperty("app.log.dir", localDataPath.resolve("logs").toString());
 
         logger = LoggerFactory.getLogger(Cogfly.class);
