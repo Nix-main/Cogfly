@@ -548,13 +548,13 @@ public class Cogfly {
     }
 
     public static boolean isWindows(){
-        return OperatingSystem.current() ==  OperatingSystem.WINDOWS;
+        return OperatingSystem.current() == OperatingSystem.WINDOWS;
     }
     public static boolean isLinux(){
-        return OperatingSystem.current() ==  OperatingSystem.LINUX;
+        return OperatingSystem.current() == OperatingSystem.LINUX;
     }
     public static boolean isMac(){
-        return OperatingSystem.current() ==  OperatingSystem.MAC;
+        return OperatingSystem.current() == OperatingSystem.MAC;
     }
     public static OperatingSystem getOs(){
         return OperatingSystem.current();
