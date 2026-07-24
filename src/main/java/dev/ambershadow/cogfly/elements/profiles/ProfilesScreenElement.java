@@ -230,8 +230,6 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
                             Process process = builder.start();
                             try (OutputStream out = process.getOutputStream()) {
                                 out.write(("do shell script \"open cogfly://launch/" + profile.getName() + "\"").getBytes(StandardCharsets.UTF_8));
-                                process.waitFor();
-                                Files.copy(Cogfly.localDataPath.resolve("icon.icns"), file.resolve("Contents/Resources/applet.icns"), StandardCopyOption.REPLACE_EXISTING);
                             }
                             String output;
                             try (InputStream in = process.getInputStream()) {
@@ -240,6 +238,7 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
                             int exit = process.waitFor();
                             if (exit != 0)
                                 throw new RuntimeException("osacompile failed with exit code " + exit + ": " + output);
+                            Files.copy(Cogfly.localDataPath.resolve("icon.icns"), file.resolve("Contents/Resources/applet.icns"), StandardCopyOption.REPLACE_EXISTING);
                             Set<PosixFilePermission> perms = Files.getPosixFilePermissions(file);
                             perms.add(PosixFilePermission.OWNER_EXECUTE);
                             perms.add(PosixFilePermission.GROUP_EXECUTE);
