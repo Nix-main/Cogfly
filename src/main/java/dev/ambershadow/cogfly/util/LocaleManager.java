@@ -18,10 +18,10 @@ public class LocaleManager {
 
     public static void setLocale(Locale locale) {
         LocaleManager.locale = locale;
-        try {
-            try (Reader reader = new InputStreamReader(Objects.requireNonNull(Cogfly.getResource("/locale/" + locale.toLanguageTag() + ".json")).openStream(), StandardCharsets.UTF_8)) {
-                data = JsonParser.parseReader(reader).getAsJsonObject();
-            }
+        try(Reader reader = new InputStreamReader(Objects.requireNonNull(Cogfly.getResource("/locale/" + locale.toLanguageTag() + ".json")).openStream(), StandardCharsets.UTF_8)) {
+            data = JsonParser.parseReader(reader).getAsJsonObject();
+        } catch (IllegalStateException ignored){
+            setLocale(Locale.US);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
