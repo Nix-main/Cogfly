@@ -1,10 +1,27 @@
 plugins {
     id("java")
+    id("application")
     id("com.gradleup.shadow") version "9.3.0"
 }
 
 group = "dev.ambershadow"
 version = property("version") as String
+
+// Java 22 minimum since since project uses unnamed vars/patterns
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(22))
+    }
+}
+
+tasks.withType<JavaCompile> {
+    options.release.set(22)
+}
+
+// provides us the 'run' gradlew task
+application {
+    mainClass.set("dev.ambershadow.cogfly.Cogfly")
+}
 
 repositories {
     mavenCentral()
@@ -63,18 +80,30 @@ tasks.register("ver") {
     }
 }
 
-if (System.getProperty("os.name").lowercase().contains("windows")) {
-    tasks.processResources {
-        dependsOn(compileWinFolderPicker, compileTinyFileDialogs)
-    }
-}
-
 tasks.shadowJar {
     archiveBaseName.set("Cogfly")
-    archiveClassifier.set("")
+    archiveClassifier.set("SHADED") // convention
     archiveVersion.set(version.toString())
+
     manifest {
         attributes["Main-Class"] = "dev.ambershadow.cogfly.Cogfly"
         attributes["Implementation-Version"] = version
     }
+}
+
+// satiate the machine... 
+tasks.named("startShadowScripts") {
+    dependsOn(tasks.named("shadowJar"))
+}
+
+tasks.named("startScripts") {
+    dependsOn(tasks.named("shadowJar"))
+}
+
+tasks.named("distTar") {
+    dependsOn(tasks.named("shadowJar"))
+}
+
+tasks.named("distZip") {
+    dependsOn(tasks.named("shadowJar"))
 }
