@@ -95,42 +95,21 @@ public class Cogfly {
         }
         settings = Settings.load(dataJson);
         extractIcons();
+        if (Desktop.isDesktopSupported()) {
+            Desktop.getDesktop().setOpenURIHandler(event -> {
+                try {
+                    handleArgs(event.getURI().toString());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        }
         if (args.length > 0) {
             Cogfly.logger.info("Received arguments: {}", Arrays.toString(args));
             String arg = args[0].replace("cogfly://", "");
-            if (arg.toLowerCase().startsWith("launch/")) {
-                String name = arg.substring(7);
-                final String[] profile = new String[]{null};
-                List<Path> paths = new ArrayList<>();
-                paths.add(Path.of(settings.profileSavePath));
-                paths.addAll(settings.profileSources.stream().map(Path::of).toList());
-                for (Path profiles : paths) {
-                    try(Stream<Path> stream = Files.list(profiles)) {
-                        stream.filter(path -> Files.isDirectory(path) && path.getFileName().toString().equalsIgnoreCase(name))
-                                .findFirst()
-                                .ifPresent(path -> profile[0] = path.toAbsolutePath().toString());
-                    }
-                }
-                if (profile[0] != null) {
-                    Profile f = ProfileManager.loadProfile(Paths.get(profile[0]));
-                    if (Files.exists(localDataPath.resolve("doorstop")))
-                        GameUtils.doorstop = localDataPath.resolve("doorstop");
-                    else {
-                        List<JsonObject> m = new ArrayList<>(ModFetcher.getAllMods());
-                        for (JsonObject object : m) {
-                            if (object.get("full_name").getAsString().equals("silksong_modding-BepInExPack_Silksong")) {
-                                JsonObject version = object.get("versions").getAsJsonArray().get(0).getAsJsonObject();
-                                GameUtils.packUrl = URL.of(URI.create(version.get("download_url").getAsString()), null);
-                                GameUtils.latestPackVer = version.get("version_number").getAsString();
-                            }
-                        }
-                    }
-                    GameUtils.launchModdedGame(f);
-                } else {
-                    JOptionPane.showMessageDialog(null, LocaleManager.errorProfileNotExist.get(), LocaleManager.titleError.get(), JOptionPane.ERROR_MESSAGE);
-                }
+            boolean a = handleArgs(arg);
+            if (a)
                 return;
-            }
         }
         logger.info("Loaded settings");
         switch (getOs()) {
@@ -212,6 +191,43 @@ public class Cogfly {
         UIManager.put("TextComponent.arc", 5);
         logger.info("Showing UI");
         FrameManager.getOrCreate().frame.setVisible(true);
+    }
+
+    private static boolean handleArgs(String arg) throws IOException {
+        if (arg.toLowerCase().startsWith("launch/")) {
+            String name = arg.substring(7);
+            final String[] profile = new String[]{null};
+            List<Path> paths = new ArrayList<>();
+            paths.add(Path.of(settings.profileSavePath));
+            paths.addAll(settings.profileSources.stream().map(Path::of).toList());
+            for (Path profiles : paths) {
+                try(Stream<Path> stream = Files.list(profiles)) {
+                    stream.filter(path -> Files.isDirectory(path) && path.getFileName().toString().equalsIgnoreCase(name))
+                            .findFirst()
+                            .ifPresent(path -> profile[0] = path.toAbsolutePath().toString());
+                }
+            }
+            if (profile[0] != null) {
+                Profile f = ProfileManager.loadProfile(Paths.get(profile[0]));
+                if (Files.exists(localDataPath.resolve("doorstop")))
+                    GameUtils.doorstop = localDataPath.resolve("doorstop");
+                else {
+                    List<JsonObject> m = new ArrayList<>(ModFetcher.getAllMods());
+                    for (JsonObject object : m) {
+                        if (object.get("full_name").getAsString().equals("silksong_modding-BepInExPack_Silksong")) {
+                            JsonObject version = object.get("versions").getAsJsonArray().get(0).getAsJsonObject();
+                            GameUtils.packUrl = URL.of(URI.create(version.get("download_url").getAsString()), null);
+                            GameUtils.latestPackVer = version.get("version_number").getAsString();
+                        }
+                    }
+                }
+                GameUtils.launchModdedGame(f);
+            } else {
+                JOptionPane.showMessageDialog(null, LocaleManager.errorProfileNotExist.get(), LocaleManager.titleError.get(), JOptionPane.ERROR_MESSAGE);
+            }
+            return true;
+        }
+        return false;
     }
 
     private static void extractIcons() throws IOException {
