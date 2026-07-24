@@ -20,7 +20,7 @@ public class InfoPageElement extends JPanel implements ReloadablePage {
     public InfoPageElement() {
         setLayout(new BorderLayout());
 
-        JLabel image = new JLabel(Assets.centralIcon.getAsScaledIcon(0.333333f));
+        JLabel image = new JLabel(Assets.centralIcon.getAsScaledIcon(1 / 3f));
         image.setHorizontalAlignment(SwingConstants.CENTER);
         add(image, BorderLayout.NORTH);
         add(createButtons(), BorderLayout.CENTER);

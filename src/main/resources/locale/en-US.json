@@ -1,0 +1,12 @@
+{
+  "title": "Cogfly",
+  "title.error": "Error",
+  "title.update": "Update",
+
+  "message.update-available": "There is an update available! You are using version %s. The latest version is %s.",
+
+  "button.select-file": "Click here to select a file.",
+  "button.close": "Close",
+
+  "error.profile-not-exist": "This profile does not exist."
+}

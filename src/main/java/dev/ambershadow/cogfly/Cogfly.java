@@ -72,6 +72,7 @@ public class Cogfly {
     public static Path tempDir;
     
     static @SuppressWarnings("unused") void main(String[] args) throws IOException {
+        LocaleManager.setLocale(Locale.getDefault());
         AppDirs dirs = AppDirsFactory.getInstance();
         localDataPath = Paths.get(dirs.getUserDataDir("Cogfly", null, ""));
         roamingDataPath = Paths.get(dirs.getUserDataDir("Cogfly", null, "", true));
@@ -125,7 +126,7 @@ public class Cogfly {
                     }
                     GameUtils.launchModdedGame(f);
                 } else {
-                    JOptionPane.showMessageDialog(null, "This profile does not exist.", "Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(null, LocaleManager.errorProfileNotExist.get(), LocaleManager.titleError.get(), JOptionPane.ERROR_MESSAGE);
                 }
                 return;
             }
@@ -311,7 +312,7 @@ public class Cogfly {
                     true,
                     () -> settings.profileSavePath,
                     (path) -> settings.profileSavePath =
-                            !path.getText().equals("Click here to select a file.") ? path.getText() : settings.profileSavePath,
+                            !path.getText().equals(LocaleManager.buttonSelectFile.get()) ? path.getText() : settings.profileSavePath,
                     (path, _) -> FileUtils.pickFolder((folder) -> path.setText(folder.toFile().getAbsolutePath())),
                     prompt);
             prompt.pack();
@@ -385,15 +386,15 @@ public class Cogfly {
         if (!version.equals(latestVer)) {
             int update = JOptionPane.showOptionDialog(
                     FrameManager.getOrCreate().frame,
-                    String.format("There is an update available! You are using version %s. The latest version is %s.", version, latestVer),
-                    "Update",
+                    String.format(LocaleManager.messageUpdateAvailable.get(), version, latestVer),
+                    LocaleManager.titleUpdate.get(),
                     JOptionPane.YES_NO_CANCEL_OPTION,
                     JOptionPane.WARNING_MESSAGE,
                     null,
                     new Object[]{
                             "Update Automatically",
                             "Open Release Page",
-                            "Close"
+                            LocaleManager.buttonClose.get()
                     },
                     "Update Automatically"
             );
@@ -419,7 +420,7 @@ public class Cogfly {
                     JOptionPane.YES_NO_CANCEL_OPTION,
                     JOptionPane.INFORMATION_MESSAGE,
                     Assets.icon.getAsIcon(),
-                    new Object[]{"Close & Don't Show Again", "Open My Patreon", "Close"},
+                    new Object[]{"Close & Don't Show Again", "Open My Patreon", LocaleManager.buttonClose.get()},
                     "Open My Patreon");
             if (val == JOptionPane.YES_OPTION) {
                 settings.dontShowPatreonAgain = true;
@@ -540,7 +541,7 @@ public class Cogfly {
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.ERROR_MESSAGE,
                 null,
-                new Object[]{"Copy To Clipboard", "Close"},
+                new Object[]{"Copy To Clipboard", LocaleManager.buttonClose.get()},
                 0);
         if (val == JOptionPane.YES_OPTION) {
             copyString(sw.toString());
