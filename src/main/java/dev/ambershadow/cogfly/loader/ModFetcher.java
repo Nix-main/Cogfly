@@ -70,10 +70,6 @@ public class ModFetcher {
             files:
             for (Path path : files.toList()) {
                 if (Files.isDirectory(path)) {
-                    try (Stream<Path> a = Files.walk(path)) {
-                        if (a.noneMatch(p -> p.getFileName().toString().endsWith(".dll") || p.getFileName().toString().endsWith(".dll.old")))
-                            continue;
-                    }
                     Path manifest = path.resolve("manifest.json");
                     if (Files.exists(manifest)) {
                         try (JsonReader reader = new JsonReader(Files.newBufferedReader(manifest))) {
@@ -120,11 +116,11 @@ public class ModFetcher {
                                 }
                             }
                             installedMods.add(new ModData(name + " (manual)", author, dependencies, verion, description, website));
-                            continue;
                         }
                     }
+                } else {
+                    installedMods.add(new ModData(path.getFileName().toString(), !path.getFileName().endsWith(".old")));
                 }
-                installedMods.add(new ModData(path.getFileName().toString(), !path.getFileName().endsWith(".old")));
             }
         } catch (IOException e){
             throw new RuntimeException(e);
