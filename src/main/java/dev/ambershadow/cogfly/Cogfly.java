@@ -302,7 +302,7 @@ public class Cogfly {
             JDialog prompt = new JDialog(FrameManager.getOrCreate().frame, "Profile Save Path", true);
             prompt.setLayout(new BorderLayout());
             prompt.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
-            prompt.setResizable(false);
+            prompt.setResizable(true);
             prompt.setPreferredSize(new Dimension(450, 160));
             prompt.pack();
             prompt.setLocationRelativeTo(FrameManager.getOrCreate().frame);
@@ -324,7 +324,7 @@ public class Cogfly {
             prompt.setLayout(new BorderLayout());
             prompt.setLocationRelativeTo(null);
             prompt.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
-            prompt.setResizable(false);
+            prompt.setResizable(true);
             prompt.setPreferredSize(new Dimension(450, 140));
             prompt.pack();
             prompt.setLocationRelativeTo(FrameManager.getOrCreate().frame);

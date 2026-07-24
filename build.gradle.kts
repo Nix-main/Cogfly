@@ -73,7 +73,6 @@ tasks.shadowJar {
     archiveBaseName.set("Cogfly")
     archiveClassifier.set("")
     archiveVersion.set(version.toString())
-    minimize()
     manifest {
         attributes["Main-Class"] = "dev.ambershadow.cogfly.Cogfly"
         attributes["Implementation-Version"] = version
