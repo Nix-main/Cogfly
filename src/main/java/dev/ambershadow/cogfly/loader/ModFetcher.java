@@ -61,6 +61,7 @@ public class ModFetcher {
         ModData.rawModData = all;
         return all;
     }
+
     public static List<ModData> getInstalledMods(Path plugins){
         List<ModData> installedMods = new ArrayList<>();
         if (!Files.exists(plugins))
@@ -69,6 +70,10 @@ public class ModFetcher {
             files:
             for (Path path : files.toList()) {
                 if (Files.isDirectory(path)) {
+                    try (Stream<Path> a = Files.walk(path)) {
+                        if (a.noneMatch(p -> p.getFileName().toString().endsWith(".dll") || p.getFileName().toString().endsWith(".dll.old")))
+                            continue;
+                    }
                     Path manifest = path.resolve("manifest.json");
                     if (Files.exists(manifest)) {
                         try (JsonReader reader = new JsonReader(Files.newBufferedReader(manifest))) {
