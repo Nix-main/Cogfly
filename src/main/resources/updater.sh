@@ -1,3 +1,4 @@
+#!/bin/bash
 A="$1"
 PATH="$2"
 B="$3"
@@ -11,4 +12,4 @@ if ! "$B" "$PATH"; then
     exit 1
 fi
 echo "Relaunching..."
-nohup "PATH" >/dev/null 2>&1 &
+nohup "$PATH" >/dev/null 2>&1 &
