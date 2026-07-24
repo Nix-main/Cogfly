@@ -27,6 +27,10 @@ public class LocaleManager {
         }
     }
 
+    public static Locale getLocale() {
+        return locale;
+    }
+
     public static final Supplier<String> title = () -> data.get("title").getAsString();
     public static final Supplier<String> titleError = () -> data.get("title.error").getAsString();
     public static final Supplier<String> titleUpdate = () -> data.get("title.update").getAsString();
