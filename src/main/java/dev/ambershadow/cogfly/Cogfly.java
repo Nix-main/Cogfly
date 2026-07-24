@@ -96,6 +96,7 @@ public class Cogfly {
         settings = Settings.load(dataJson);
         extractIcons();
         if (args.length > 0) {
+            Cogfly.logger.info("Received arguments: {}", Arrays.toString(args));
             String arg = args[0].replace("cogfly://", "");
             if (arg.toLowerCase().startsWith("launch/")) {
                 String name = arg.substring(7);
