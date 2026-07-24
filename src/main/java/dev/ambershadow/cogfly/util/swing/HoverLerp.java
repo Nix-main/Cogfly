@@ -20,23 +20,26 @@ public class HoverLerp {
         c.forEach(a -> a.setBackground(normal.get()));
         Timer timer = new Timer(16, null);
         float[] progress = { 0f };
-        float[] target = {0f};
-        Color[] n = {normal.get()};
-        Color[] h = {hover.get()};
+        float[] target = { 0f };
+        Color[] n = { normal.get() };
+        Color[] h = { hover.get() };
+        long[] lastTime = { System.nanoTime() };
         timer.addActionListener(_ -> {
-            float speed = 0.12f;
-
+            long now = System.nanoTime();
+            float dt = (now - lastTime[0]) / 1_000_000_000f;
+            lastTime[0] = now;
+            float speed = 8f;
             if (progress[0] < target[0])
-                progress[0] = Math.min(target[0], progress[0] + speed);
+                progress[0] = Math.min(target[0], progress[0] + speed * dt);
             else
-                progress[0] = Math.max(target[0], progress[0] - speed);
+                progress[0] = Math.max(target[0], progress[0] - speed * dt);
             c.forEach(component -> {
                 component.setBackground(
                         lerp(n[0], h[0], progress[0])
                 );
                 component.repaint();
             });
-            if (progress == target)
+            if (progress[0] == target[0])
                 timer.stop();
         });
         timer.start();
@@ -45,6 +48,7 @@ public class HoverLerp {
             public void mouseEntered(MouseEvent e) {
                 n[0] = normal.get();
                 h[0] = hover.get();
+                lastTime[0] = System.nanoTime();
                 target[0] = 1;
                 if (!timer.isRunning())
                     timer.start();
@@ -52,7 +56,10 @@ public class HoverLerp {
 
             @Override
             public void mouseExited(MouseEvent e) {
+                lastTime[0] = System.nanoTime();
                 target[0] = 0;
+                if (!timer.isRunning())
+                    timer.start();
             }
         };
 
