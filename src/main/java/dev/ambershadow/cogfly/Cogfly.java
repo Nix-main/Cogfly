@@ -71,7 +71,7 @@ public class Cogfly {
 
     public static Path tempDir;
     
-    static @SuppressWarnings("unused") void main(String[] args) throws IOException {
+    public static @SuppressWarnings("unused") void main(String[] args) throws IOException {
         LocaleManager.setLocale(Locale.getDefault());
         AppDirs dirs = AppDirsFactory.getInstance();
         localDataPath = Paths.get(dirs.getUserDataDir("Cogfly", null, ""));

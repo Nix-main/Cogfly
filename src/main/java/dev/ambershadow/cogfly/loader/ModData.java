@@ -173,9 +173,7 @@ public class ModData {
         }
     }
     public ModData(JsonObject parentObject) {
-        JsonArray versions = parentObject.get("versions").getAsJsonArray();
-        JsonObject latestVersion = versions.get(0).getAsJsonObject();
-        this(parentObject, latestVersion);
+        this(parentObject, parentObject.get("versions").getAsJsonArray().get(0).getAsJsonObject());
     }
 
     private boolean manual = false;

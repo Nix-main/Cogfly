@@ -63,14 +63,6 @@ tasks.register("ver") {
     }
 }
 
-tasks.withType<JavaCompile>().configureEach {
-    options.compilerArgs.add("--enable-preview")
-}
-
-tasks.withType<JavaExec>().configureEach {
-    jvmArgs("--enable-preview")
-}
-
 if (System.getProperty("os.name").lowercase().contains("windows")) {
     tasks.processResources {
         dependsOn(compileWinFolderPicker, compileTinyFileDialogs)
