@@ -95,7 +95,7 @@ public class Cogfly {
         }
         settings = Settings.load(dataJson);
         extractIcons();
-        if (Desktop.isDesktopSupported()) {
+        if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.APP_OPEN_URI)) {
             Desktop.getDesktop().setOpenURIHandler(event -> {
                 try {
                     handleArgs(event.getURI().toString());
