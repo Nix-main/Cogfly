@@ -40,7 +40,7 @@ The latest CI build can be retrieved from the workflow, but building manually is
 
 
 Windows:
-To build Cogfly on Windows, you'll need both GCC and G++ in your PATH, as they are invoked to compile the windows file dialog libraries.
+To build Cogfly on Windows, you'll need both GCC and G++ in your PATH, as they are invoked to compile the Windows file dialog libraries.
 I personally use https://www.mingw-w64.org/
 These are not built on Unix.
 `.\gradlew.bat clean shadowJar`

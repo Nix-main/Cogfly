@@ -32,7 +32,7 @@ public class Settings {
             "SteamLibrary/steamapps/common/Hollow Knight Silksong",
     };
 
-    private static JsonObject getData(Path dataJson){
+    private static JsonObject getData(Path dataJson) {
         String content;
         try(InputStream stream = Files.newInputStream(dataJson)) {
             content = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
@@ -72,7 +72,7 @@ public class Settings {
     public String theme = FlatNordIJTheme.class.getName();
     public String gamePath = findDefaultPath();
     public String profileSavePath = Cogfly.roamingDataPath.resolve("profiles").toString();
-    public List<String> profileSources = new ArrayList<>();
+    public final List<String> profileSources = new ArrayList<>();
     public boolean baseGameEnabled = false;
     public boolean modNameSpaces = true;
     public int scrollingIncrement = 16;
@@ -85,12 +85,12 @@ public class Settings {
     public boolean acceptedSteamArgs = false;
     public int profileButtonSize = 15;
 
-    private Settings(){}
+    private Settings() {}
     private transient Path dataFile;
     public JsonObject getData() {
         return getData(dataFile);
     }
-    private String findDefaultPath(){
+    private String findDefaultPath() {
         for (Path root : FileSystems.getDefault().getRootDirectories()) {
             for (String path : STATIC_PATHS) {
                 Path combined = root.resolve(path);
@@ -99,20 +99,20 @@ public class Settings {
                 }
             }
         }
-        if (Cogfly.isMac()){
+        if (Cogfly.isMac()) {
             String path = AppDirsFactory.getInstance().getUserDataDir
                     ("Steam", null, "Steam")
                     + "/steamapps/common/Hollow Knight Silksong/";
             return Files.isDirectory(Paths.get(path)) ? path : "";
         }
-        if (Cogfly.isLinux()){
+        if (Cogfly.isLinux()) {
             String path = System.getProperty("user.home") + "/.local/share/Steam/steamapps/common/Hollow Knight Silksong/";
             return Files.isDirectory(Paths.get(path)) ? path : "";
         }
         return "";
     }
 
-    public void save(){
+    public void save() {
         try (Writer writer = Files.newBufferedWriter(dataFile)) {
             GSON.toJson(this, writer);
         } catch (IOException ex) {
@@ -121,12 +121,12 @@ public class Settings {
     }
 
     @Override
-    public int hashCode(){
+    public int hashCode() {
         return GSON.toJsonTree(this).hashCode();
     }
 
     @Override
-    public boolean equals(Object other){
+    public boolean equals(Object other) {
         return other instanceof Settings && GSON.toJsonTree(other).equals(GSON.toJsonTree(this));
     }
 }

@@ -33,11 +33,11 @@ public class ProfileManager {
 
     public static Profile baseGame;
     public static final List<Profile> profiles = new ArrayList<>();
-    public static void createProfile(String name, String iconPath){
+    public static void createProfile(String name, String iconPath) {
         Path profile = Paths.get(Cogfly.settings.profileSavePath).resolve(name);
         try {
             Files.createDirectories(profile);
-        } catch (IOException e){
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
         GameUtils.downloadBepInEx(profile);
@@ -62,7 +62,7 @@ public class ProfileManager {
         ProfilesScreenElement.queueRefresh();
         FrameManager.getOrCreate().getCurrentPage().reload();
     }
-    private static void deleteFolder(Path path){
+    private static void deleteFolder(Path path) {
         try(Stream<Path> stream = Files.walk(path)) {
             stream
                     .sorted(Comparator.reverseOrder())
@@ -77,7 +77,7 @@ public class ProfileManager {
             throw new RuntimeException(e);
         }
     }
-    public static void removeProfile(Profile profile){
+    public static void removeProfile(Profile profile) {
         if (profile == null)
             return;
         profiles.remove(profile);
@@ -86,7 +86,7 @@ public class ProfileManager {
         deleteFolder(profile.getPath());
     }
 
-    public static void changeIcon(Profile profile, String iconPath){
+    public static void changeIcon(Profile profile, String iconPath) {
         String[] extensions = {"png", "jpeg", "jpg", "gif"};
         for (String extension : extensions) {
             Path existingIconPath = Paths.get(profile.getPath().toString()+"/icon."+extension);
@@ -133,7 +133,7 @@ public class ProfileManager {
                     profiles.add(profile);
                 }
             }
-            catch (IOException e){
+            catch (IOException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -141,13 +141,13 @@ public class ProfileManager {
         baseGame.refreshMods();
     }
 
-    public static Profile loadProfile(Path path){
+    public static Profile loadProfile(Path path) {
         String[] extensions = {"png", "jpeg", "jpg", "gif"};
         ImageIcon icon = null;
         Path imagePath = null;
         for (String extension : extensions) {
             Path path2 = path.resolve("icon." + extension);
-            if (Files.exists(path2)){
+            if (Files.exists(path2)) {
                 imagePath = path2;
                 icon = new ImageIcon(path2.toString());
                 break;
@@ -155,7 +155,7 @@ public class ProfileManager {
         }
         Path data = path.resolve("cogfly_data.json");
         String gamePath = "";
-        if (Files.exists(data)){
+        if (Files.exists(data)) {
             try(JsonReader reader = new JsonReader(Files.newBufferedReader(data))) {
                 reader.beginObject();
                 if (reader.nextName().equals("gamePath")) {
@@ -173,15 +173,15 @@ public class ProfileManager {
         return profile;
     }
 
-    public static void fromFile(Path path, BiConsumer<Profile, ModData[]> outdated){
-        try(ZipInputStream zis = new ZipInputStream(Files.newInputStream(path))){
+    public static void fromFile(Path path, BiConsumer<Profile, ModData[]> outdated) {
+        try(ZipInputStream zis = new ZipInputStream(Files.newInputStream(path))) {
             fromZipStream(zis, outdated);
-        } catch (IOException e){
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static void fromId(String id, BiConsumer<Profile, ModData[]> outdated){
+    public static void fromId(String id, BiConsumer<Profile, ModData[]> outdated) {
         if (id == null) return;
         try {
             URL url = URL.of(URI.create("https://thunderstore.io/api/experimental/legacyprofile/get/" + id), null);
@@ -197,7 +197,7 @@ public class ProfileManager {
         }
     }
     @SuppressWarnings("unchecked")
-    private static void fromZipStream(ZipInputStream zis,BiConsumer<Profile, ModData[]> outdated){
+    private static void fromZipStream(ZipInputStream zis,BiConsumer<Profile, ModData[]> outdated) {
         String r2xContent = "";
         String cogflyData = "";
         Map<String, byte[]> configData = new HashMap<>();
@@ -227,7 +227,7 @@ public class ProfileManager {
                     manualData.put(entry.getName(), data);
                 zis.closeEntry();
             }
-        } catch (IOException e){
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
@@ -294,19 +294,19 @@ public class ProfileManager {
                 Files.write(profile.getPath().resolve(key), manualData.get(key), StandardOpenOption.CREATE_NEW);
                 ModUtils.downloadManualMod(profile.getPath().resolve(key), profile, false);
             }
-        } catch (IOException e){
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
         outdated.accept(profile, outdatedMods.toArray(ModData[]::new));
     }
 
-    public static void toFile(Profile profile, Path path){
+    public static void toFile(Profile profile, Path path) {
         try {
             Files.write(path.resolve(profile.getName() + ".r2z"), toZip(profile));
         } catch (IOException ignored) {}
     }
 
-    public static String toId(Profile profile){
+    public static String toId(Profile profile) {
         byte[] data = toZip(profile);
         String base64 = Base64.getEncoder().encodeToString(data);
         base64 = "#r2modman\n" + base64;
@@ -324,7 +324,7 @@ public class ProfileManager {
         }
     }
 
-    private static byte[] toZip(Profile profile){
+    private static byte[] toZip(Profile profile) {
         Path config = profile.getBepInExPath().resolve("config/");
 
         Map<String, Object> root = new LinkedHashMap<>();
@@ -342,7 +342,7 @@ public class ProfileManager {
         pack.put("enabled", true);
         mods.add(pack);
 
-        for (ModData data : profile.getInstalledMods()){
+        for (ModData data : profile.getInstalledMods()) {
             if (data.isManual())
                 continue;
             Map<String, Object> mod = new LinkedHashMap<>();

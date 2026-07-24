@@ -29,7 +29,7 @@ public class ModPanelElement extends JPanel {
             panels.get(profile).redrawPanel();
     }
 
-    public static void redrawAll(){
+    public static void redrawAll() {
         panels.values().forEach(ModPanelElement::redrawPanel);
     }
 
@@ -334,7 +334,7 @@ public class ModPanelElement extends JPanel {
         Instant updated = Instant.parse(mod.getDateModified());
         ZonedDateTime localModified = updated.atZone(userZone);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        if (mod.isManual()){
+        if (mod.isManual()) {
             entry.created.setVisible(false);
             entry.updated.setVisible(false);
         }
@@ -360,7 +360,7 @@ public class ModPanelElement extends JPanel {
         refreshButtons(filtered);
     }
 
-    private void redrawPanel(){
+    private void redrawPanel() {
         setProgressBar();
         scrollPane.getVerticalScrollBar().setUnitIncrement(Cogfly.settings.scrollingIncrement);
         String query = searchField.getText();
@@ -370,7 +370,7 @@ public class ModPanelElement extends JPanel {
             filterButtons();
     }
 
-    private void setProgressBar(){
+    private void setProgressBar() {
         card.setBar(ModUtils.isDownloading(profile));
     }
 

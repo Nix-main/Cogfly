@@ -28,8 +28,8 @@ import java.util.stream.Stream;
 
 public class ProfileCardElement extends JPanel {
 
-    public static Supplier<Color> normal = () -> UIManager.getColor("Button.background").darker();
-    public static Supplier<Color> hover = () -> UIManager.getColor("Button.pressedBackground");
+    public static final Supplier<Color> normal = () -> UIManager.getColor("Button.background").darker();
+    public static final Supplier<Color> hover = () -> FlatLaf.isLafDark() ? UIManager.getColor("Button.pressedBackground").brighter() : UIManager.getColor("Button.pressedBackground").darker();
 
     private JPanel buttonPanel;
     private JPanel south;
@@ -92,7 +92,7 @@ public class ProfileCardElement extends JPanel {
         HoverLerp.install(normal, hover, this, south, buttonPanel);
     }
 
-    private void updateIcons(){
+    private void updateIcons() {
         CogflyAsset[] profileIcons = Assets.getProfileIcons();
         SVGIcon[] icons = new SVGIcon[profileIcons.length];
         for (int i = 0; i < profileIcons.length; i++) {
@@ -113,7 +113,7 @@ public class ProfileCardElement extends JPanel {
         remove.setIcon(icons[3]);
     }
 
-    private void createButtons(){
+    private void createButtons() {
         buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
         launch = new JButton();
         launch.addActionListener(_ -> {
@@ -174,16 +174,16 @@ public class ProfileCardElement extends JPanel {
 
             create.addActionListener(_ -> {
                 if ((profile.getIconPath() == null || !button.getText().equals(profile.getIconPath().toString()))
-                && !button.getText().equals("Click here to select a file")){
+                && !button.getText().equals("Click here to select a file")) {
                     ProfileManager.changeIcon(profile, button.getText());
                 }
                 if (!btn.getText().equals(profile.getGamePath())) {
                     profile.setGamePath(btn.getText());
                 }
-                if (btn.getText().equals(Cogfly.settings.gamePath)){
+                if (btn.getText().equals(Cogfly.settings.gamePath)) {
                     profile.resetGamePath();
                 }
-                if (!nameField.getText().equals(profile.getName())){
+                if (!nameField.getText().equals(profile.getName())) {
                     try {
                         Files.move(profile.getPath(), Path.of(Cogfly.settings.profileSavePath).resolve(nameField.getText()), StandardCopyOption.ATOMIC_MOVE);
                     } catch (IOException e) {
@@ -271,7 +271,7 @@ public class ProfileCardElement extends JPanel {
                 ProfilesScreenElement.queueRefresh();
             }
         });
-        if (profile.getPath().equals(Paths.get(Cogfly.settings.gamePath))){
+        if (profile.getPath().equals(Paths.get(Cogfly.settings.gamePath))) {
             remove.setEnabled(false);
             edit.setEnabled(false);
             copy.setEnabled(false);
@@ -287,8 +287,6 @@ public class ProfileCardElement extends JPanel {
     }
 
     void updateColors() {
-        Color base = UIManager.getColor("Button.pressedBackground");
-        hover = FlatLaf.isLafDark() ? base::brighter : base::darker;
         setBackground(normal.get());
         south.setBackground(normal.get());
         buttonPanel.setBackground(normal.get());

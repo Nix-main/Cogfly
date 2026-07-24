@@ -51,7 +51,7 @@ public class Cogfly {
     }
 
     public static Logger logger;
-    public static final List<String> excludedMods = new ArrayList<>(){
+    public static final List<String> excludedMods = new ArrayList<>() {
         {
             add("ebkr-r2modman");
             add("BepInEx-BepInExPack_Silksong");
@@ -94,22 +94,22 @@ public class Cogfly {
         }
         settings = Settings.load(dataJson);
         extractIcons();
-        if (args.length > 0){
+        if (args.length > 0) {
             String arg = args[0].replace("cogfly://", "");
-            if (arg.toLowerCase().startsWith("launch/")){
+            if (arg.toLowerCase().startsWith("launch/")) {
                 String name = arg.substring(7);
                 final String[] profile = new String[]{null};
                 List<Path> paths = new ArrayList<>();
                 paths.add(Path.of(settings.profileSavePath));
                 paths.addAll(settings.profileSources.stream().map(Path::of).toList());
                 for (Path profiles : paths) {
-                    try(Stream<Path> stream = Files.list(profiles)){
+                    try(Stream<Path> stream = Files.list(profiles)) {
                         stream.filter(path -> Files.isDirectory(path) && path.getFileName().toString().equalsIgnoreCase(name))
                                 .findFirst()
                                 .ifPresent(path -> profile[0] = path.toAbsolutePath().toString());
                     }
                 }
-                if (profile[0] != null){
+                if (profile[0] != null) {
                     Profile f = ProfileManager.loadProfile(Paths.get(profile[0]));
                     if (Files.exists(localDataPath.resolve("doorstop")))
                         GameUtils.doorstop = localDataPath.resolve("doorstop");
@@ -131,7 +131,7 @@ public class Cogfly {
             }
         }
         logger.info("Loaded settings");
-        switch (getOs()){
+        switch (getOs()) {
             case WINDOWS -> WinUtils.init();
             case LINUX -> {
                 if (System.getenv("APPIMAGE") != null) {
@@ -213,7 +213,7 @@ public class Cogfly {
     }
 
     private static void extractIcons() throws IOException {
-        String ext = switch (getOs()){
+        String ext = switch (getOs()) {
             case WINDOWS -> "ico";
             case MAC -> "icns";
             default -> "png";
@@ -259,7 +259,7 @@ public class Cogfly {
         System.exit(0);
     }
 
-    public static List<ModData> sortList(SortingType type, String direction, Profile profile, boolean installedOnly){
+    public static List<ModData> sortList(SortingType type, String direction, Profile profile, boolean installedOnly) {
         List<ModData> mods = new ArrayList<>(getDisplayedMods(profile, installedOnly));
         switch (type) {
             case NAME:
@@ -279,13 +279,13 @@ public class Cogfly {
                 mods.sort(Comparator.comparing(mod -> Instant.parse(mod.getDateModified())));
                 break;
         }
-        if (direction.equalsIgnoreCase("descending")){
+        if (direction.equalsIgnoreCase("descending")) {
             mods = mods.reversed();
         }
         return mods;
     }
 
-    public static List<ModData> getDisplayedMods(Profile profile, boolean installedOnly){
+    public static List<ModData> getDisplayedMods(Profile profile, boolean installedOnly) {
         if (installedOnly)
             return profile.getInstalledMods();
         List<ModData> mds = new ArrayList<>(profile.getManualMods());
@@ -343,7 +343,7 @@ public class Cogfly {
         }
 
 
-        if (ProfileManager.profiles.isEmpty() && !settings.baseGameEnabled){
+        if (ProfileManager.profiles.isEmpty() && !settings.baseGameEnabled) {
             int confirm = JOptionPane.showConfirmDialog(FrameManager.getOrCreate().frame,
                     "You don't have any profiles! Are you ready to create one?",
                     "Profile Onboarding",
@@ -364,7 +364,7 @@ public class Cogfly {
         }
 
         String latestVer = ((Supplier<String>)() -> {
-            try (HttpClient client = HttpClient.newHttpClient()){
+            try (HttpClient client = HttpClient.newHttpClient()) {
                 HttpRequest request = HttpRequest.newBuilder()
                         .GET()
                         .uri(URI.create("https://ambershadow.dev/api/cogfly/latest/"))
@@ -397,8 +397,8 @@ public class Cogfly {
                     },
                     "Update Automatically"
             );
-            if (update == JOptionPane.YES_OPTION){
-                switch (getOs()){
+            if (update == JOptionPane.YES_OPTION) {
+                switch (getOs()) {
                     case WINDOWS -> autoUpdateWindows(latestVer);
                     case LINUX -> {
                         if (System.getenv("APPIMAGE") != null)
@@ -421,7 +421,7 @@ public class Cogfly {
                     Assets.icon.getAsIcon(),
                     new Object[]{"Close & Don't Show Again", "Open My Patreon", "Close"},
                     "Open My Patreon");
-            if (val == JOptionPane.YES_OPTION){
+            if (val == JOptionPane.YES_OPTION) {
                 settings.dontShowPatreonAgain = true;
                 settings.save();
             }
@@ -429,7 +429,7 @@ public class Cogfly {
                 FileUtils.openURI(URI.create("https://www.patreon.com/c/AmberShadowo?utm_medium=unknown&utm_source=join_link&utm_campaign=creatorshare_creator&utm_content=copyLink"));
         }
 
-        try (HttpClient client = HttpClient.newHttpClient()){
+        try (HttpClient client = HttpClient.newHttpClient()) {
             HttpRequest request = HttpRequest.newBuilder()
                     .GET()
                     .uri(URI.create("https://ambershadow.dev/cogfly/dynamic_message.json"))
@@ -438,7 +438,7 @@ public class Cogfly {
                 HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
                 JsonObject message = JsonParser.parseString(response.body()).getAsJsonObject();
                 String content = message.get("content").getAsString();
-                if (!content.isBlank()){
+                if (!content.isBlank()) {
                     //noinspection MagicConstant
                     JOptionPane.showMessageDialog(
                             FrameManager.getOrCreate().frame,
@@ -451,7 +451,7 @@ public class Cogfly {
                 throw new RuntimeException(e);
             }
         }
-        if (showUnknownHost){
+        if (showUnknownHost) {
             JOptionPane.showMessageDialog(
                     FrameManager.getOrCreate().frame,
                     "An UnknownHostException was thrown during mod discovery.\nMods may not install properly.",
@@ -495,7 +495,7 @@ public class Cogfly {
         prompt.add(confirmPanel, BorderLayout.SOUTH);
     }
 
-    public static void copyFile(Path path){
+    public static void copyFile(Path path) {
         try {
             copyString(Files.readString(path, StandardCharsets.UTF_8));
         } catch (IOException e) {
@@ -511,7 +511,7 @@ public class Cogfly {
 
 
 
-    public static CompletableFuture<Void> runAsync(Runnable runnable){
+    public static CompletableFuture<Void> runAsync(Runnable runnable) {
         CompletableFuture<Void> future = CompletableFuture.runAsync(runnable);
         future.exceptionally(f -> {
             throw new RuntimeException(f);
@@ -519,7 +519,7 @@ public class Cogfly {
         return future;
     }
 
-    public static void throwNonFatalError(Throwable e){
+    public static void throwNonFatalError(Throwable e) {
         StringWriter sw = new StringWriter();
         e.printStackTrace(new PrintWriter(sw));
         String[] lines = sw.toString().split("\\R");
@@ -547,16 +547,16 @@ public class Cogfly {
         }
     }
 
-    public static boolean isWindows(){
+    public static boolean isWindows() {
         return OperatingSystem.current() == OperatingSystem.WINDOWS;
     }
-    public static boolean isLinux(){
+    public static boolean isLinux() {
         return OperatingSystem.current() == OperatingSystem.LINUX;
     }
-    public static boolean isMac(){
+    public static boolean isMac() {
         return OperatingSystem.current() == OperatingSystem.MAC;
     }
-    public static OperatingSystem getOs(){
+    public static OperatingSystem getOs() {
         return OperatingSystem.current();
     }
 

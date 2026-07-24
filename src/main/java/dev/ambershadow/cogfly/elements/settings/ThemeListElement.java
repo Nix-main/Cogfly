@@ -10,7 +10,7 @@ import java.util.Objects;
 
 public class ThemeListElement extends SettingsElement {
 
-    public ThemeListElement(SettingsDialog parent){
+    public ThemeListElement(SettingsDialog parent) {
         JComboBox<UIManager.LookAndFeelInfo> combo =
                 new JComboBox<>(FlatAllIJThemes.INFOS);
         add(new JLabel("Theme "), combo);

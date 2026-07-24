@@ -19,7 +19,7 @@ public class WinUtils {
     public static WinFolderPicker FOLDER_PICKER;
     public static WinTinyFileDialogs FILE_DIALOGS;
 
-    public static void init(){
+    public static void init() {
         try {
             FOLDER_PICKER =
                     Native.load(Native.extractFromResourcePath("winfolderpicker").getAbsolutePath(),

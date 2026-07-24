@@ -21,7 +21,7 @@ public class ProfileOpenPageCardElement extends JPanel {
     private final Profile profile;
     private final JButton updateAll;
     private final JProgressBar progressBar;
-    public void setBar(boolean val){
+    public void setBar(boolean val) {
         progressBar.setVisible(val);
         long total = ModUtils.getTotalDownloadCount(profile);
         long remaining = ModUtils.getDownloadCount(profile);
@@ -86,7 +86,7 @@ public class ProfileOpenPageCardElement extends JPanel {
 
         JButton copyLogToClipboard = new JButton("Copy Log To Clipboard");
         copyLogToClipboard.addActionListener(_ -> {
-            if (Files.exists(profile.getBepInExPath().resolve("LogOutput.log"))){
+            if (Files.exists(profile.getBepInExPath().resolve("LogOutput.log"))) {
                 Cogfly.copyFile(profile.getBepInExPath().resolve("LogOutput.log"));
             }
         });
@@ -120,7 +120,7 @@ public class ProfileOpenPageCardElement extends JPanel {
 
         JButton copyLaunchArgs = new JButton("Copy Launch Arguments");
         copyLaunchArgs.addActionListener(_ -> {
-            if (Cogfly.isWindows()){
+            if (Cogfly.isWindows()) {
                 Cogfly.copyString("--doorstop-enabled true --doorstop-target-assembly \"" + profile.getBepInExPath().resolve("core", "BepInEx.Preloader.dll") + "\"");
             } else {
                 Cogfly.copyString(Paths.get(profile.getGamePath()).resolve("run_bepinex.sh") + " %command% --doorstop_enabled true --doorstop_target_assembly " + profile.getBepInExPath().resolve("core", "BepInEx.Preloader.dll"));
@@ -149,7 +149,7 @@ public class ProfileOpenPageCardElement extends JPanel {
         add(new ModPanelElement(profile, this));
     }
 
-    public void reload(){
+    public void reload() {
         boolean anyOutdated = profile.getInstalledMods()
                 .stream().anyMatch(mod -> mod.isOutdated(profile));
         updateAll.setEnabled(anyOutdated);

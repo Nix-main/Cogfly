@@ -10,7 +10,6 @@ import dev.ambershadow.cogfly.profile.Profile;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.swing.*;
-import java.awt.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
@@ -29,7 +28,7 @@ public class ModUtils {
         Cogfly.logger.info("Attempting to remove {} at version {} for profile {}.",
                 mod.getFullName(), mod.getVersionNumber(), profile.getName());
 
-        if (mod.isManual()){
+        if (mod.isManual()) {
             try {
                 Files.delete(profile.getPluginsPath().resolve(mod.getManualFileName()));
             } catch (IOException e) {
@@ -55,11 +54,11 @@ public class ModUtils {
 
         ModPanelElement.redraw(profile);
     }
-    public static void downloadLatestMod(ModData mod, Profile profile, boolean deps){
+    public static void downloadLatestMod(ModData mod, Profile profile, boolean deps) {
         downloadMod(ModData.getMod(mod), profile, deps);
     }
 
-    public static void downloadMod(ModData mod, Profile profile, boolean deps){
+    public static void downloadMod(ModData mod, Profile profile, boolean deps) {
         downloadMod(mod, profile, deps, true);
     }
     public static boolean isDownloading(Profile profile) {
@@ -70,11 +69,11 @@ public class ModUtils {
     private static final Map<Profile, AtomicLong> totalDownloads = new ConcurrentHashMap<>();
     private static final Map<Profile, Set<String>> downloads = new ConcurrentHashMap<>();
 
-    public static long getDownloadCount(Profile profile){
+    public static long getDownloadCount(Profile profile) {
         return activeDownloads.containsKey(profile) ? activeDownloads.get(profile).get() : 0L;
     }
 
-    public static long getTotalDownloadCount(Profile profile){
+    public static long getTotalDownloadCount(Profile profile) {
         return totalDownloads.containsKey(profile) ? totalDownloads.get(profile).get() : 0L;
     }
 
@@ -92,14 +91,14 @@ public class ModUtils {
         );
     }
 
-    private static Set<String> getDownloads(Profile profile){
+    private static Set<String> getDownloads(Profile profile) {
         return downloads.computeIfAbsent(
                 profile,
                 _ -> ConcurrentHashMap.newKeySet()
         );
     }
 
-    public static void downloadManualMod(Path path, Profile profile, boolean copy){
+    public static void downloadManualMod(Path path, Profile profile, boolean copy) {
         final String[] fname = {""};
         Cogfly.runAsync(() -> {
             try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(path))) {
@@ -164,7 +163,7 @@ public class ModUtils {
         });
         ModPanelElement.setProgressBar(profile);
     }
-    public static void downloadMod(ModData mod, Profile profile, boolean deps, boolean enabled){
+    public static void downloadMod(ModData mod, Profile profile, boolean deps, boolean enabled) {
         CompletableFuture<Void> download = Cogfly.runAsync(() -> {
             String fn = mod.getFullName();
             if (!getDownloads(profile).add(fn))
@@ -291,7 +290,7 @@ public class ModUtils {
         }
     }
 
-    private static ModData getModFromDependency(String dependency){
+    private static ModData getModFromDependency(String dependency) {
         String[] split = dependency.split("-");
         String dep = split[0] + "-" + split[1];
         return ModData.getMod(dep);

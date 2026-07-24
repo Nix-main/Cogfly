@@ -15,9 +15,9 @@ public class ManageProfileSourcesDialog extends JDialog {
         super(base, "Manage Profile Sources", true);
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         setSize(800, 320);
-        DefaultTableModel model = new DefaultTableModel(new Object[]{"Path"}, 0){
+        DefaultTableModel model = new DefaultTableModel(new Object[]{"Path"}, 0) {
             @Override
-            public boolean isCellEditable(int row, int column){
+            public boolean isCellEditable(int row, int column) {
                 return false;
             }
         };

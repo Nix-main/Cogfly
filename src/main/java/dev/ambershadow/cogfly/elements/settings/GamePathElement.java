@@ -7,7 +7,7 @@ import dev.ambershadow.cogfly.util.FileUtils;
 import javax.swing.*;
 
 public class GamePathElement extends SettingsElement {
-    public GamePathElement(SettingsDialog parent){
+    public GamePathElement(SettingsDialog parent) {
 
         JLabel label = new JLabel("Game Path ");
         JButton button = new JButton(Cogfly.settings.gamePath);

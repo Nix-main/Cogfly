@@ -6,7 +6,7 @@ import java.awt.*;
 public class SelectedPageButtonElement extends JButton {
 
     public boolean selected;
-    public SelectedPageButtonElement(String name){
+    public SelectedPageButtonElement(String name) {
         super(name);
     }
 

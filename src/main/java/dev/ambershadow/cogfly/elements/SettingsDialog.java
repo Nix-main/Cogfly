@@ -1,6 +1,5 @@
 package dev.ambershadow.cogfly.elements;
 
-import com.formdev.flatlaf.FlatLaf;
 import dev.ambershadow.cogfly.Cogfly;
 import dev.ambershadow.cogfly.elements.profiles.ProfileCardElement;
 import dev.ambershadow.cogfly.elements.settings.*;
@@ -92,12 +91,12 @@ public class SettingsDialog extends JDialog {
     public <T> T get(Function<Settings, T> func) {
         return func.apply(queued);
     }
-    public void update(Consumer<Settings> v){
+    public void update(Consumer<Settings> v) {
         v.accept(queued);
         saveButton.setEnabled(!initial.equals(queued));
     }
 
-    public void setAndClose(Settings settings){
+    public void setAndClose(Settings settings) {
         queued = settings;
         applyAndSave();
         dispose();
@@ -105,14 +104,13 @@ public class SettingsDialog extends JDialog {
     }
 
 
-    private void applyAndSave(){
+    private void applyAndSave() {
         try {
             UIManager.setLookAndFeel(queued.theme);
         } catch (ClassNotFoundException | UnsupportedLookAndFeelException | InstantiationException |
                  IllegalAccessException e) {
             throw new RuntimeException(e);
         }
-        ProfileCardElement.hover = FlatLaf.isLafDark() ? () -> UIManager.getColor("Button.pressedBackground").brighter() : () -> UIManager.getColor("Button.pressedBackground").darker();
         FrameManager.getOrCreate().getCurrentPageButton().setBackground(ProfileCardElement.hover.get());
         Cogfly.settings = queued;
         if (!queued.profileSources.equals(initial.profileSources))
@@ -125,7 +123,7 @@ public class SettingsDialog extends JDialog {
         Cogfly.settings.save();
     }
 
-    private void resetQueue(){
+    private void resetQueue() {
         queued = Settings.load(Cogfly.dataJson);
         initial = Settings.load(Cogfly.dataJson);
     }

@@ -38,11 +38,11 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
         FrameManager.getOrCreate().getCurrentPage().reload();
     };
     private static boolean refreshQueued = false;
-    public static void queueRefresh(){
+    public static void queueRefresh() {
         refreshQueued = true;
     }
 
-    public static void createPrompt(BiConsumer<String, String> consumer, Runnable extra){
+    public static void createPrompt(BiConsumer<String, String> consumer, Runnable extra) {
         JDialog prompt = new JDialog(FrameManager.getOrCreate().frame);
         prompt.setModal(true);
         prompt.setSize(new Dimension(300, 150));
@@ -121,7 +121,7 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
         importFromCode.addActionListener(_ -> {
             String input = JOptionPane.showInputDialog("Enter Profile Code");
             ProfileManager.fromId(input, (profile, outdated) -> {
-                if (outdated.length > 0){
+                if (outdated.length > 0) {
                     List<Object> msg = new ArrayList<>();
                     msg.add("This profile has outdated mods.");
                     msg.add("");
@@ -187,7 +187,7 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
                 Profile profile = profiles.get(profileComboBox.getSelectedIndex());
                 Path loc = Path.of(path.getText());
                 try {
-                    switch (Cogfly.getOs()){
+                    switch (Cogfly.getOs()) {
                         case WINDOWS -> {
                             String cmd =
                                     String.format("$s=(New-Object -COM WScript.Shell).CreateShortcut('%s');" +
@@ -277,7 +277,7 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
         drawProfiles();
     }
 
-    public void drawProfiles(){
+    public void drawProfiles() {
         if (!Cogfly.createdProfiles)
             return;
         int maxPerRow = 5;

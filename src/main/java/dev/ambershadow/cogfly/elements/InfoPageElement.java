@@ -34,7 +34,7 @@ public class InfoPageElement extends JPanel implements ReloadablePage {
         add(panel, BorderLayout.SOUTH);
     }
 
-    public JScrollPane createLinks(){
+    public JScrollPane createLinks() {
         String[] text = {
                 "Modding Discord",
                 "Source Code",
@@ -68,14 +68,14 @@ public class InfoPageElement extends JPanel implements ReloadablePage {
                 buttons[i].addActionListener(_ -> FileUtils.openURI(URI.create(link)));
                 HoverLerp.install(ProfileCardElement.normal, ProfileCardElement.hover, buttons[i]);
                 panel.add(buttons[i]);
-            } catch (URISyntaxException e){
+            } catch (URISyntaxException e) {
                 throw new RuntimeException(e);
             }
         }
         return new JScrollPane(panel, ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
     }
 
-    public JPanel createButtons(){
+    public JPanel createButtons() {
         Dimension dim = new Dimension(175, 40);
         Dimension max = new Dimension(Integer.MAX_VALUE, 40);
 

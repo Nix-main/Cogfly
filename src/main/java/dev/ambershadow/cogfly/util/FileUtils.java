@@ -75,7 +75,7 @@ public class FileUtils {
         return matches;
     }
 
-    public static void deleteFolder(Path folder){
+    public static void deleteFolder(Path folder) {
         if (!Files.exists(folder))
             return;
         try(Stream<Path> walk = Files.walk(folder)) {
@@ -92,7 +92,7 @@ public class FileUtils {
         }
     }
 
-    public static void downloadAndExtract(URL url, Path output){
+    public static void downloadAndExtract(URL url, Path output) {
         try (ZipInputStream zis = new ZipInputStream(url.openStream())) {
             Files.createDirectories(output);
             ZipEntry entry;
@@ -112,11 +112,11 @@ public class FileUtils {
 
             }
             zis.closeEntry();
-        } catch (IOException ignored){}
+        } catch (IOException ignored) {}
     }
 
-    public static void pickFolder(Consumer<Path> callback){
-        switch (Cogfly.getOs()){
+    public static void pickFolder(Consumer<Path> callback) {
+        switch (Cogfly.getOs()) {
             case MAC -> {
                 ProcessBuilder pb = new ProcessBuilder("osascript", "-e", "POSIX path of (choose folder)");
                 readValue(pb).ifPresent((p) -> {
@@ -160,8 +160,8 @@ public class FileUtils {
         }
     }
 
-    public static void pickFile(Consumer<Path> callback, String name, String... extensions){
-        switch (Cogfly.getOs()){
+    public static void pickFile(Consumer<Path> callback, String name, String... extensions) {
+        switch (Cogfly.getOs()) {
             case MAC -> {
                 Set<String> utis = new LinkedHashSet<>();
 
@@ -250,7 +250,7 @@ public class FileUtils {
                 String value = reader.readLine();
                 int exit = p.waitFor();
 
-                if (exit == 1){ // cancelled in zenity/dialog
+                if (exit == 1) { // cancelled in zenity/dialog
                     return Optional.of(Paths.get(""));
                 }
 
@@ -263,7 +263,7 @@ public class FileUtils {
         return Optional.empty();
     }
 
-    public static void openPath(Path path){
+    public static void openPath(Path path) {
         if (!(Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.OPEN)))
             return;
         try {
@@ -273,7 +273,7 @@ public class FileUtils {
         }
     }
 
-    public static void openURI(URI uri){
+    public static void openURI(URI uri) {
         try {
             if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE))
                 Desktop.getDesktop().browse(uri);
@@ -283,7 +283,7 @@ public class FileUtils {
             throw new RuntimeException(e);
         }
     }
-    public static void openSavePath(){
+    public static void openSavePath() {
         if (Files.isDirectory(GameUtils.getSavePath())) {
             try (Stream<Path> stream = Files.list(GameUtils.getSavePath())) {
                 stream.findFirst().ifPresent(FileUtils::openPath);
@@ -295,7 +295,7 @@ public class FileUtils {
         openPath(profile.getPath());
     }
 
-    private static String manualFilePath(boolean invalid, String name, String... extensions){
+    private static String manualFilePath(boolean invalid, String name, String... extensions) {
         StringJoiner filterJoiner = new StringJoiner(",");
         for (String extension : extensions)
             filterJoiner.add("\"" + extension + "\"");

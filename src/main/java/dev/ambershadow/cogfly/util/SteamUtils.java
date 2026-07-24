@@ -33,7 +33,7 @@ public class SteamUtils {
             String val = line.trim().replaceAll("\"", "");
             if (val.matches("\\d+"))
                 isSilk = false;
-            if (val.equals("1030300")){
+            if (val.equals("1030300")) {
                 silksongIndex = i;
                 isSilk = true;
             }
@@ -48,7 +48,7 @@ public class SteamUtils {
             return false;
         if (launchOpts.contains("run_bepinex.sh"))
             return true;
-        if (!Cogfly.settings.finishedSteamPopup){
+        if (!Cogfly.settings.finishedSteamPopup) {
             int opt = JOptionPane.showOptionDialog(FrameManager.getOrCreate().frame,
                     "Cogfly is trying to add " + "\"" + args + "\" to your steam launch arguments, this is necessary for the Launch with Steam setting to work on Mac and Linux. This will not overwrite your existing launch arguments, they will still work. You will not be shown this popup again, but can always modify this value in your settings.",
                     "Steam Launch Args",
@@ -66,7 +66,7 @@ public class SteamUtils {
             return true;
         String val;
         int index;
-        if (launchOptsIndex == -1 || launchOpts.isEmpty()){
+        if (launchOptsIndex == -1 || launchOpts.isEmpty()) {
             String[] vals = lines.get(silksongIndex+2).split("\"");
             vals[1] = "LaunchOptions";
             vals[3] = args + "\"";
@@ -114,7 +114,7 @@ public class SteamUtils {
         };
         if (steamRoot == null) return List.of();
         List<Path> paths = new ArrayList<>();
-        for (int id : getSteamUserIds(steamRoot.resolve("config", "loginusers.vdf"))){
+        for (int id : getSteamUserIds(steamRoot.resolve("config", "loginusers.vdf"))) {
             paths.add(steamRoot.resolve("userdata", id + "/config"));
         }
         return paths;

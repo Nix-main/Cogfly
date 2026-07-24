@@ -35,7 +35,7 @@ public class GameUtils {
 
     public static Path getSavePath() {
         String home = System.getProperty("user.home");
-        return switch (Cogfly.getOs()){
+        return switch (Cogfly.getOs()) {
             case MAC -> Paths.get(home + "/Library/Application Support/unity.Team-Cherry.Silksong/");
             case LINUX -> Paths.get(home + "/.config/unity3d/Team Cherry/Hollow Knight Silksong/");
             case WINDOWS -> Paths.get(home + "\\AppData\\LocalLow\\Team Cherry\\Hollow Knight Silksong\\");
@@ -43,8 +43,8 @@ public class GameUtils {
         };
     }
 
-    public static String getGameExecutable(){
-        return switch (Cogfly.getOs()){
+    public static String getGameExecutable() {
+        return switch (Cogfly.getOs()) {
             case WINDOWS -> "Hollow Knight Silksong.exe";
             case LINUX, MAC -> "run_bepinex.sh";
             default -> "";
@@ -54,7 +54,7 @@ public class GameUtils {
     private static void downloadPack(String version) throws IOException {
         oldPackVersion = "-1";
         Path ver = Cogfly.localDataPath.resolve("pack_version.txt");
-        if (Files.exists(ver)){
+        if (Files.exists(ver)) {
             oldPackVersion = Files.readString(ver);
         }
         pack = Cogfly.localDataPath.resolve("BepInExPack");
@@ -83,7 +83,7 @@ public class GameUtils {
         Files.write(ver, version.getBytes());
     }
 
-    private static void downloadDoorstop(Path path){
+    private static void downloadDoorstop(Path path) {
         if (hasDoorstop(path))
             return;
         try(Stream<Path> files = Files.list(doorstop)) {
@@ -113,7 +113,7 @@ public class GameUtils {
         return exists;
     }
 
-    public static void afterLoad(){
+    public static void afterLoad() {
         try {
             downloadPack(latestPackVer);
         } catch (IOException e) {
@@ -180,16 +180,16 @@ public class GameUtils {
         });
     }
 
-    public static void launchModdedGame(Profile profile){
+    public static void launchModdedGame(Profile profile) {
         Cogfly.logger.info("Attempting to launch game with profile: {}",  profile.getName());
-        if (ModUtils.isDownloading(profile)){
+        if (ModUtils.isDownloading(profile)) {
             JOptionPane.showMessageDialog(FrameManager.getOrCreate().frame, "Downloads are currently in-progress for this profile. Please wait for them to complete before launching.", "Downloads in progress!", JOptionPane.WARNING_MESSAGE);
             return;
         }
         launchGameAsync(true, profile.getBepInExPath().toString(), profile.getGamePath());
     }
 
-    public static void launchGameAsync(boolean enabled, String path, String gamePath){
+    public static void launchGameAsync(boolean enabled, String path, String gamePath) {
         CompletableFuture.runAsync(() -> {
             Cogfly.logger.info("Launching game. OS: {}, BepInExPath: {}, GamePath: {}", Cogfly.getOs(), path, gamePath);
             Path game = Paths.get(gamePath);
@@ -210,10 +210,10 @@ public class GameUtils {
             if (Cogfly.settings.launchWithSteam) {
                 arg = URLEncoder.encode(arg, StandardCharsets.UTF_8);
                 String cmd = "steam://rungameid/1030300//" + arg + "/";
-                if (!gamePath.equals(Cogfly.settings.gamePath)){
+                if (!gamePath.equals(Cogfly.settings.gamePath)) {
                     try {
                         long val = SteamUtils.getSteamIdSafe(game);
-                        if (val == -1){
+                        if (val == -1) {
                             JOptionPane.showMessageDialog(FrameManager.getOrCreate().frame,
                                     "You must add this executable as a non-steam game in your steam client to launch this profile through steam.",
                                     "Missing non-steam game!",
@@ -314,7 +314,7 @@ public class GameUtils {
         return cmds;
     }
 
-    private static Supplier<String> getSupplier(Supplier<InputStream> stream){
+    private static Supplier<String> getSupplier(Supplier<InputStream> stream) {
         return () -> {
             try {
                 return new String(stream.get().readAllBytes());

@@ -16,7 +16,7 @@ import java.util.function.Consumer;
 
 public class FrameManager {
 
-    public static FrameManager getOrCreate(){
+    public static FrameManager getOrCreate() {
         return instance != null ? instance : new FrameManager();
     }
     private static FrameManager instance;
@@ -27,7 +27,7 @@ public class FrameManager {
     public JPanel getPagePanel() {
         return pagePanel;
     }
-    private FrameManager(){
+    private FrameManager() {
         instance = this;
         pagePanel = new JPanel(new CardLayout());
         screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -59,9 +59,9 @@ public class FrameManager {
         }
         Border padding = BorderFactory.createEmptyBorder(0, 0, 5, 0);
         Border color =
-                new MatteBorder(0, 0, 3, 0, UIManager.getColor("Panel.background").darker()){
+                new MatteBorder(0, 0, 3, 0, UIManager.getColor("Panel.background").darker()) {
                     @Override
-                    public void paintBorder(Component c, Graphics g, int x, int y, int width, int height){
+                    public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
                         color = UIManager.getColor("Panel.background").darker();
                         super.paintBorder(c, g, x, y, width, height);
                     }
@@ -75,14 +75,14 @@ public class FrameManager {
     private SelectedPageButtonElement currentPageButton = null;
 
     private CogflyPage currentPage = null;
-    public CogflyPage getCurrentPage(){
+    public CogflyPage getCurrentPage() {
         return currentPage;
     }
     public SelectedPageButtonElement getCurrentPageButton() {
         return currentPageButton;
     }
-    public void setPage(CogflyPage page, SelectedPageButtonElement button){
-        if (page.equals(CogflyPage.SETTINGS)){
+    public void setPage(CogflyPage page, SelectedPageButtonElement button) {
+        if (page.equals(CogflyPage.SETTINGS)) {
             JDialog dialog = new SettingsDialog(frame, "Settings", true);
             dialog.setVisible(true);
         } else {
@@ -108,20 +108,20 @@ public class FrameManager {
 
         private final String pageString;
         private final JPanel page;
-        CogflyPage(String string, JPanel page){
+        CogflyPage(String string, JPanel page) {
             this.pageString = string;
             this.page = page;
             page.setName(string);
         }
 
-        CogflyPage(String string, Consumer<JPanel> action){
+        CogflyPage(String string, Consumer<JPanel> action) {
             this.pageString = string;
             this.page = new JPanel();
             page.setName(string);
             action.accept(page);
         }
 
-        public void reload(){
+        public void reload() {
             if (page instanceof ReloadablePage reload)
                 reload.reload();
         }

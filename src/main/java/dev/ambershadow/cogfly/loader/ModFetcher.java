@@ -30,8 +30,8 @@ public class ModFetcher {
         try (GZIPInputStream gz = new GZIPInputStream(URL.of(URI.create(Url), null).openStream())) {
             StringBuilder v = new StringBuilder();
             JsonArray links = JsonParser.parseString(new String(gz.readAllBytes(), StandardCharsets.UTF_8)).getAsJsonArray();
-            for (JsonElement link : links){
-                try(GZIPInputStream a = new GZIPInputStream(URL.of(URI.create(link.getAsString()), null).openStream())){
+            for (JsonElement link : links) {
+                try(GZIPInputStream a = new GZIPInputStream(URL.of(URI.create(link.getAsString()), null).openStream())) {
                     v.append(new String(a.readAllBytes(), StandardCharsets.UTF_8));
                 }
             }
@@ -62,7 +62,7 @@ public class ModFetcher {
         return all;
     }
 
-    public static List<ModData> getInstalledMods(Path plugins){
+    public static List<ModData> getInstalledMods(Path plugins) {
         List<ModData> installedMods = new ArrayList<>();
         if (!Files.exists(plugins))
             return installedMods;
@@ -122,10 +122,10 @@ public class ModFetcher {
                     installedMods.add(new ModData(path.getFileName().toString(), !path.getFileName().endsWith(".old")));
                 }
             }
-        } catch (IOException e){
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        try (Stream<Path> paths = Files.list(plugins)){
+        try (Stream<Path> paths = Files.list(plugins)) {
             paths
                     .filter(Files::isRegularFile)
                     .filter(path -> path.getFileName().toString().endsWith(".dll")
@@ -135,13 +135,13 @@ public class ModFetcher {
                         installedMods.add(new ModData(path.getFileName().toString(), !path.getFileName().toString().endsWith(".dll.old")));
                     });
         }
-        catch (IOException e){
+        catch (IOException e) {
             throw new RuntimeException(e);
         }
         return installedMods;
     }
 
-    private static int check(Object val, Object md){
+    private static int check(Object val, Object md) {
         return val.equals(md) ? 1 : 0;
     }
     private static String get(JsonObject obj, String key) {
