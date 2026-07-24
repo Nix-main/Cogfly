@@ -4,16 +4,15 @@ import com.formdev.flatlaf.FlatLaf;
 import dev.ambershadow.cogfly.Cogfly;
 import dev.ambershadow.cogfly.elements.profiles.ProfileCardElement;
 import dev.ambershadow.cogfly.elements.settings.*;
-import dev.ambershadow.cogfly.util.GameUtils;
-import dev.ambershadow.cogfly.util.swing.FrameManager;
 import dev.ambershadow.cogfly.profile.ProfileManager;
+import dev.ambershadow.cogfly.util.GameUtils;
 import dev.ambershadow.cogfly.util.Settings;
+import dev.ambershadow.cogfly.util.swing.FrameManager;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-
 import java.nio.file.Path;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -29,6 +28,7 @@ public class SettingsDialog extends JDialog {
         super(parent, name, modal);
         resetQueue();
         setResizable(false);
+
         JPanel panel = new JPanel(new BorderLayout());
         JPanel holder = new JPanel();
         holder.setLayout(new BoxLayout(holder, BoxLayout.Y_AXIS));
@@ -45,6 +45,7 @@ public class SettingsDialog extends JDialog {
         holder.add(new LaunchWithSteamElement(this));
         holder.add(new AllowLaunchArgsElement(this));
         holder.add(new ProfileSourcesPanelElement(this));
+        holder.add(new ResetToDefaultElement(this));
 
         saveButton = new JButton("Apply & Save");
         saveButton.addActionListener(_ -> {
@@ -94,6 +95,13 @@ public class SettingsDialog extends JDialog {
     public void update(Consumer<Settings> v){
         v.accept(queued);
         saveButton.setEnabled(!initial.equals(queued));
+    }
+
+    public void setAndClose(Settings settings){
+        queued = settings;
+        applyAndSave();
+        dispose();
+        resetQueue();
     }
 
 

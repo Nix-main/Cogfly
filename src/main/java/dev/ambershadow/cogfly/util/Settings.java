@@ -29,6 +29,7 @@ public class Settings {
             "Program Files (x86)/GOG Galaxy/Games/Hollow Knight Silksong",
             "Steam/steamapps/common/Hollow Knight Silksong",
             "GOG Galaxy/Games/Hollow Knight Silksong",
+            "SteamLibrary/steamapps/common/Hollow Knight Silksong",
     };
 
     private static JsonObject getData(Path dataJson){
@@ -45,6 +46,7 @@ public class Settings {
         }
         return null;
     }
+
     public static Settings load(Path file) {
         Settings settings = null;
         if (Files.exists(file))
