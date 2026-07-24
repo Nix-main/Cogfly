@@ -1,6 +1,5 @@
 package dev.ambershadow.cogfly.util;
 
-import com.sun.jna.Pointer;
 import com.sun.jna.WString;
 import dev.ambershadow.cogfly.Cogfly;
 import dev.ambershadow.cogfly.profile.Profile;
@@ -189,7 +188,7 @@ public class FileUtils {
                 for (int i = 0; i < extensions.length; i++) {
                     extensions[i] = name + "." + extensions[i];
                 }
-                Pointer pointer = WinUtils.FILE_DIALOGS.tinyfd_openFileDialog(
+                String val = WinUtils.FILE_DIALOGS.tinyfd_openFileDialog(
                         "Select File",
                         null,
                         extensions.length,
@@ -197,9 +196,8 @@ public class FileUtils {
                         "",
                         0
                 );
-                String path;
-                if (pointer != null && !(path = pointer.getString(0, StandardCharsets.UTF_8.name())).isEmpty())
-                    callback.accept(Paths.get(path));
+                if (val != null && !val.isEmpty())
+                    callback.accept(Paths.get(val));
             }
             case LINUX -> {
                 String patterns = Arrays.stream(extensions)

@@ -532,16 +532,16 @@ public class Cogfly {
         );
         if (lines.length > maxLines) {
             stackTrace += System.lineSeparator()
-                    + "... (" + (lines.length - maxLines) + " more lines)";
+                    + String.format(LocaleManager.textMoreLines.get(), lines.length - maxLines);
         }
         int val = JOptionPane.showOptionDialog(
                 FrameManager.getOrCreate().frame,
                 stackTrace,
-                "An error has occurred!",
+                LocaleManager.titleError.get(),
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.ERROR_MESSAGE,
                 null,
-                new Object[]{"Copy To Clipboard", LocaleManager.buttonClose.get()},
+                new Object[]{LocaleManager.buttonCopy, LocaleManager.buttonClose.get()},
                 0);
         if (val == JOptionPane.YES_OPTION) {
             copyString(sw.toString());

@@ -29,7 +29,6 @@ public class WinUtils {
                     Native.load(Native.extractFromResourcePath("wintinyfiledialogs").getAbsolutePath(),
                             WinTinyFileDialogs.class
                     );
-
             String commandKey = "Software\\Classes\\cogfly\\shell\\open\\command";
             Path exe = Paths.get(
                             Cogfly.class.getProtectionDomain()

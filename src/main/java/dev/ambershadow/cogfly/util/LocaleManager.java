@@ -35,11 +35,14 @@ public class LocaleManager {
     public static final Supplier<String> titleError = () -> data.get("title.error").getAsString();
     public static final Supplier<String> titleUpdate = () -> data.get("title.update").getAsString();
 
+    public static final Supplier<String> textMoreLines = () -> data.get("text.more-lines").getAsString();
+
     public static final Supplier<String> messageUpdateAvailable = () -> data.get("message.update-available").getAsString();
 
     public static final Supplier<String> errorProfileNotExist = () -> data.get("error.profile-not-exist").getAsString();
 
-    public static final Supplier<String> buttonSelectFile = () -> data.get("button.select-file").getAsString();
     public static final Supplier<String> buttonClose = () -> data.get("button.close").getAsString();
+    public static final Supplier<String> buttonCopy = () -> data.get("button.copy").getAsString();
+    public static final Supplier<String> buttonSelectFile = () -> data.get("button.select-file").getAsString();
 
 }
