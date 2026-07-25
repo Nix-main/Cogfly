@@ -66,13 +66,23 @@ public class ProfileCardElement extends JPanel {
                 }
                 JPanel pages = FrameManager.getOrCreate().getPagePanel();
                 ProfileOpenPageCardElement panel = new ProfileOpenPageCardElement(profile);
+
                 panel.setName(profile.getName());
-                FrameManager.getOrCreate().getPagePanel().add(panel, profile.getName());
+                pages.add(panel, profile.getName());
                 panel.reload();
-                ((CardLayout)pages.getLayout()).show(pages, profile.getName());
+
+                CardLayout layout = (CardLayout) pages.getLayout();
+                layout.show(pages, profile.getName());
+
                 SelectedPageButtonElement button = FrameManager.getOrCreate().getCurrentPageButton();
-                button.setBackground(UIManager.getColor("Button.background"));
-                button.selected = false;
+
+                if (button != null) {
+                    button.setBackground(UIManager.getColor("Button.background"));
+                    button.selected = false;
+                }
+
+                pages.revalidate();
+                pages.repaint();
             }
         };
 
@@ -202,27 +212,36 @@ public class ProfileCardElement extends JPanel {
             // lowkey this jpanel chain sucks but nothing else was working lol
             JPanel e = new JPanel(new BorderLayout());
             JPanel main = new JPanel();
+            
             main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
-            JPanel holder = new JPanel();
+            main.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+            JPanel holder = new JPanel(new BorderLayout(5, 5));
             holder.add(name, BorderLayout.WEST);
-            holder.add(nameField, BorderLayout.EAST);
-            JPanel extraHolder = new JPanel();
+            holder.add(nameField, BorderLayout.CENTER);
+
+            JPanel extraHolder = new JPanel(new BorderLayout(5, 5));
             extraHolder.add(icon, BorderLayout.WEST);
-            extraHolder.add(button,  BorderLayout.EAST);
+            extraHolder.add(button, BorderLayout.CENTER);
+
             main.add(holder);
+            main.add(Box.createVerticalStrut(8));
             main.add(extraHolder);
             if (Cogfly.settings.profileSpecificPaths) {
-                JPanel holder3 = new JPanel();
+                JPanel holder3 = new JPanel(new BorderLayout(5, 5));
                 holder3.add(pth, BorderLayout.WEST);
-                holder3.add(btn, BorderLayout.EAST);
+                holder3.add(btn, BorderLayout.CENTER);
+                main.add(Box.createVerticalStrut(8));
                 main.add(holder3);
             }
-            main.add(Box.createVerticalStrut(10));
-            e.add(main, BorderLayout.CENTER);
-            e.add(create, BorderLayout.SOUTH);
-            prompt.setSize(new Dimension(500, 180));
-            prompt.setLocationRelativeTo(null);
-            prompt.setContentPane(e);
+
+            JPanel content = new JPanel(new BorderLayout());
+            content.add(main, BorderLayout.CENTER);
+            content.add(create, BorderLayout.SOUTH);
+
+            prompt.setContentPane(content);
+            prompt.pack();
+            prompt.setLocationRelativeTo(FrameManager.getOrCreate().frame);
             prompt.setVisible(true);
         });
 
