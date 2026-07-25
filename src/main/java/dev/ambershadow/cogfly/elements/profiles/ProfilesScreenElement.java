@@ -47,7 +47,6 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
         prompt.setModal(true);
         prompt.setSize(new Dimension(300, 150));
         prompt.setResizable(false);
-        prompt.setLocationRelativeTo(null);
         prompt.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         JPanel holder = new JPanel();
         JLabel name = new JLabel("Name: ");
@@ -74,6 +73,9 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
         prompt.add(holder, BorderLayout.NORTH);
         prompt.add(extraHolder, BorderLayout.CENTER);
         prompt.add(create, BorderLayout.SOUTH);
+
+        prompt.pack();
+        prompt.setLocationRelativeTo(FrameManager.getOrCreate().frame);
         prompt.setVisible(true);
     }
     private final JPanel parentPanel;
