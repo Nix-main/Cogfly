@@ -7,7 +7,7 @@ plugins {
 group = "dev.ambershadow"
 version = property("version") as String
 
-// Java 22 minimum since since project uses unnamed vars/patterns
+// requires Java 22 since since project uses unnamed vars/patterns
 tasks.withType<JavaCompile> {
     options.release.set(22)
 }
