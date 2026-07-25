@@ -65,5 +65,6 @@ public class ManageProfileSourcesDialog extends JDialog {
         buttonWrapper.add(Box.createHorizontalStrut(200));
         buttonWrapper.add(button2, BorderLayout.WEST);
         add(buttonWrapper, BorderLayout.SOUTH);
+        this.pack();
     }
 }
