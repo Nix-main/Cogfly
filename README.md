@@ -38,6 +38,7 @@ Please submit actual information about the bug experienced. Please also submit y
 If you're just looking for a jar file, it can be found in the release artifacts.
 The latest CI build can be retrieved from the workflow, but building manually is very simple.
 
+***Cogfly requires Java 22 or later to compile.***
 
 Windows:
 To build Cogfly on Windows, you'll need both GCC and G++ in your PATH, as they are invoked to compile the Windows file dialog libraries.
