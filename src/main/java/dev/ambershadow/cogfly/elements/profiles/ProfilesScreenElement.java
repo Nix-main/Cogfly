@@ -42,7 +42,7 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
         refreshQueued = true;
     }
 
-    public static void createPrompt(BiConsumer<String, String> consumer, Runnable extra) {
+    public static void createProfilePrompt(BiConsumer<String, String> consumer, Runnable extra) {
         JDialog prompt = new JDialog(FrameManager.getOrCreate().frame);
         prompt.setModal(true);
         prompt.setSize(new Dimension(300, 150));
@@ -162,7 +162,7 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
 
 
         JButton createProfile = new JButton("Create Profile");
-        createProfile.addActionListener(_ -> createPrompt(defaultCallback, () -> {}));
+        createProfile.addActionListener(_ -> createProfilePrompt(defaultCallback, () -> {}));
 
         JButton createShortcut = new JButton("Create Shortcut");
         createShortcut.addActionListener(_ -> {

@@ -227,7 +227,7 @@ public class ProfileCardElement extends JPanel {
         });
 
         copy = new JButton();
-        copy.addActionListener(_ -> ProfilesScreenElement.createPrompt((name, icn) -> Cogfly.runAsync(() -> {
+        copy.addActionListener(_ -> ProfilesScreenElement.createProfilePrompt((name, icn) -> Cogfly.runAsync(() -> {
             try (Stream<Path> files = Files.walk(profile.getPath())) {
                 Files.createDirectory(Path.of(Cogfly.settings.profileSavePath).resolve(name));
                 Path source = Paths.get(icn);
