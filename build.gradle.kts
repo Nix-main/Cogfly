@@ -8,12 +8,6 @@ group = "dev.ambershadow"
 version = property("version") as String
 
 // Java 22 minimum since since project uses unnamed vars/patterns
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(22))
-    }
-}
-
 tasks.withType<JavaCompile> {
     options.release.set(22)
 }
