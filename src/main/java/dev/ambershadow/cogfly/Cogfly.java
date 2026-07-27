@@ -83,16 +83,19 @@ public class Cogfly {
 
         logger = LoggerFactory.getLogger(Cogfly.class);
         logger.info("Initializing...");
-        try (Stream<Path> stream = Files.walk(tempDir)){
-            for (Path path : stream.toList().reversed()){
-                if (!Files.isDirectory(path)){
-                    Cogfly.logger.info("Cogfly previously failed to install {} for profile {}.", path.getFileName(), path.getParent().getFileName());
-                    failedDownloads.computeIfAbsent(path.getParent().getFileName().toString(), k -> new ArrayList<>()).add(path.getFileName().toString().split("\\d")[0]);
+        try {
+            try (Stream<Path> stream = Files.walk(tempDir)){
+                for (Path path : stream.toList().reversed()){
+                    if (!Files.isDirectory(path)){
+                        Cogfly.logger.info("Cogfly previously failed to install {} for profile {}.", path.getFileName(), path.getParent().getFileName());
+                        failedDownloads.computeIfAbsent(path.getParent().getFileName().toString(), k -> new ArrayList<>()).add(path.getFileName().toString().split("\\d")[0]);
+                    }
+                    Files.delete(path);
                 }
-                Files.delete(path);
             }
+        } catch (IOException e) {
+            Files.createDirectory(tempDir);
         }
-        Files.createDirectory(tempDir);
 
         Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
             logger.error("Uncaught exception in thread {}", thread.getName(), throwable);
