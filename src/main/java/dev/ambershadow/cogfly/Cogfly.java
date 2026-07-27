@@ -421,6 +421,8 @@ public class Cogfly {
                     case LINUX -> {
                         if (System.getenv("APPIMAGE") != null)
                             autoUpdateAppImage();
+                        else
+                            JOptionPane.showMessageDialog(FrameManager.getOrCreate().frame, "Cogfly is managed by your system's package manager (apt/dnf/yum). Please run an upgrade through it to update Cogfly.", "No auto-update available.", JOptionPane.INFORMATION_MESSAGE);
                     }
                     case MAC -> autoUpdateMac();
                 }
