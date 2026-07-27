@@ -87,7 +87,7 @@ public class Cogfly {
             for (Path path : stream.toList().reversed()){
                 if (!Files.isDirectory(path)){
                     Cogfly.logger.info("Cogfly previously failed to install {} for profile {}.", path.getFileName(), path.getParent().getFileName());
-                    failedDownloads.computeIfAbsent(path.getParent().getFileName().toString(), k -> new ArrayList<>()).add(path.getFileName().toString());
+                    failedDownloads.computeIfAbsent(path.getParent().getFileName().toString(), k -> new ArrayList<>()).add(path.getFileName().toString().split("\\d")[0]);
                 }
                 Files.delete(path);
             }
@@ -493,7 +493,7 @@ public class Cogfly {
         for (String key : failedDownloads.keySet()) {
             List<String> failed = failedDownloads.get(key);
             if (failed.isEmpty()) continue;
-            String message = failed.size() + " mod" + (failed.size() == 1 ? "" : "s") + "failed to download for profile " + key + " on last launch.";
+            String message = failed.size() + " mod" + (failed.size() == 1 ? " " : "s ") + "failed to download for profile " + key + " on last launch.";
             JOptionPane.showMessageDialog(
                     FrameManager.getOrCreate().frame,
                     message + "\n\n" + String.join("\n", failed),
