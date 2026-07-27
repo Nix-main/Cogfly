@@ -57,23 +57,27 @@ public class GameUtils {
         if (Files.exists(ver)) {
             oldPackVersion = Files.readString(ver);
         }
-        pack = Cogfly.localDataPath.resolve("BepInExPack");
-        doorstop = Cogfly.localDataPath.resolve("doorstop");
-        if (version.equals(oldPackVersion))
+        Path newPack = Cogfly.localDataPath.resolve("BepInExPack");
+        Path newDoorstop = Cogfly.localDataPath.resolve("doorstop");
+        if (version.equals(oldPackVersion)) {
+            pack = newPack;
+            doorstop = newDoorstop;
             return;
-        Path pack = Cogfly.localDataPath.resolve("bex_pack");
-        FileUtils.downloadAndExtract(packUrl, pack);
-        FileUtils.deleteFolder(pack);
-        Files.move(pack.resolve("BepInExPack"), pack);
-        FileUtils.deleteFolder(pack);
-        FileUtils.deleteFolder(doorstop);
-        Files.createDirectory(doorstop);
-        Files.delete(pack.resolve("changelog.txt"));
-        try (Stream<Path> files = Files.list(pack)) {
+        }
+        Path downloadedPack = Cogfly.localDataPath.resolve("bex_pack");
+        FileUtils.deleteFolder(downloadedPack);
+        FileUtils.downloadAndExtract(packUrl, downloadedPack);
+        FileUtils.deleteFolder(newPack);
+        Files.move(downloadedPack.resolve("BepInExPack"), newPack);
+        FileUtils.deleteFolder(downloadedPack);
+        Files.deleteIfExists(newDoorstop);
+        Files.createDirectory(newDoorstop);
+        Files.deleteIfExists(newPack.resolve("changelog.txt"));
+        try (Stream<Path> files = Files.list(newPack)) {
             files.forEach(file -> {
                 if (!Files.isDirectory(file)) {
                     try {
-                        Files.move(file, doorstop.resolve(file.getFileName()));
+                        Files.move(file, newDoorstop.resolve(file.getFileName()));
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
@@ -81,6 +85,10 @@ public class GameUtils {
             });
         }
         Files.write(ver, version.getBytes());
+
+        // only mark the pack as available after it is actually ready
+        pack = newPack;
+        doorstop = newDoorstop;
     }
 
     private static void downloadDoorstop(Path path) {
@@ -126,7 +134,8 @@ public class GameUtils {
     }
 
     public static void downloadBepInEx(Path path) {
-        if (pack == null) {
+        Cogfly.logger.info("downloadBepInEx({})", path);
+        if (pack == null || !Files.exists(pack.resolve("BepInEx"))) {
             queuedPaths.add(path);
             return;
         }
@@ -134,7 +143,7 @@ public class GameUtils {
         if (Files.exists(bepindll))
             return;
         Cogfly.logger.info("{}", path);
-        try(Stream<Path> files = Files.walk(pack.resolve("BepInEx"))) {
+        try (Stream<Path> files = Files.walk(pack.resolve("BepInEx"))) {
             for (Path file : files.toList()) {
                 Path relative = pack.resolve("BepInEx").relativize(file);
                 Path newF = path.resolve("BepInEx").resolve(relative);
@@ -145,9 +154,10 @@ public class GameUtils {
                     continue;
                 if (Files.isDirectory(file)) {
                     Files.createDirectories(newF);
-                    continue;
+                } else {
+                    Files.createDirectories(newF.getParent());
+                    Files.copy(file, newF);
                 }
-                Files.copy(file, newF);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);

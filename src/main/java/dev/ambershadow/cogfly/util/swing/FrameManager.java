@@ -35,7 +35,6 @@ public class FrameManager {
         frame.setTitle("Cogfly - v" + Cogfly.version);
         frame.setMinimumSize(new Dimension(1200, 750));
         frame.setPreferredSize(new Dimension(1200, 750));
-        frame.setLocation(screenSize.width/2-frame.getWidth()/2,screenSize.height/2-frame.getHeight()/2);
         frame.setIconImage(Assets.icon.getAsImage());
         frame.setLayout(new BorderLayout());
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -70,6 +69,9 @@ public class FrameManager {
         topPanel.add(Box.createHorizontalStrut(sidePadding));
         frame.add(pagePanel, BorderLayout.CENTER);
         frame.add(topPanel, BorderLayout.NORTH);
+        frame.pack();
+        frame.setLocation(screenSize.width/2-frame.getWidth()/2,screenSize.height/2-frame.getHeight()/2);
+        frame.setLocationRelativeTo(null);
     }
 
     private SelectedPageButtonElement currentPageButton = null;
