@@ -152,10 +152,20 @@ public class ModData {
         Cogfly.runAsync(() -> {
             try {
                 Files.createDirectories(Cogfly.localDataPath.resolve("icons"));
-                Path path = Cogfly.localDataPath.resolve("icons").resolve(getFullName() + ".png");
+                Path path = Cogfly.localDataPath.resolve("icons").resolve(getFullName() + "-" + getVersionNumber() + ".png");
                 if (Files.exists(path)) {
                     iconBytes = Files.readAllBytes(path);
                 } else {
+                    try(Stream<Path> a = Files.walk(Cogfly.localDataPath.resolve("icons"))){
+                        for (Path p : a.toList()) {
+                            if (p.getFileName().toString().startsWith(getFullName())) {
+                                Files.delete(p);
+                                Cogfly.logger.info("Deleting old icon for {}", getFullName());
+                            }
+                        }
+                    } catch (IOException e){
+                        throw new RuntimeException(e);
+                    }
                     BufferedImage image = ImageIO.read(iconUrl);
                     Image scaled = image.getScaledInstance(128, 128, Image.SCALE_SMOOTH);
                     ByteArrayOutputStream os = new ByteArrayOutputStream();
