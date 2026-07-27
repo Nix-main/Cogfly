@@ -26,7 +26,8 @@ A cross-platform mod manager for [Hollow Knight: Silksong](https://hollowknights
 ## Contributions & Bug Reports
 Contributions can be submitted here:    
 https://github.com/nix-main/Cogfly/pulls    
-All contributions must be written in either Java or Kotlin, as Cogfly is a Java program. It's preferred that pull requests do not add additional libraries/dependencies, but doing so does not immediately disqualify them.
+All contributions must be written in either Java or Kotlin, as Cogfly is a Java program. It's preferred that pull requests do not add additional libraries/dependencies, but doing so does not immediately disqualify them.\
+Please disclose usage of generative ai in pull requests.
 
 Bug reports can be submitted here:  
 https://github.com/nix-main/Cogfly/issues   
@@ -36,16 +37,16 @@ Please submit actual information about the bug experienced. Please also submit y
 If you're just looking for a jar file, it can be found in the release artifacts.
 The latest CI build can be retrieved from the workflow, but building manually is basic.
 
-Windows:
-__To build Cogfly on Windows, you'll need both GCC and G++ in your PATH, as they are invoked to compile the Windows file dialog libraries.__
-I personally use https://www.mingw-w64.org/
-These are not built on Unix.
+Windows:\
+__To build Cogfly on Windows, you'll need both GCC and G++ in your PATH, as they are invoked to compile the Windows file dialog libraries.__\
+I personally use https://www.mingw-w64.org/ \
 `.\gradlew.bat clean shadowJar`
 
-Unix/OSX:
+Unix/OSX:\
+__If you have GCC and G++ on PATH, the windows DLLs will be built so that your jar works on Windows. If not, the build will still succeed, but not work properly on Windows.__\
 `./gradlew clean shadowJar`
 
-The output will be in /build/libs
+The output will be in __/build/libs__
 
 <details>
 <summary><h3>Credits</h3></summary>
