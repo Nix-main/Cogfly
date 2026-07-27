@@ -19,14 +19,28 @@ public class WinUtils {
     public static WinFolderPicker FOLDER_PICKER;
     public static WinTinyFileDialogs FILE_DIALOGS;
 
-    public static void init() {
+    public static void init() throws IOException {
+        Path folder = Cogfly.localDataPath.resolve("winfolderpicker.dll");
+        Path file = Cogfly.localDataPath.resolve("wintinyfiledialogs.dll");
+        if (!Files.exists(folder)){
+            Files.copy(
+                    Cogfly.getResource("/winfolderpicker.dll").openStream(),
+                    folder
+            );
+        }
+        if (!Files.exists(file)){
+            Files.copy(
+                    Cogfly.getResource("/wintinyfiledialogs.dll").openStream(),
+                    file
+            );
+        }
         try {
             FOLDER_PICKER =
-                    Native.load(Native.extractFromResourcePath("winfolderpicker").getAbsolutePath(),
+                    Native.load(folder.toAbsolutePath().toString(),
                             WinFolderPicker.class
                     );
             FILE_DIALOGS =
-                    Native.load(Native.extractFromResourcePath("wintinyfiledialogs").getAbsolutePath(),
+                    Native.load(file.toAbsolutePath().toString(),
                             WinTinyFileDialogs.class
                     );
             String commandKey = "Software\\Classes\\cogfly\\shell\\open\\command";

@@ -149,28 +149,29 @@ public class ModData {
 
         parentObject.get("versions").getAsJsonArray().forEach(v -> totalDownloads += v.getAsJsonObject().get("downloads").getAsInt());
 
-        try {
-            Files.createDirectories(Cogfly.localDataPath.resolve("icons"));
-            Path path = Cogfly.localDataPath.resolve("icons").resolve(getFullName() + ".png");
-            if (Files.exists(path)) {
-                iconBytes = Files.readAllBytes(path);
+        Cogfly.runAsync(() -> {
+            try {
+                Files.createDirectories(Cogfly.localDataPath.resolve("icons"));
+                Path path = Cogfly.localDataPath.resolve("icons").resolve(getFullName() + ".png");
+                if (Files.exists(path)) {
+                    iconBytes = Files.readAllBytes(path);
+                } else {
+                    BufferedImage image = ImageIO.read(iconUrl);
+                    Image scaled = image.getScaledInstance(128, 128, Image.SCALE_SMOOTH);
+                    ByteArrayOutputStream os = new ByteArrayOutputStream();
+                    BufferedImage resized = new BufferedImage(128, 128, BufferedImage.TYPE_INT_ARGB);
+                    Graphics2D g2d = resized.createGraphics();
+                    g2d.drawImage(scaled, 0, 0, null);
+                    g2d.dispose();
+                    ImageIO.write(resized, "png", os);
+                    byte[] bytes = os.toByteArray();
+                    Files.write(path, bytes);
+                    iconBytes = bytes;
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-            else {
-                BufferedImage image = ImageIO.read(iconUrl);
-                Image scaled = image.getScaledInstance(128, 128, Image.SCALE_SMOOTH);
-                ByteArrayOutputStream os = new ByteArrayOutputStream();
-                BufferedImage resized = new BufferedImage(128, 128, BufferedImage.TYPE_INT_ARGB);
-                Graphics2D g2d = resized.createGraphics();
-                g2d.drawImage(scaled, 0, 0, null);
-                g2d.dispose();
-                ImageIO.write(resized, "png", os);
-                byte[] bytes = os.toByteArray();
-                Files.write(path, bytes);
-                iconBytes = bytes;
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        });
     }
     public ModData(JsonObject parentObject) {
         this(parentObject, parentObject.get("versions").getAsJsonArray().get(0).getAsJsonObject());
