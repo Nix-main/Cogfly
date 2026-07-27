@@ -62,11 +62,12 @@ tasks.register("ver") {
         println(project.version)
     }
 }
-
-if (System.getProperty("os.name").lowercase().contains("windows")) {
-    tasks.processResources {
-        dependsOn(compileWinFolderPicker, compileTinyFileDialogs)
-    }
+tasks.processResources {
+    dependsOn(compileWinFolderPicker, compileTinyFileDialogs)
+}
+if (!System.getProperty("os.name").contains("Windows", ignoreCase = true)) {
+    compileTinyFileDialogs.get().isIgnoreExitValue = true
+    compileWinFolderPicker.get().isIgnoreExitValue = true
 }
 
 tasks.shadowJar {
