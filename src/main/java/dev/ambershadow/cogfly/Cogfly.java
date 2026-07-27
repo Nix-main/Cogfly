@@ -70,6 +70,8 @@ public class Cogfly {
     private static String macSha256;
 
     public static Path tempDir;
+
+    private static HashMap<String, List<String>> failedDownloads = new HashMap<>();
     
     public static @SuppressWarnings("unused") void main(String[] args) throws IOException {
         LocaleManager.setLocale(Locale.getDefault());
@@ -77,12 +79,20 @@ public class Cogfly {
         localDataPath = Paths.get(dirs.getUserDataDir("Cogfly", null, ""));
         roamingDataPath = Paths.get(dirs.getUserDataDir("Cogfly", null, "", true));
         tempDir = Paths.get(System.getProperty("java.io.tmpdir"), "cogfly-downloads");
-        FileUtils.deleteFolder(tempDir);
-        Files.createDirectory(tempDir);
         System.setProperty("app.log.dir", localDataPath.resolve("logs").toString());
 
         logger = LoggerFactory.getLogger(Cogfly.class);
         logger.info("Initializing...");
+        try (Stream<Path> stream = Files.walk(tempDir)){
+            for (Path path : stream.toList().reversed()){
+                if (!Files.isDirectory(path)){
+                    Cogfly.logger.info("Cogfly previously failed to install {} for profile {}.", path.getFileName(), path.getParent().getFileName());
+                    failedDownloads.computeIfAbsent(path.getParent().getFileName().toString(), k -> new ArrayList<>()).add(path.getFileName().toString());
+                }
+                Files.delete(path);
+            }
+        }
+        Files.createDirectory(tempDir);
 
         Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
             logger.error("Uncaught exception in thread {}", thread.getName(), throwable);
@@ -479,6 +489,19 @@ public class Cogfly {
                     JOptionPane.WARNING_MESSAGE
             );
         }
+
+        for (String key : failedDownloads.keySet()) {
+            List<String> failed = failedDownloads.get(key);
+            if (failed.isEmpty()) continue;
+            String message = failed.size() + " mod" + (failed.size() == 1 ? "" : "s") + "failed to download for profile " + key + " on last launch.";
+            JOptionPane.showMessageDialog(
+                    FrameManager.getOrCreate().frame,
+                    message + "\n\n" + String.join("\n", failed),
+                    "Failed to download mods",
+                    JOptionPane.WARNING_MESSAGE
+            );
+        }
+        failedDownloads = null;
     }
 
     private static void addPathPanel(String text, String text2, boolean ia, Supplier<String> def, Consumer<JButton> set, BiConsumer<JButton, JButton> a, JDialog prompt) {

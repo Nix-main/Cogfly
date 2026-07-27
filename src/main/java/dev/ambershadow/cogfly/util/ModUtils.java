@@ -211,7 +211,9 @@ public class ModUtils {
         getActiveDownloads(profile).addAndGet(totalBytes);
         getTotalDownloads(profile).addAndGet(totalBytes);
         SwingUtilities.invokeLater(() -> ModPanelElement.setProgressBar(profile));
-        Path temp = Files.createTempFile(Cogfly.tempDir, fullName, ".zip");
+        Path dir = Cogfly.tempDir.resolve(profile.getName());
+        Files.createDirectories(dir);
+        Path temp = Files.createTempFile(dir, fullName, ".zip");
         Cogfly.logger.info("Downloading {} ({} bytes) to {}", fullName, totalBytes, temp);
         byte[] buffer = new byte[8192];
         int n;
