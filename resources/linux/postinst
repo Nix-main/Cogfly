@@ -23,7 +23,6 @@ package_type=deb
 case "$1" in
     configure)
 xdg-desktop-menu install /opt/cogfly/lib/cogfly-Cogfly.desktop
-ln -sf /opt/cogfly/bin/Cogfly /usr/local/bin/cogfly
 curl -fsSL https://apt.ambershadow.dev/repo.gpg -o /usr/share/keyrings/cogfly.gpg
 curl -fsSL https://apt.ambershadow.dev/cogfly.sources -o /etc/apt/sources.list.d/cogfly.sources
 apt-get update || true

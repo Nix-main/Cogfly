@@ -91,6 +91,7 @@ jobs:
             --dest output/${{ runner.os }} \
             --resource-dir resources/linux \
             --verbose
+            --linux-shortcut
 
       - name: Build RPM
         if: runner.os == 'Linux'
@@ -107,6 +108,7 @@ jobs:
             --dest output/${{ runner.os }} \
             --resource-dir resources/linux \
             --verbose
+            --linux-shortcut
 
       - name: Build APPIMAGE
         if: runner.os == 'Linux'
