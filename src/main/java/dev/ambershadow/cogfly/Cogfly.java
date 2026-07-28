@@ -83,13 +83,15 @@ public class Cogfly {
 
         logger = LoggerFactory.getLogger(Cogfly.class);
         logger.info("Initializing...");
-        try (Stream<Path> stream = Files.walk(tempDir)){
-            for (Path path : stream.toList().reversed()){
-                if (!Files.isDirectory(path)){
-                    Cogfly.logger.info("Cogfly previously failed to install {} for profile {}.", path.getFileName(), path.getParent().getFileName());
-                    failedDownloads.computeIfAbsent(path.getParent().getFileName().toString(), k -> new ArrayList<>()).add(path.getFileName().toString().split("\\d")[0]);
+        if (Files.exists(tempDir)) {
+            try (Stream<Path> stream = Files.walk(tempDir)) {
+                for (Path path : stream.toList().reversed()) {
+                    if (!Files.isDirectory(path)) {
+                        Cogfly.logger.info("Cogfly previously failed to install {} for profile {}.", path.getFileName(), path.getParent().getFileName());
+                        failedDownloads.computeIfAbsent(path.getParent().getFileName().toString(), k -> new ArrayList<>()).add(path.getFileName().toString().split("\\d")[0]);
+                    }
+                    Files.delete(path);
                 }
-                Files.delete(path);
             }
         }
         Files.createDirectory(tempDir);
