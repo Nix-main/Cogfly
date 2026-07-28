@@ -90,7 +90,7 @@ jobs:
             --app-version ${{ env.ver }} \
             --dest output/${{ runner.os }} \
             --resource-dir resources/linux \
-            --verbose
+            --verbose \
             --linux-shortcut
 
       - name: Build RPM
@@ -107,7 +107,7 @@ jobs:
             --app-version ${{ env.ver }} \
             --dest output/${{ runner.os }} \
             --resource-dir resources/linux \
-            --verbose
+            --verbose \
             --linux-shortcut
 
       - name: Build APPIMAGE
