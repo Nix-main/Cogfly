@@ -31,9 +31,10 @@ val compileWinFolderPicker by tasks.register("compileWinFolderPicker") {
     doFirst { mkdir("${layout.buildDirectory.get()}/native") }
     doLast {
         try {
+            val s = if (System.getProperty("os.name").contains("Windows", ignoreCase = true)) "g++" else "x86_64-w64-mingw32-g++"
             providers.exec {
                 commandLine(
-                    "g++",
+                    s,
                     "-shared",
                     "-o",
                     "${layout.buildDirectory.get()}/native/winfolderpicker.dll",
@@ -45,6 +46,7 @@ val compileWinFolderPicker by tasks.register("compileWinFolderPicker") {
         } catch (e: Exception) {
             if (System.getProperty("os.name").contains("Windows", ignoreCase = true))
                 throw e
+            throw e
         }
     }
 }
@@ -52,9 +54,10 @@ val compileTinyFileDialogs = tasks.register("compileTinyFileDialogs") {
     doFirst { mkdir("${layout.buildDirectory.get()}/native") }
     doLast {
         try {
+            val s = if (System.getProperty("os.name").contains("Windows", ignoreCase = true)) "gcc" else "x86_64-w64-mingw32-gcc"
             providers.exec {
                 commandLine(
-                    "gcc",
+                    s,
                     "-shared",
                     "-o",
                     "${layout.buildDirectory.get()}/native/wintinyfiledialogs.dll",

@@ -43,7 +43,7 @@ I personally use https://www.mingw-w64.org/ \
 `.\gradlew.bat clean shadowJar`
 
 Unix/OSX:\
-__If you have GCC and G++ on PATH, the windows DLLs will be built so that your jar works on Windows. If not, the build will still succeed, but not work properly on Windows.__\
+__To build a cross-platform jar that works on Windows, you need MinGW-w64 on your PATH. If you do not have this, the Windows file dialog libraries will be skipped.__\
 `./gradlew clean shadowJar`
 
 The output will be in __/build/libs__
