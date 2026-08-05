@@ -13,8 +13,8 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 public class Settings {
 
@@ -72,7 +72,7 @@ public class Settings {
     public String theme = FlatNordIJTheme.class.getName();
     public String gamePath = findDefaultPath();
     public String profileSavePath = Cogfly.roamingDataPath.resolve("profiles").toString();
-    public final List<String> profileSources = new ArrayList<>();
+    public final Set<String> profileSources = new HashSet<>();
     public boolean baseGameEnabled = false;
     public boolean modNameSpaces = true;
     public int scrollingIncrement = 16;

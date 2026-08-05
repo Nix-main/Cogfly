@@ -13,6 +13,7 @@ import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -112,9 +113,10 @@ public class SettingsDialog extends JDialog {
             throw new RuntimeException(e);
         }
         FrameManager.getOrCreate().getCurrentPageButton().setBackground(ProfileCardElement.hover.get());
+        if (!Objects.equals(queued.profileSavePath, initial.profileSavePath))
+            queued.profileSources.add(initial.profileSavePath);
         Cogfly.settings = queued;
-        if (!queued.profileSources.equals(initial.profileSources))
-            ProfileManager.loadProfiles();
+        ProfileManager.loadProfiles();
         if (queued.baseGameEnabled)
             GameUtils.downloadBepInEx(Path.of(queued.gamePath));
         SwingUtilities.invokeLater(ModPanelElement::redrawAll);
