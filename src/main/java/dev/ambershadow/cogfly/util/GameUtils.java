@@ -250,7 +250,8 @@ public class GameUtils {
                         try {
                             for (Path config : SteamUtils.getSteamFolders()) {
                                 Path vdf = config.resolve("localconfig.vdf");
-                                boolean argsSet = SteamUtils.setLaunchArgs(vdf, "/bin/sh \\\"" + game.resolve("run_bepinex.sh").toAbsolutePath() + "\\\"");
+                                String prefix = Cogfly.isMac() ? "/usr/bin/arch -x86_64 " : "";
+                                boolean argsSet = SteamUtils.setLaunchArgs(vdf, prefix + "/bin/sh \\\"" + game.resolve("run_bepinex.sh").toAbsolutePath() + "\\\"");
                                 if (argsSet)
                                     break;
                             }
