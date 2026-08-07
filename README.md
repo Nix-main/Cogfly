@@ -39,7 +39,6 @@ The latest CI build can be retrieved from the workflow, but building manually is
 
 Windows:\
 __To build Cogfly on Windows, you'll need both GCC and G++ in your PATH, as they are invoked to compile the Windows file dialog libraries.__\
-I personally use https://www.mingw-w64.org/ \
 `.\gradlew.bat clean shadowJar`
 
 Unix/OSX:\
@@ -54,7 +53,9 @@ The output will be in __/build/libs__
 Nix herself very likely did anything not listed here.
 
 - Art
-    - [Jngo](https://github.com/jngo102) - Main icon on the info page
+    - [Jngo](https://github.com/jngo102) - Main icon on the info 
+- Reese
+    - [Slaurent](https://github.com/slaurent22) - Pictures of his lovely cat 
 - Contributions
     - [Hien Ngo](https://github.com/hien-ngo29) 
       - RPM build in the workflow
