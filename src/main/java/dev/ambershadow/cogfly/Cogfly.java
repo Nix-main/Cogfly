@@ -272,7 +272,7 @@ public class Cogfly {
 
     private static void autoUpdateAppImage() throws IOException {
         new ProcessBuilder(
-                "bash", localDataPath.resolve("updater.sh").toString(),
+                "bash", localDataPath.resolve("updater").resolve("updater.sh").toString(),
                 ProcessHandle.current().pid() + "",
                 localDataPath.resolve("appimageupdatetool-x86_64.appimage").toString()
         ).start();
@@ -281,7 +281,7 @@ public class Cogfly {
 
     private static void autoUpdateMac() throws IOException {
         new ProcessBuilder(
-                localDataPath.resolve("updater_mac.sh").toString(),
+                localDataPath.resolve("updater").resolve("updater_mac.sh").toString(),
                 ProcessHandle.current().pid() + "",
                 String.format("https://ambershadow.dev/Cogfly-%s.dmg", version),
                 macSha256
