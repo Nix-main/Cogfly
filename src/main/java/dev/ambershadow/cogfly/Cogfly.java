@@ -71,9 +71,7 @@ public class Cogfly {
     public static boolean showUnknownHost;
     private static String windowsSha256;
     private static String macSha256;
-
     public static Path tempDir;
-
     private static HashMap<String, List<String>> failedDownloads = new HashMap<>();
     
     public static @SuppressWarnings("unused") void main(String[] args) throws IOException {
