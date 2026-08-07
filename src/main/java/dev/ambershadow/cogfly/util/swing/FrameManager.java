@@ -1,4 +1,4 @@
-package dev.ambershadow.cogfly.util;
+package dev.ambershadow.cogfly.util.swing;
 
 import dev.ambershadow.cogfly.Cogfly;
 import dev.ambershadow.cogfly.asset.Assets;
@@ -16,7 +16,7 @@ import java.util.function.Consumer;
 
 public class FrameManager {
 
-    public static FrameManager getOrCreate(){
+    public static FrameManager getOrCreate() {
         return instance != null ? instance : new FrameManager();
     }
     private static FrameManager instance;
@@ -27,7 +27,7 @@ public class FrameManager {
     public JPanel getPagePanel() {
         return pagePanel;
     }
-    private FrameManager(){
+    private FrameManager() {
         instance = this;
         pagePanel = new JPanel(new CardLayout());
         screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -35,7 +35,6 @@ public class FrameManager {
         frame.setTitle("Cogfly - v" + Cogfly.version);
         frame.setMinimumSize(new Dimension(1200, 750));
         frame.setPreferredSize(new Dimension(1200, 750));
-        frame.setLocation(screenSize.width/2-frame.getWidth()/2,screenSize.height/2-frame.getHeight()/2);
         frame.setIconImage(Assets.icon.getAsImage());
         frame.setLayout(new BorderLayout());
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -59,9 +58,9 @@ public class FrameManager {
         }
         Border padding = BorderFactory.createEmptyBorder(0, 0, 5, 0);
         Border color =
-                new MatteBorder(0, 0, 3, 0, UIManager.getColor("Panel.background").darker()){
+                new MatteBorder(0, 0, 3, 0, UIManager.getColor("Panel.background").darker()) {
                     @Override
-                    public void paintBorder(Component c, Graphics g, int x, int y, int width, int height){
+                    public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
                         color = UIManager.getColor("Panel.background").darker();
                         super.paintBorder(c, g, x, y, width, height);
                     }
@@ -70,19 +69,22 @@ public class FrameManager {
         topPanel.add(Box.createHorizontalStrut(sidePadding));
         frame.add(pagePanel, BorderLayout.CENTER);
         frame.add(topPanel, BorderLayout.NORTH);
+        frame.pack();
+        frame.setLocation(screenSize.width/2-frame.getWidth()/2,screenSize.height/2-frame.getHeight()/2);
+        frame.setLocationRelativeTo(null);
     }
 
     private SelectedPageButtonElement currentPageButton = null;
 
     private CogflyPage currentPage = null;
-    public CogflyPage getCurrentPage(){
+    public CogflyPage getCurrentPage() {
         return currentPage;
     }
     public SelectedPageButtonElement getCurrentPageButton() {
         return currentPageButton;
     }
-    public void setPage(CogflyPage page, SelectedPageButtonElement button){
-        if (page.equals(CogflyPage.SETTINGS)){
+    public void setPage(CogflyPage page, SelectedPageButtonElement button) {
+        if (page.equals(CogflyPage.SETTINGS)) {
             JDialog dialog = new SettingsDialog(frame, "Settings", true);
             dialog.setVisible(true);
         } else {
@@ -97,7 +99,7 @@ public class FrameManager {
             }
             currentPageButton = button;
             currentPageButton.selected = true;
-            currentPageButton.setBackground(ProfileCardElement.hover);
+            currentPageButton.setBackground(ProfileCardElement.hover.get());
         }
     }
     public enum CogflyPage {
@@ -108,20 +110,20 @@ public class FrameManager {
 
         private final String pageString;
         private final JPanel page;
-        CogflyPage(String string, JPanel page){
+        CogflyPage(String string, JPanel page) {
             this.pageString = string;
             this.page = page;
             page.setName(string);
         }
 
-        CogflyPage(String string, Consumer<JPanel> action){
+        CogflyPage(String string, Consumer<JPanel> action) {
             this.pageString = string;
             this.page = new JPanel();
             page.setName(string);
             action.accept(page);
         }
 
-        public void reload(){
+        public void reload() {
             if (page instanceof ReloadablePage reload)
                 reload.reload();
         }

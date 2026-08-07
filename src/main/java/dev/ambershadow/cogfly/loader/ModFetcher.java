@@ -7,15 +7,14 @@ import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import dev.ambershadow.cogfly.Cogfly;
 
-import javax.swing.*;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.List;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 
@@ -28,11 +27,16 @@ public class ModFetcher {
         List<JsonObject> all = new ArrayList<>();
         String content;
         boolean found = false;
-        try (GZIPInputStream gzip = new GZIPInputStream(URL.of(URI.create(Url), null).openStream());
-             GZIPInputStream gzip1 = new GZIPInputStream(URL.of(URI.create(new String(gzip.readAllBytes()).split("\"")[1]), null).openStream())
-        ) {
-            content = new String(gzip1.readAllBytes());
+        try (GZIPInputStream gz = new GZIPInputStream(URL.of(URI.create(Url), null).openStream())) {
+            StringBuilder v = new StringBuilder();
+            JsonArray links = JsonParser.parseString(new String(gz.readAllBytes(), StandardCharsets.UTF_8)).getAsJsonArray();
+            for (JsonElement link : links) {
+                try(GZIPInputStream a = new GZIPInputStream(URL.of(URI.create(link.getAsString()), null).openStream())) {
+                    v.append(new String(a.readAllBytes(), StandardCharsets.UTF_8));
+                }
+            }
             found = true;
+            content = v.toString();
             Files.writeString(cache, content);
         }
         catch (UnknownHostException unknown) {
@@ -57,7 +61,8 @@ public class ModFetcher {
         ModData.rawModData = all;
         return all;
     }
-    public static List<ModData> getInstalledMods(Path plugins){
+
+    public static List<ModData> getInstalledMods(Path plugins) {
         List<ModData> installedMods = new ArrayList<>();
         if (!Files.exists(plugins))
             return installedMods;
@@ -111,16 +116,16 @@ public class ModFetcher {
                                 }
                             }
                             installedMods.add(new ModData(name + " (manual)", author, dependencies, verion, description, website));
-                            continue;
                         }
                     }
+                } else {
+                    installedMods.add(new ModData(path.getFileName().toString(), !path.getFileName().endsWith(".old")));
                 }
-                installedMods.add(new ModData(path.getFileName().toString(), !path.getFileName().endsWith(".old")));
             }
-        } catch (IOException e){
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        try (Stream<Path> paths = Files.list(plugins)){
+        try (Stream<Path> paths = Files.list(plugins)) {
             paths
                     .filter(Files::isRegularFile)
                     .filter(path -> path.getFileName().toString().endsWith(".dll")
@@ -130,13 +135,13 @@ public class ModFetcher {
                         installedMods.add(new ModData(path.getFileName().toString(), !path.getFileName().toString().endsWith(".dll.old")));
                     });
         }
-        catch (IOException e){
+        catch (IOException e) {
             throw new RuntimeException(e);
         }
         return installedMods;
     }
 
-    private static int check(Object val, Object md){
+    private static int check(Object val, Object md) {
         return val.equals(md) ? 1 : 0;
     }
     private static String get(JsonObject obj, String key) {

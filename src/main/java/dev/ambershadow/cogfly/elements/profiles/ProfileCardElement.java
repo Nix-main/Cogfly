@@ -7,7 +7,11 @@ import dev.ambershadow.cogfly.asset.Assets;
 import dev.ambershadow.cogfly.asset.CogflyAsset;
 import dev.ambershadow.cogfly.elements.SelectedPageButtonElement;
 import dev.ambershadow.cogfly.loader.ModData;
+import dev.ambershadow.cogfly.profile.Profile;
+import dev.ambershadow.cogfly.profile.ProfileManager;
 import dev.ambershadow.cogfly.util.*;
+import dev.ambershadow.cogfly.util.swing.FrameManager;
+import dev.ambershadow.cogfly.util.swing.HoverLerp;
 
 import javax.swing.*;
 import java.awt.*;
@@ -19,12 +23,13 @@ import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public class ProfileCardElement extends JPanel {
 
-    public static Color normal = UIManager.getColor("Button.background").darker();
-    public static Color hover = UIManager.getColor("Button.pressedBackground");
+    public static final Supplier<Color> normal = () -> UIManager.getColor("Button.background").darker();
+    public static final Supplier<Color> hover = () -> FlatLaf.isLafDark() ? UIManager.getColor("Button.pressedBackground").brighter() : UIManager.getColor("Button.pressedBackground").darker();
 
     private JPanel buttonPanel;
     private JPanel south;
@@ -51,7 +56,7 @@ public class ProfileCardElement extends JPanel {
         add(nameLabel, BorderLayout.NORTH);
         createButtons();
 
-        setBackground(normal);
+        setBackground(normal.get());
         MouseAdapter mouseHandler = new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -61,13 +66,23 @@ public class ProfileCardElement extends JPanel {
                 }
                 JPanel pages = FrameManager.getOrCreate().getPagePanel();
                 ProfileOpenPageCardElement panel = new ProfileOpenPageCardElement(profile);
+
                 panel.setName(profile.getName());
-                FrameManager.getOrCreate().getPagePanel().add(panel, profile.getName());
+                pages.add(panel, profile.getName());
                 panel.reload();
-                ((CardLayout)pages.getLayout()).show(pages, profile.getName());
+
+                CardLayout layout = (CardLayout) pages.getLayout();
+                layout.show(pages, profile.getName());
+
                 SelectedPageButtonElement button = FrameManager.getOrCreate().getCurrentPageButton();
-                button.setBackground(UIManager.getColor("Button.background"));
-                button.selected = false;
+
+                if (button != null) {
+                    button.setBackground(UIManager.getColor("Button.background"));
+                    button.selected = false;
+                }
+
+                pages.revalidate();
+                pages.repaint();
             }
         };
 
@@ -84,10 +99,10 @@ public class ProfileCardElement extends JPanel {
                 SwingUtilities.invokeLater(this::updateColors);
             }
         });
-        HoverLerp.install(() -> normal, () -> hover, this, south, buttonPanel);
+        HoverLerp.install(normal, hover, this, south, buttonPanel);
     }
 
-    private void updateIcons(){
+    private void updateIcons() {
         CogflyAsset[] profileIcons = Assets.getProfileIcons();
         SVGIcon[] icons = new SVGIcon[profileIcons.length];
         for (int i = 0; i < profileIcons.length; i++) {
@@ -108,7 +123,7 @@ public class ProfileCardElement extends JPanel {
         remove.setIcon(icons[3]);
     }
 
-    private void createButtons(){
+    private void createButtons() {
         buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
         launch = new JButton();
         launch.addActionListener(_ -> {
@@ -131,17 +146,17 @@ public class ProfileCardElement extends JPanel {
                 if (result == JOptionPane.YES_OPTION) {
                     List<CompletableFuture<Void>> voids = new ArrayList<>();
                     for (ModData modData : outdated) {
-                        voids.add(CompletableFuture.runAsync(() -> Utils.downloadLatestMod(
+                        voids.add(Cogfly.runAsync(() -> ModUtils.downloadLatestMod(
                                 ModData.getMod(modData.getFullName()),
                                 profile,
                                 false
                         )));
                     }
-                    CompletableFuture.allOf(voids.toArray(CompletableFuture[]::new)).thenRun(() -> Utils.launchModdedGame(profile)).join();
+                    CompletableFuture.allOf(voids.toArray(CompletableFuture[]::new)).thenRun(() -> GameUtils.launchModdedGame(profile)).join();
                     return;
                 }
             }
-            Utils.launchModdedGame(profile);
+            GameUtils.launchModdedGame(profile);
         });
 
         edit = new JButton();
@@ -160,25 +175,25 @@ public class ProfileCardElement extends JPanel {
             JButton create = new JButton("Update");
 
             nameField.getDocument().addDocumentListener(new ProfilesScreenElement.NameDocumentListener(nameField, create));
-            button.addActionListener(_ -> Utils.pickFile((path) -> button.setText(path.toString()), "*", "png", "jpg", "jpeg", "gif"));
+            button.addActionListener(_ -> FileUtils.pickFile((path) -> button.setText(path.toString()), "*", "png", "jpg", "jpeg", "gif"));
 
             JLabel pth = new JLabel("Path: ");
             JButton btn = new JButton(profile.getGamePath());
             nameField.getDocument().addDocumentListener(new ProfilesScreenElement.NameDocumentListener(nameField, create));
-            button.addActionListener(_ -> Utils.pickFile((path) -> btn.setText(path.toString()), "Hollow Knight Silksong", "png", "jpg", "jpeg", "gif"));
+            button.addActionListener(_ -> FileUtils.pickFile((path) -> btn.setText(path.toString()), "Hollow Knight Silksong", "png", "jpg", "jpeg", "gif"));
 
             create.addActionListener(_ -> {
                 if ((profile.getIconPath() == null || !button.getText().equals(profile.getIconPath().toString()))
-                && !button.getText().equals("Click here to select a file")){
+                && !button.getText().equals("Click here to select a file")) {
                     ProfileManager.changeIcon(profile, button.getText());
                 }
                 if (!btn.getText().equals(profile.getGamePath())) {
                     profile.setGamePath(btn.getText());
                 }
-                if (btn.getText().equals(Cogfly.settings.gamePath)){
+                if (btn.getText().equals(Cogfly.settings.gamePath)) {
                     profile.resetGamePath();
                 }
-                if (!nameField.getText().equals(profile.getName())){
+                if (!nameField.getText().equals(profile.getName())) {
                     try {
                         Files.move(profile.getPath(), Path.of(Cogfly.settings.profileSavePath).resolve(nameField.getText()), StandardCopyOption.ATOMIC_MOVE);
                     } catch (IOException e) {
@@ -197,32 +212,41 @@ public class ProfileCardElement extends JPanel {
             // lowkey this jpanel chain sucks but nothing else was working lol
             JPanel e = new JPanel(new BorderLayout());
             JPanel main = new JPanel();
+            
             main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
-            JPanel holder = new JPanel();
+            main.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+            JPanel holder = new JPanel(new BorderLayout(5, 5));
             holder.add(name, BorderLayout.WEST);
-            holder.add(nameField, BorderLayout.EAST);
-            JPanel extraHolder = new JPanel();
+            holder.add(nameField, BorderLayout.CENTER);
+
+            JPanel extraHolder = new JPanel(new BorderLayout(5, 5));
             extraHolder.add(icon, BorderLayout.WEST);
-            extraHolder.add(button,  BorderLayout.EAST);
+            extraHolder.add(button, BorderLayout.CENTER);
+
             main.add(holder);
+            main.add(Box.createVerticalStrut(8));
             main.add(extraHolder);
             if (Cogfly.settings.profileSpecificPaths) {
-                JPanel holder3 = new JPanel();
+                JPanel holder3 = new JPanel(new BorderLayout(5, 5));
                 holder3.add(pth, BorderLayout.WEST);
-                holder3.add(btn, BorderLayout.EAST);
+                holder3.add(btn, BorderLayout.CENTER);
+                main.add(Box.createVerticalStrut(8));
                 main.add(holder3);
             }
-            main.add(Box.createVerticalStrut(10));
-            e.add(main, BorderLayout.CENTER);
-            e.add(create, BorderLayout.SOUTH);
-            prompt.setSize(new Dimension(500, 180));
-            prompt.setLocationRelativeTo(null);
-            prompt.setContentPane(e);
+
+            JPanel content = new JPanel(new BorderLayout());
+            content.add(main, BorderLayout.CENTER);
+            content.add(create, BorderLayout.SOUTH);
+
+            prompt.setContentPane(content);
+            prompt.pack();
+            prompt.setLocationRelativeTo(FrameManager.getOrCreate().frame);
             prompt.setVisible(true);
         });
 
         copy = new JButton();
-        copy.addActionListener(_ -> ProfilesScreenElement.createPrompt((name, icn) -> CompletableFuture.runAsync(() -> {
+        copy.addActionListener(_ -> ProfilesScreenElement.createProfilePrompt((name, icn) -> Cogfly.runAsync(() -> {
             try (Stream<Path> files = Files.walk(profile.getPath())) {
                 Files.createDirectory(Path.of(Cogfly.settings.profileSavePath).resolve(name));
                 Path source = Paths.get(icn);
@@ -246,7 +270,7 @@ public class ProfileCardElement extends JPanel {
         }).whenComplete((_, e) -> {
             if (e != null) {
                 Cogfly.logger.error("", e);
-                Utils.throwNonFatalError(e);
+                Cogfly.throwNonFatalError(e);
             }
             ProfileManager.loadProfiles();
             ProfilesScreenElement.queueRefresh();
@@ -266,8 +290,10 @@ public class ProfileCardElement extends JPanel {
                 ProfilesScreenElement.queueRefresh();
             }
         });
-        if (profile.getPath().equals(Paths.get(Cogfly.settings.gamePath))){
+        if (profile.getPath().equals(Paths.get(Cogfly.settings.gamePath))) {
             remove.setEnabled(false);
+            edit.setEnabled(false);
+            copy.setEnabled(false);
         }
         buttonPanel.add(launch);
         buttonPanel.add(edit);
@@ -280,12 +306,9 @@ public class ProfileCardElement extends JPanel {
     }
 
     void updateColors() {
-        normal = UIManager.getColor("Button.background").darker();
-        Color base = UIManager.getColor("Button.pressedBackground");
-        hover = FlatLaf.isLafDark() ? base.brighter() : base.darker();
-        setBackground(normal);
-        south.setBackground(normal);
-        buttonPanel.setBackground(normal);
+        setBackground(normal.get());
+        south.setBackground(normal.get());
+        buttonPanel.setBackground(normal.get());
         updateIcons();
         repaint();
     }

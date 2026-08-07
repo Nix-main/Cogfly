@@ -4,7 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import dev.ambershadow.cogfly.Cogfly;
-import dev.ambershadow.cogfly.util.Profile;
+import dev.ambershadow.cogfly.profile.Profile;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -42,22 +42,22 @@ public class ModData {
         return new ModData(parent, targetVersion[0]);
     }
 
-    public static ModData getModByName(String name){
+    public static ModData getModByName(String name) {
         return Cogfly.mods.values().stream().filter(mod -> mod.getName().equals(name)).findFirst().orElse(null);
     }
 
-    public static ModData getModAtVersion(String fullName, String version){
+    public static ModData getModAtVersion(String fullName, String version) {
         Optional<JsonObject> mod = rawModData.stream()
                 .filter(obj -> obj.get("full_name")
                         .getAsString().equals(fullName)).findFirst();
         return mod.map(jsonObject -> getModAtVersion(jsonObject, version)).orElse(null);
     }
 
-    public static ModData getMod(String fullName){
+    public static ModData getMod(String fullName) {
         return Cogfly.mods.getOrDefault(fullName, null);
     }
 
-    public static ModData getMod(ModData other){
+    public static ModData getMod(ModData other) {
         return getMod(other.getFullName());
     }
 
@@ -118,7 +118,7 @@ public class ModData {
     private final URI websiteUrl;
     private byte[] iconBytes;
     private ImageIcon cachedIcon;
-    private ModData(JsonObject parentObject, JsonObject version){
+    private ModData(JsonObject parentObject, JsonObject version) {
         rawObj = parentObject;
         name = parentObject.get("name").getAsString();
         author = parentObject.get("owner").getAsString();
@@ -128,11 +128,11 @@ public class ModData {
         dateCreated = parentObject.get("date_created").getAsString();
         try {
             iconUrl = URL.of(URI.create(version.get("icon").getAsString()), null);
-        } catch (MalformedURLException ignored){}
+        } catch (MalformedURLException ignored) {}
         // thunderstore URLs won't be malformed
         try {
             downloadUrl = URL.of(URI.create(version.get("download_url").getAsString()), null);
-        } catch (MalformedURLException ignored){}
+        } catch (MalformedURLException ignored) {}
         // thunderstore URLs won't be malformed
         packageUrl = URI.create(parentObject.get("package_url").getAsString());
         String website = version.get("website_url").getAsString();
@@ -149,40 +149,49 @@ public class ModData {
 
         parentObject.get("versions").getAsJsonArray().forEach(v -> totalDownloads += v.getAsJsonObject().get("downloads").getAsInt());
 
-        try {
-            Files.createDirectories(Cogfly.localDataPath.resolve("icons"));
-            Path path = Cogfly.localDataPath.resolve("icons").resolve(getFullName() + ".png");
-            if (Files.exists(path)){
-                iconBytes = Files.readAllBytes(path);
+        Cogfly.runAsync(() -> {
+            try {
+                Files.createDirectories(Cogfly.localDataPath.resolve("icons"));
+                Path path = Cogfly.localDataPath.resolve("icons").resolve(getFullName() + "-" + getVersionNumber() + ".png");
+                if (Files.exists(path)) {
+                    iconBytes = Files.readAllBytes(path);
+                } else {
+                    try(Stream<Path> a = Files.walk(Cogfly.localDataPath.resolve("icons"))){
+                        for (Path p : a.toList()) {
+                            if (p.getFileName().toString().startsWith(getFullName())) {
+                                Files.delete(p);
+                                Cogfly.logger.info("Deleting old icon for {}", getFullName());
+                            }
+                        }
+                    } catch (IOException e){
+                        throw new RuntimeException(e);
+                    }
+                    BufferedImage image = ImageIO.read(iconUrl);
+                    Image scaled = image.getScaledInstance(128, 128, Image.SCALE_SMOOTH);
+                    ByteArrayOutputStream os = new ByteArrayOutputStream();
+                    BufferedImage resized = new BufferedImage(128, 128, BufferedImage.TYPE_INT_ARGB);
+                    Graphics2D g2d = resized.createGraphics();
+                    g2d.drawImage(scaled, 0, 0, null);
+                    g2d.dispose();
+                    ImageIO.write(resized, "png", os);
+                    byte[] bytes = os.toByteArray();
+                    Files.write(path, bytes);
+                    iconBytes = bytes;
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-            else {
-                BufferedImage image = ImageIO.read(iconUrl);
-                Image scaled = image.getScaledInstance(128, 128, Image.SCALE_SMOOTH);
-                ByteArrayOutputStream os = new ByteArrayOutputStream();
-                BufferedImage resized = new BufferedImage(128, 128, BufferedImage.TYPE_INT_ARGB);
-                Graphics2D g2d = resized.createGraphics();
-                g2d.drawImage(scaled, 0, 0, null);
-                g2d.dispose();
-                ImageIO.write(resized, "png", os);
-                byte[] bytes = os.toByteArray();
-                Files.write(path, bytes);
-                iconBytes = bytes;
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        });
     }
-    public ModData(JsonObject parentObject){
-        JsonArray versions = parentObject.get("versions").getAsJsonArray();
-        JsonObject latestVersion = versions.get(0).getAsJsonObject();
-        this(parentObject, latestVersion);
+    public ModData(JsonObject parentObject) {
+        this(parentObject, parentObject.get("versions").getAsJsonArray().get(0).getAsJsonObject());
     }
 
     private boolean manual = false;
     // for disabling & enabling manuals
     private boolean enabled = true;
 
-    public ModData(String name, boolean enabled){
+    public ModData(String name, boolean enabled) {
         manual = true;
         rawObj = new JsonObject();
         this.name = name;
@@ -199,7 +208,7 @@ public class ModData {
         this.enabled = enabled;
     }
 
-    public ModData(String name, String author, List<String> dependencies, String versionNumber, String description, String websiteUrl){
+    public ModData(String name, String author, List<String> dependencies, String versionNumber, String description, String websiteUrl) {
         manual = true;
         rawObj = new JsonObject();
         this.name = name;
@@ -230,7 +239,7 @@ public class ModData {
     public String getName() {
         return name;
     }
-    public String getFullName(){
+    public String getFullName() {
         return fullName;
     }
     public String getVersionNumber() {
@@ -245,13 +254,13 @@ public class ModData {
     public String getDateModified() {
         return dateModified;
     }
-    public int getTotalDownloads(){
+    public int getTotalDownloads() {
         return totalDownloads;
     }
-    public URI getPackageUrl(){
+    public URI getPackageUrl() {
         return packageUrl;
     }
-    public URI getWebsiteUrl(){
+    public URI getWebsiteUrl() {
         return websiteUrl;
     }
     public ImageIcon getIcon() {
@@ -260,11 +269,11 @@ public class ModData {
         }
         return cachedIcon;
     }
-    public byte[] getIconBytes(){
+    public byte[] getIconBytes() {
         return iconBytes;
     }
 
-    public boolean isInstalled(Profile profile){
+    public boolean isInstalled(Profile profile) {
         if (manual)
             return true;
         return profile.getInstalledMods()
@@ -272,7 +281,7 @@ public class ModData {
                         m.getFullName().equals(getFullName()));
     }
 
-    public boolean isOutdated(Profile profile){
+    public boolean isOutdated(Profile profile) {
         if (manual)
             return false;
         if (!isInstalled(profile))
@@ -317,7 +326,7 @@ public class ModData {
         profile.setEnabled(this, enabled);
     }
 
-    public boolean isManual(){
+    public boolean isManual() {
         return manual;
     }
 
@@ -331,13 +340,13 @@ public class ModData {
         return Objects.hash(name, author, description, fullName, versionNumber);
     }
     @Override
-    public boolean equals(Object o){
+    public boolean equals(Object o) {
         return o instanceof ModData md &&
                 equalsIgnoreVersion(md)
                 && md.getVersionNumber().equals(getVersionNumber());
     }
 
-    public boolean equalsIgnoreVersion(ModData md){
+    public boolean equalsIgnoreVersion(ModData md) {
         return md.getName().equals(getName())
                 && md.getAuthor().equals(getAuthor())
                 && md.getDescription().equals(getDescription())

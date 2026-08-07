@@ -3,8 +3,9 @@ package dev.ambershadow.cogfly.elements;
 import dev.ambershadow.cogfly.Cogfly;
 import dev.ambershadow.cogfly.elements.profiles.ProfileOpenPageCardElement;
 import dev.ambershadow.cogfly.loader.ModData;
-import dev.ambershadow.cogfly.util.Profile;
-import dev.ambershadow.cogfly.util.Utils;
+import dev.ambershadow.cogfly.profile.Profile;
+import dev.ambershadow.cogfly.util.FileUtils;
+import dev.ambershadow.cogfly.util.ModUtils;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -28,7 +29,7 @@ public class ModPanelElement extends JPanel {
             panels.get(profile).redrawPanel();
     }
 
-    public static void redrawAll(){
+    public static void redrawAll() {
         panels.values().forEach(ModPanelElement::redrawPanel);
     }
 
@@ -209,7 +210,11 @@ public class ModPanelElement extends JPanel {
                 infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
                 infoPanel.add(new JLabel("Description: " + mod.getDescription()));
                 infoPanel.add(new JLabel("Author: " + mod.getAuthor()));
-                infoPanel.add(new JLabel("Latest version: " + mod.getVersionNumber()));
+                JLabel versionLabel = new JLabel("Latest version: " + mod.getVersionNumber());
+                JLabel installedVersionLabel = new JLabel("Installed version: " + mod.getVersionNumber());
+                infoPanel.add(versionLabel);
+                if (mod.isInstalled(profile))
+                    infoPanel.add(installedVersionLabel);
                 infoPanel.add(new JLabel("Total downloads: " + mod.getTotalDownloads()));
                 Instant created = Instant.parse(mod.getDateCreated());
                 ZoneId userZone = ZoneId.systemDefault();
@@ -244,11 +249,11 @@ public class ModPanelElement extends JPanel {
                 }
 
                 JButton open = new JButton("Open Thunderstore Page");
-                open.addActionListener(_ -> Utils.openURI(mod.getPackageUrl()));
+                open.addActionListener(_ -> FileUtils.openURI(mod.getPackageUrl()));
                 JButton openWebsite = new JButton("Open Project Website");
                 if (mod.getWebsiteUrl() != null)
                     openWebsite.setToolTipText(mod.getWebsiteUrl().toString());
-                openWebsite.addActionListener(_ -> Utils.openURI(mod.getWebsiteUrl()));
+                openWebsite.addActionListener(_ -> FileUtils.openURI(mod.getWebsiteUrl()));
 
                 Box buttonBox = Box.createHorizontalBox();
                 if (mod.getPackageUrl() != null)
@@ -286,8 +291,8 @@ public class ModPanelElement extends JPanel {
                 });
 
                 installButton.addActionListener(_ -> {
-                    if (mod.isInstalled(profile) && !mod.isOutdated(profile)) Utils.removeMod(mod, profile);
-                    else Utils.downloadMod(mod, profile, true);
+                    if (mod.isInstalled(profile) && !mod.isOutdated(profile)) ModUtils.removeMod(mod, profile);
+                    else ModUtils.downloadMod(mod, profile, true);
                     update(mod, ModPanelElement.this.mods.get(mod));
                     filterButtons();
                 });
@@ -295,6 +300,7 @@ public class ModPanelElement extends JPanel {
                 entry.modPanel = modPanel;
                 entry.installButton = installButton;
                 entry.enableButton = enableButton;
+                entry.version = installedVersionLabel;
 
                 update(mod, entry);
                 this.mods.put(mod, entry);
@@ -317,14 +323,18 @@ public class ModPanelElement extends JPanel {
         entry.enableButton.setSelected(enabled);
         entry.enableButton.setText(enabled ? "On" : "Off");
         entry.enableButton.setEnabled(installedNow);
-
+        entry.version.setText("Installed version: " + mod.getVersionNumber());
+        if (mod.isInstalled(profile))
+            entry.version.setText("Installed version: " + mod.getVersionNumber());
+        else
+            entry.version.setText("");
         Instant created = Instant.parse(mod.getDateCreated());
         ZoneId userZone = ZoneId.systemDefault();
         ZonedDateTime localCreated = created.atZone(userZone);
         Instant updated = Instant.parse(mod.getDateModified());
         ZonedDateTime localModified = updated.atZone(userZone);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        if (mod.isManual()){
+        if (mod.isManual()) {
             entry.created.setVisible(false);
             entry.updated.setVisible(false);
         }
@@ -350,7 +360,7 @@ public class ModPanelElement extends JPanel {
         refreshButtons(filtered);
     }
 
-    private void redrawPanel(){
+    private void redrawPanel() {
         setProgressBar();
         scrollPane.getVerticalScrollBar().setUnitIncrement(Cogfly.settings.scrollingIncrement);
         String query = searchField.getText();
@@ -360,8 +370,8 @@ public class ModPanelElement extends JPanel {
             filterButtons();
     }
 
-    private void setProgressBar(){
-        card.setBar(Utils.isDownloading(profile));
+    private void setProgressBar() {
+        card.setBar(ModUtils.isDownloading(profile));
     }
 
 
@@ -413,5 +423,6 @@ public class ModPanelElement extends JPanel {
         JToggleButton enableButton;
         JLabel created;
         JLabel updated;
+        JLabel version;
     }
 }

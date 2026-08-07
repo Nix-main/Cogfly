@@ -1,4 +1,4 @@
-package dev.ambershadow.cogfly.util;
+package dev.ambershadow.cogfly.profile;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -7,6 +7,9 @@ import dev.ambershadow.cogfly.Cogfly;
 import dev.ambershadow.cogfly.asset.Assets;
 import dev.ambershadow.cogfly.elements.profiles.ProfilesScreenElement;
 import dev.ambershadow.cogfly.loader.ModData;
+import dev.ambershadow.cogfly.util.GameUtils;
+import dev.ambershadow.cogfly.util.swing.FrameManager;
+import dev.ambershadow.cogfly.util.ModUtils;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
@@ -30,36 +33,38 @@ public class ProfileManager {
 
     public static Profile baseGame;
     public static final List<Profile> profiles = new ArrayList<>();
-    public static void createProfile(String name, String iconPath){
+    public static void createProfile(String name, String iconPath) {
         Path profile = Paths.get(Cogfly.settings.profileSavePath).resolve(name);
         try {
             Files.createDirectories(profile);
-        } catch (IOException e){
-            throw new RuntimeException(e);
-        }
-        Cogfly.downloadBepInEx(profile);
-        Icon icon;
-        if (iconPath.isEmpty()) {
-            icon = UIManager.getIcon("OptionPane.informationIcon");
-        } else {
-            icon = new ImageIcon(iconPath);
-        }
-        Path source = Paths.get(iconPath);
-        Path ia = profile.resolve("icon." + source.getFileName().toString()
-                .split("\\.")[1]);
-        Profile prof = new Profile(name, profile, ia, icon);
-        try {
-            Files.copy(source, ia);
         } catch (IOException e) {
             throw new RuntimeException(e);
-        } catch (ArrayIndexOutOfBoundsException ignored) {
-            // ignore. No icon was specified.
+        }
+        GameUtils.downloadBepInEx(profile);
+        Profile prof;
+        if (iconPath.isEmpty()) {
+            Icon icon = UIManager.getIcon("OptionPane.informationIcon");
+            prof = new Profile(name, profile, null, icon);
+        } else {
+            Path source = Paths.get(iconPath);
+            String fileName = source.getFileName().toString();
+            int dot = fileName.lastIndexOf('.');
+            String extension = (dot == -1) ? "" : fileName.substring(dot + 1);
+            Path ia = profile.resolve("icon." + extension);
+            prof = new Profile(name, profile, ia, new ImageIcon(iconPath));
+            try {
+                Files.copy(source, ia);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
         profiles.add(prof);
-        ProfilesScreenElement.queueRefresh();
-        FrameManager.getOrCreate().getCurrentPage().reload();
+        SwingUtilities.invokeLater(() -> {
+            ProfilesScreenElement.queueRefresh();
+            FrameManager.getOrCreate().getCurrentPage().reload();
+        });
     }
-    private static void deleteFolder(Path path){
+    private static void deleteFolder(Path path) {
         try(Stream<Path> stream = Files.walk(path)) {
             stream
                     .sorted(Comparator.reverseOrder())
@@ -74,7 +79,7 @@ public class ProfileManager {
             throw new RuntimeException(e);
         }
     }
-    public static void removeProfile(Profile profile){
+    public static void removeProfile(Profile profile) {
         if (profile == null)
             return;
         profiles.remove(profile);
@@ -83,7 +88,7 @@ public class ProfileManager {
         deleteFolder(profile.getPath());
     }
 
-    public static void changeIcon(Profile profile, String iconPath){
+    public static void changeIcon(Profile profile, String iconPath) {
         String[] extensions = {"png", "jpeg", "jpg", "gif"};
         for (String extension : extensions) {
             Path existingIconPath = Paths.get(profile.getPath().toString()+"/icon."+extension);
@@ -130,7 +135,7 @@ public class ProfileManager {
                     profiles.add(profile);
                 }
             }
-            catch (IOException e){
+            catch (IOException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -138,13 +143,13 @@ public class ProfileManager {
         baseGame.refreshMods();
     }
 
-    public static Profile loadProfile(Path path){
+    public static Profile loadProfile(Path path) {
         String[] extensions = {"png", "jpeg", "jpg", "gif"};
         ImageIcon icon = null;
         Path imagePath = null;
         for (String extension : extensions) {
             Path path2 = path.resolve("icon." + extension);
-            if (Files.exists(path2)){
+            if (Files.exists(path2)) {
                 imagePath = path2;
                 icon = new ImageIcon(path2.toString());
                 break;
@@ -152,7 +157,7 @@ public class ProfileManager {
         }
         Path data = path.resolve("cogfly_data.json");
         String gamePath = "";
-        if (Files.exists(data)){
+        if (Files.exists(data)) {
             try(JsonReader reader = new JsonReader(Files.newBufferedReader(data))) {
                 reader.beginObject();
                 if (reader.nextName().equals("gamePath")) {
@@ -170,15 +175,15 @@ public class ProfileManager {
         return profile;
     }
 
-    public static void fromFile(Path path, BiConsumer<Profile, ModData[]> outdated){
-        try(ZipInputStream zis = new ZipInputStream(Files.newInputStream(path))){
+    public static void fromFile(Path path, BiConsumer<Profile, ModData[]> outdated) {
+        try(ZipInputStream zis = new ZipInputStream(Files.newInputStream(path))) {
             fromZipStream(zis, outdated);
-        } catch (IOException e){
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static void fromId(String id, BiConsumer<Profile, ModData[]> outdated){
+    public static void fromId(String id, BiConsumer<Profile, ModData[]> outdated) {
         if (id == null) return;
         try {
             URL url = URL.of(URI.create("https://thunderstore.io/api/experimental/legacyprofile/get/" + id), null);
@@ -194,7 +199,7 @@ public class ProfileManager {
         }
     }
     @SuppressWarnings("unchecked")
-    private static void fromZipStream(ZipInputStream zis,BiConsumer<Profile, ModData[]> outdated){
+    private static void fromZipStream(ZipInputStream zis,BiConsumer<Profile, ModData[]> outdated) {
         String r2xContent = "";
         String cogflyData = "";
         Map<String, byte[]> configData = new HashMap<>();
@@ -224,7 +229,7 @@ public class ProfileManager {
                     manualData.put(entry.getName(), data);
                 zis.closeEntry();
             }
-        } catch (IOException e){
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
@@ -262,7 +267,7 @@ public class ProfileManager {
             throw new RuntimeException(e);
         }
         profiles.add(profile);
-        Cogfly.downloadBepInEx(profile.getPath());
+        GameUtils.downloadBepInEx(profile.getPath());
         mods.forEach(mod -> {
             String name = mod.get("name").toString();
             if (Cogfly.excludedMods.contains(name))
@@ -277,7 +282,7 @@ public class ProfileManager {
                 if (d.isOutdated(profile)) {
                     outdatedMods.add(d);
                 }
-                Utils.downloadMod(d, profile, false, false);
+                ModUtils.downloadMod(d, profile, false, false);
             }
         });
 
@@ -290,21 +295,21 @@ public class ProfileManager {
                 Files.createDirectories(profile.getPath().resolve("manual"));
             for (String key : manualData.keySet()) {
                 Files.write(profile.getPath().resolve(key), manualData.get(key), StandardOpenOption.CREATE_NEW);
-                Utils.downloadManualMod(profile.getPath().resolve(key), profile, false);
+                ModUtils.downloadManualMod(profile.getPath().resolve(key), profile, false);
             }
-        } catch (IOException e){
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
         outdated.accept(profile, outdatedMods.toArray(ModData[]::new));
     }
 
-    public static void toFile(Profile profile, Path path){
+    public static void toFile(Profile profile, Path path) {
         try {
             Files.write(path.resolve(profile.getName() + ".r2z"), toZip(profile));
         } catch (IOException ignored) {}
     }
 
-    public static String toId(Profile profile){
+    public static String toId(Profile profile) {
         byte[] data = toZip(profile);
         String base64 = Base64.getEncoder().encodeToString(data);
         base64 = "#r2modman\n" + base64;
@@ -322,7 +327,7 @@ public class ProfileManager {
         }
     }
 
-    private static byte[] toZip(Profile profile){
+    private static byte[] toZip(Profile profile) {
         Path config = profile.getBepInExPath().resolve("config/");
 
         Map<String, Object> root = new LinkedHashMap<>();
@@ -332,7 +337,7 @@ public class ProfileManager {
         Map<String, Object> pack = new LinkedHashMap<>();
         pack.put("name", "silksong_modding-BepInExPack_Silksong");
         Map<String, Integer> version = new LinkedHashMap<>();
-        String[] v = Cogfly.latestPackVer.split("\\.");
+        String[] v = GameUtils.latestPackVer.split("\\.");
         version.put("major", Integer.parseInt(v[0]));
         version.put("minor", Integer.parseInt(v[1]));
         version.put("patch", Integer.parseInt(v[2]));
@@ -340,7 +345,7 @@ public class ProfileManager {
         pack.put("enabled", true);
         mods.add(pack);
 
-        for (ModData data : profile.getInstalledMods()){
+        for (ModData data : profile.getInstalledMods()) {
             if (data.isManual())
                 continue;
             Map<String, Object> mod = new LinkedHashMap<>();

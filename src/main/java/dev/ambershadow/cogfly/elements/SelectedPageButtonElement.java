@@ -6,14 +6,20 @@ import java.awt.*;
 public class SelectedPageButtonElement extends JButton {
 
     public boolean selected;
-    public SelectedPageButtonElement(String name){
+
+    public SelectedPageButtonElement(String name) {
         super(name);
+        
+        setFocusPainted(false);
+        setBorderPainted(false);
+        setContentAreaFilled(true);
+        setOpaque(true);
     }
 
     @Override
     protected void paintBorder(Graphics g) {
-        if (selected || isSelected())
-            setBorderPainted(true);
-
+        if (selected || isSelected()) {
+            super.paintBorder(g);
+        }
     }
 }

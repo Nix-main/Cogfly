@@ -1,4 +1,4 @@
-package dev.ambershadow.cogfly.util;
+package dev.ambershadow.cogfly.profile;
 
 import com.google.gson.stream.JsonWriter;
 import dev.ambershadow.cogfly.Cogfly;
@@ -38,37 +38,37 @@ public class Profile {
         return path;
     }
 
-    public Path getBepInExPath(){
+    public Path getBepInExPath() {
         return path.resolve("BepInEx");
     }
 
-    public Path getPluginsPath(){
+    public Path getPluginsPath() {
         return getBepInExPath().resolve("plugins");
     }
 
-    public Path getIconPath(){
+    public Path getIconPath() {
         return iconPath;
     }
     public List<ModData> getInstalledMods() {
         return installedMods.values().stream().toList();
     }
 
-    public void removeMod(ModData mod){
+    public void removeMod(ModData mod) {
         installedMods.remove(mod.getFullName());
     }
 
-    public void addMod(ModData mod){
+    public void addMod(ModData mod) {
         installedMods.put(mod.getFullName(), mod);
     }
 
-    public void setEnabled(ModData mod, boolean enabled){
+    public void setEnabled(ModData mod, boolean enabled) {
         if (enabled)
             disabledMods.remove(mod.getFullName());
         else
             disabledMods.add(mod.getFullName());
     }
 
-    public boolean isEnabled(ModData mod){
+    public boolean isEnabled(ModData mod) {
         return !disabledMods.contains(mod.getFullName());
     }
 
@@ -82,11 +82,11 @@ public class Profile {
     public void setIcon(Icon icon) {
         this.icon = icon;
     }
-    public String getGamePath(){
+    public String getGamePath() {
         return Cogfly.settings.profileSpecificPaths ? gamePath : Cogfly.settings.gamePath;
     }
 
-    public void resetGamePath(){
+    public void resetGamePath() {
         try {
             Files.deleteIfExists(getPath().resolve("cogfly_data.json"));
         } catch (IOException e) {
@@ -94,7 +94,7 @@ public class Profile {
         }
         gamePath = Cogfly.settings.gamePath;
     }
-    public void setGamePath(String gamePath){
+    public void setGamePath(String gamePath) {
         this.gamePath = gamePath;
         try(JsonWriter writer = new JsonWriter(Files.newBufferedWriter(getPath().resolve("cogfly_data.json")))) {
             writer.beginObject();
@@ -106,7 +106,7 @@ public class Profile {
         }
     }
 
-    public void refreshMods(){
+    public void refreshMods() {
         installedMods = ModFetcher.getInstalledMods(getPluginsPath())
                 .stream().collect(Collectors.toMap(
                         ModData::getFullName,
@@ -120,7 +120,7 @@ public class Profile {
                 .collect(Collectors.toSet());
     }
 
-    public List<ModData> getManualMods(){
+    public List<ModData> getManualMods() {
         return installedMods.values().stream().filter(ModData::isManual).toList();
     }
 

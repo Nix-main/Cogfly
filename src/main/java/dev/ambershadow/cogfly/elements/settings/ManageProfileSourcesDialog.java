@@ -1,7 +1,7 @@
 package dev.ambershadow.cogfly.elements.settings;
 
 import dev.ambershadow.cogfly.elements.SettingsDialog;
-import dev.ambershadow.cogfly.util.Utils;
+import dev.ambershadow.cogfly.util.FileUtils;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -15,9 +15,9 @@ public class ManageProfileSourcesDialog extends JDialog {
         super(base, "Manage Profile Sources", true);
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         setSize(800, 320);
-        DefaultTableModel model = new DefaultTableModel(new Object[]{"Path"}, 0){
+        DefaultTableModel model = new DefaultTableModel(new Object[]{"Path"}, 0) {
             @Override
-            public boolean isCellEditable(int row, int column){
+            public boolean isCellEditable(int row, int column) {
                 return false;
             }
         };
@@ -41,7 +41,7 @@ public class ManageProfileSourcesDialog extends JDialog {
 
         JPanel buttonWrapper = new JPanel(new FlowLayout(FlowLayout.CENTER));
         JButton button1 = new JButton("Add");
-        button1.addActionListener(_ -> Utils.pickFolder((path) -> {
+        button1.addActionListener(_ -> FileUtils.pickFolder((path) -> {
             if (path.equals(Paths.get(base.<String>get(s -> s.profileSavePath))))
                 return;
             model.setRowCount(model.getRowCount() + 1);
@@ -54,7 +54,7 @@ public class ManageProfileSourcesDialog extends JDialog {
         button2.addActionListener(_ -> {
             int row = table.getSelectedRow();
             if (row >= 0 && row < base.get(s -> s.profileSources).size()) {
-                base.update(s -> s.profileSources.remove(row));
+                base.update(s -> s.profileSources.remove(table.getValueAt(row, 0).toString()));
                 model.removeRow(row);
                 table.setModel(model);
             }
@@ -65,5 +65,6 @@ public class ManageProfileSourcesDialog extends JDialog {
         buttonWrapper.add(Box.createHorizontalStrut(200));
         buttonWrapper.add(button2, BorderLayout.WEST);
         add(buttonWrapper, BorderLayout.SOUTH);
+        this.pack();
     }
 }

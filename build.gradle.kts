@@ -27,54 +27,58 @@ dependencies {
     implementation("org.yaml:snakeyaml:2.2")
 }
 
-val compileWinFolderPicker by tasks.registering(Exec::class) {
-    workingDir = projectDir
+val compileWinFolderPicker by tasks.register("compileWinFolderPicker") {
     doFirst { mkdir("${layout.buildDirectory.get()}/native") }
-    commandLine(
-        "g++",
-        "-shared",
-        "-o",
-        "${layout.buildDirectory.get()}/native/winfolderpicker.dll",
-        "libs/folderpicker.cpp",
-        "-lole32",
-        "-luuid"
-    )
+    doLast {
+        try {
+            providers.exec {
+                commandLine(
+                    "g++",
+                    "-shared",
+                    "-o",
+                    "${layout.buildDirectory.get()}/native/winfolderpicker.dll",
+                    "resources/libs/folderpicker.cpp",
+                    "-lole32",
+                    "-luuid"
+                )
+            }.result.get()
+        } catch (e: Exception) {
+            if (System.getProperty("os.name").contains("Windows", ignoreCase = true))
+                throw e
+        }
+    }
 }
-
-val compileTinyFileDialogs by tasks.registering(Exec::class) {
+val compileTinyFileDialogs = tasks.register("compileTinyFileDialogs") {
     doFirst { mkdir("${layout.buildDirectory.get()}/native") }
-    workingDir = projectDir
-    commandLine(
-        "gcc",
-        "-shared",
-        "-o",
-        "${layout.buildDirectory.get()}/native/wintinyfiledialogs.dll",
-        "libs/tinyfiledialogs.c",
-        "-lole32",
-        "-lcomdlg32",
-        "-lshell32",
-        "-luuid"
-    )
+    doLast {
+        try {
+            providers.exec {
+                commandLine(
+                    "gcc",
+                    "-shared",
+                    "-o",
+                    "${layout.buildDirectory.get()}/native/wintinyfiledialogs.dll",
+                    "resources/libs/tinyfiledialogs.c",
+                    "-lole32",
+                    "-lcomdlg32",
+                    "-lshell32",
+                    "-luuid"
+                )
+                isIgnoreExitValue = true
+            }.result.get()
+        } catch (e: Exception) {
+            if (System.getProperty("os.name").contains("Windows", ignoreCase = true))
+                throw e
+        }
+    }
 }
-
 tasks.register("ver") {
     doLast {
         println(project.version)
     }
 }
-
-tasks.withType<JavaCompile>().configureEach {
-    options.compilerArgs.add("--enable-preview")
-}
-
-tasks.withType<JavaExec>().configureEach {
-    jvmArgs("--enable-preview")
-}
-
-if (System.getProperty("os.name").lowercase().contains("windows")) {
-    tasks.processResources {
-        dependsOn(compileWinFolderPicker, compileTinyFileDialogs)
-    }
+tasks.processResources {
+    dependsOn(compileWinFolderPicker, compileTinyFileDialogs)
 }
 
 tasks.shadowJar {

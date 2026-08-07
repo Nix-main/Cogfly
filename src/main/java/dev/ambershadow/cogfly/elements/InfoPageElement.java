@@ -4,9 +4,10 @@ import com.kitfox.svg.app.beans.SVGIcon;
 import dev.ambershadow.cogfly.Cogfly;
 import dev.ambershadow.cogfly.asset.Assets;
 import dev.ambershadow.cogfly.elements.profiles.ProfileCardElement;
-import dev.ambershadow.cogfly.util.HoverLerp;
-import dev.ambershadow.cogfly.util.ReloadablePage;
-import dev.ambershadow.cogfly.util.Utils;
+import dev.ambershadow.cogfly.util.FileUtils;
+import dev.ambershadow.cogfly.util.GameUtils;
+import dev.ambershadow.cogfly.util.swing.HoverLerp;
+import dev.ambershadow.cogfly.util.swing.ReloadablePage;
 
 import javax.swing.*;
 import java.awt.*;
@@ -19,7 +20,7 @@ public class InfoPageElement extends JPanel implements ReloadablePage {
     public InfoPageElement() {
         setLayout(new BorderLayout());
 
-        JLabel image = new JLabel(Assets.centralIcon.getAsScaledIcon(0.333333f));
+        JLabel image = new JLabel(Assets.centralIcon.getAsScaledIcon(1 / 3f));
         image.setHorizontalAlignment(SwingConstants.CENTER);
         add(image, BorderLayout.NORTH);
         add(createButtons(), BorderLayout.CENTER);
@@ -33,15 +34,15 @@ public class InfoPageElement extends JPanel implements ReloadablePage {
         add(panel, BorderLayout.SOUTH);
     }
 
-    public JScrollPane createLinks(){
+    public JScrollPane createLinks() {
         String[] text = {
-                "Source Code",
                 "Modding Discord",
+                "Source Code",
                 "My Patreon"
         };
         String[] links = {
-                "https://github.com/nix-main/Cogfly",
                 "https://discord.gg/VDsg3HmWuB",
+                "https://github.com/Nix-main/Cogfly",
                 "https://patreon.com/c/AmberShadowo"
         };
         Dimension size = new Dimension(150, 125);
@@ -64,17 +65,17 @@ public class InfoPageElement extends JPanel implements ReloadablePage {
                 buttons[i].setPreferredSize(size);
                 buttons[i].setToolTipText(links[i]);
                 final String link = links[i];
-                buttons[i].addActionListener(_ -> Utils.openURI(URI.create(link)));
-                HoverLerp.install(() -> ProfileCardElement.normal, () -> ProfileCardElement.hover, buttons[i]);
+                buttons[i].addActionListener(_ -> FileUtils.openURI(URI.create(link)));
+                HoverLerp.install(ProfileCardElement.normal, ProfileCardElement.hover, buttons[i]);
                 panel.add(buttons[i]);
-            } catch (URISyntaxException e){
+            } catch (URISyntaxException e) {
                 throw new RuntimeException(e);
             }
         }
         return new JScrollPane(panel, ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
     }
 
-    public JPanel createButtons(){
+    public JPanel createButtons() {
         Dimension dim = new Dimension(175, 40);
         Dimension max = new Dimension(Integer.MAX_VALUE, 40);
 
@@ -83,20 +84,20 @@ public class InfoPageElement extends JPanel implements ReloadablePage {
         savesButton.setHorizontalAlignment(SwingConstants.LEFT);
         savesButton.setPreferredSize(dim);
         savesButton.setMaximumSize(max);
-        savesButton.addActionListener(_ -> Utils.openSavePath());
+        savesButton.addActionListener(_ -> FileUtils.openSavePath());
 
         JButton logsButton = new JButton("Open Logs Folder");
         logsButton.setIcon(Assets.openSaves.getAsIconWithColor(Color.BLUE));
         logsButton.setHorizontalAlignment(SwingConstants.LEFT);
         logsButton.setPreferredSize(dim);
         logsButton.setMaximumSize(max);
-        logsButton.addActionListener(_ -> Utils.openPath(Cogfly.localDataPath.resolve("logs")));
+        logsButton.addActionListener(_ -> FileUtils.openPath(Cogfly.localDataPath.resolve("logs")));
 
         JButton launchVanilla = new JButton("Launch Vanilla Game");
         launchVanilla.setHorizontalAlignment(SwingConstants.CENTER);
         launchVanilla.setPreferredSize(dim);
         launchVanilla.setMaximumSize(max);
-        launchVanilla.addActionListener(_ -> Cogfly.launchGameAsync(false, "", Cogfly.settings.gamePath));
+        launchVanilla.addActionListener(_ -> GameUtils.launchGameAsync(false, "", Cogfly.settings.gamePath));
 
         JPanel buttons = new JPanel();
         buttons.setLayout(new BoxLayout(buttons, BoxLayout.X_AXIS));
@@ -125,7 +126,7 @@ public class InfoPageElement extends JPanel implements ReloadablePage {
     @Override
     public void reload() {
         for (JButton button : buttons) {
-            button.setBackground(ProfileCardElement.normal);
+            button.setBackground(ProfileCardElement.normal.get());
         }
     }
 }

@@ -1,10 +1,10 @@
-package dev.ambershadow.cogfly.util;
+package dev.ambershadow.cogfly.util.jna;
 
 import com.sun.jna.Library;
-import com.sun.jna.Pointer;
 
 public interface WinTinyFileDialogs extends Library {
-    Pointer tinyfd_openFileDialog(
+
+    String tinyfd_openFileDialog(
             String title,
             String defaultPathAndFile,
             int numOfFilterPatterns,

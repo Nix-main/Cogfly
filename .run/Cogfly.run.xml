@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Cogfly" type="Application" factoryName="Application">
+    <option name="ALTERNATIVE_JRE_PATH" value="23" />
+    <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
+    <option name="MAIN_CLASS_NAME" value="dev.ambershadow.cogfly.Cogfly" />
+    <module name="Cogfly.main" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

@@ -1,0 +1,11 @@
+{
+  "button.close": "Close",
+  "button.copy": "Copy To Clipboard",
+  "button.select-file": "Click here to select a file.",
+  "error.profile-not-exist": "This profile does not exist.",
+  "message.update-available": "There is an update available! You are using version %s. The latest version is %s.",
+  "text.more-lines": "... (%s more lines)",
+  "title": "Cogfly",
+  "title.error": "An error has occurred!",
+  "title.update": "Update"
+}

@@ -23,8 +23,8 @@ public class Assets {
     private static final CogflyAsset edit_dark = getAsset("profile/edit_dark.svg");
     private static final CogflyAsset copy_dark = getAsset("profile/copy_dark.svg");
     private static final CogflyAsset delete_dark = getAsset("profile/delete_dark.svg");
-    public static CogflyAsset[] getProfileIcons(){
-        if (FlatLaf.isLafDark()){
+    public static CogflyAsset[] getProfileIcons() {
+        if (FlatLaf.isLafDark()) {
             return new CogflyAsset[]{play, edit, copy, delete};
         } else {
             return new CogflyAsset[]{play_dark, edit_dark, copy_dark, delete_dark};

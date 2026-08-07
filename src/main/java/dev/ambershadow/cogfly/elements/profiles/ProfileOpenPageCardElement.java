@@ -1,12 +1,17 @@
 package dev.ambershadow.cogfly.elements.profiles;
 
+import dev.ambershadow.cogfly.Cogfly;
 import dev.ambershadow.cogfly.elements.ModPanelElement;
 import dev.ambershadow.cogfly.loader.ModData;
+import dev.ambershadow.cogfly.profile.Profile;
+import dev.ambershadow.cogfly.profile.ProfileManager;
 import dev.ambershadow.cogfly.util.*;
+import dev.ambershadow.cogfly.util.swing.FrameManager;
 
 import javax.swing.*;
 import java.awt.*;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -16,8 +21,13 @@ public class ProfileOpenPageCardElement extends JPanel {
     private final Profile profile;
     private final JButton updateAll;
     private final JProgressBar progressBar;
-    public void setBar(boolean val){
+    public void setBar(boolean val) {
         progressBar.setVisible(val);
+        long total = ModUtils.getTotalDownloadCount(profile);
+        long remaining = ModUtils.getDownloadCount(profile);
+        progressBar.setMinimum(0);
+        progressBar.setMaximum((int) total);
+        progressBar.setValue((int) (total - remaining));
     }
     public ProfileOpenPageCardElement(Profile profile) {
         super(new BorderLayout());
@@ -47,17 +57,17 @@ public class ProfileOpenPageCardElement extends JPanel {
                 if (result == JOptionPane.YES_OPTION) {
                     List<CompletableFuture<Void>> voids = new ArrayList<>();
                     for (ModData modData : outdated) {
-                        voids.add(CompletableFuture.runAsync(() -> Utils.downloadLatestMod(
+                        voids.add(Cogfly.runAsync(() -> ModUtils.downloadLatestMod(
                                 ModData.getMod(modData.getFullName()),
                                 profile,
                                 false
                         )));
                     }
-                    CompletableFuture.allOf(voids.toArray(CompletableFuture[]::new)).thenRun(() -> Utils.launchModdedGame(profile)).join();
+                    CompletableFuture.allOf(voids.toArray(CompletableFuture[]::new)).thenRun(() -> GameUtils.launchModdedGame(profile)).join();
                     return;
                 }
             }
-            Utils.launchModdedGame(profile);
+            GameUtils.launchModdedGame(profile);
         });
 
         updateAll = new JButton("Update All");
@@ -66,7 +76,7 @@ public class ProfileOpenPageCardElement extends JPanel {
             updateAll.setEnabled(false);
             for (ModData modData : profile.getInstalledMods()) {
                 if (!modData.isOutdated(profile)) continue;
-                CompletableFuture.runAsync(() -> Utils.downloadLatestMod(
+                Cogfly.runAsync(() -> ModUtils.downloadLatestMod(
                         ModData.getMod(modData.getFullName()),
                         profile,
                         false
@@ -76,15 +86,15 @@ public class ProfileOpenPageCardElement extends JPanel {
 
         JButton copyLogToClipboard = new JButton("Copy Log To Clipboard");
         copyLogToClipboard.addActionListener(_ -> {
-            if (Files.exists(profile.getBepInExPath().resolve("LogOutput.log"))){
-                Utils.copyFile(profile.getBepInExPath().resolve("LogOutput.log"));
+            if (Files.exists(profile.getBepInExPath().resolve("LogOutput.log"))) {
+                Cogfly.copyFile(profile.getBepInExPath().resolve("LogOutput.log"));
             }
         });
 
         JButton exportAsId = new JButton("Export As Code");
         exportAsId.addActionListener(_ -> {
             String id = ProfileManager.toId(profile);
-            Utils.copyString(id);
+            Cogfly.copyString(id);
             JOptionPane.showMessageDialog(
                 null, 
                 "Your code: " + id + " has been copied to your clipboard!", 
@@ -94,10 +104,10 @@ public class ProfileOpenPageCardElement extends JPanel {
         });
 
         JButton exportAsFile = new JButton("Export As File");
-        exportAsFile.addActionListener(_ -> Utils.pickFolder(path -> ProfileManager.toFile(profile, path)));
+        exportAsFile.addActionListener(_ -> FileUtils.pickFolder(path -> ProfileManager.toFile(profile, path)));
 
         JButton openFileLocation = new JButton("Open Profile Folder");
-        openFileLocation.addActionListener(_ -> Utils.openProfilePath(profile));
+        openFileLocation.addActionListener(_ -> FileUtils.openProfilePath(profile));
 
         JButton refresh = new JButton("Refresh");
         refresh.addActionListener(_ -> {
@@ -106,7 +116,16 @@ public class ProfileOpenPageCardElement extends JPanel {
         });
 
         JButton install = new JButton("Install Manually");
-        install.addActionListener(_ -> Utils.pickFile((path) -> Utils.downloadManualMod(path, profile, true), "*", "zip", "dll"));
+        install.addActionListener(_ -> FileUtils.pickFile((path) -> ModUtils.downloadManualMod(path, profile, true), "*", "zip", "dll"));
+
+        JButton copyLaunchArgs = new JButton("Copy Launch Arguments");
+        copyLaunchArgs.addActionListener(_ -> {
+            if (Cogfly.isWindows()) {
+                Cogfly.copyString("--doorstop-enabled true --doorstop-target-assembly \"" + profile.getBepInExPath().resolve("core", "BepInEx.Preloader.dll") + "\"");
+            } else {
+                Cogfly.copyString(Paths.get(profile.getGamePath()).resolve("run_bepinex.sh") + " %command% --doorstop_enabled true --doorstop_target_assembly " + profile.getBepInExPath().resolve("core", "BepInEx.Preloader.dll"));
+            }
+        });
 
         upperPanel.add(launch);
         upperPanel.add(updateAll);
@@ -115,11 +134,11 @@ public class ProfileOpenPageCardElement extends JPanel {
         upperPanel.add(exportAsFile);
         upperPanel.add(openFileLocation);
         upperPanel.add(refresh);
+        upperPanel.add(copyLaunchArgs);
         upperPanel.add(install);
 
         JPanel centerPanel = new JPanel();
         progressBar = new JProgressBar();
-        progressBar.setIndeterminate(true);
         progressBar.setVisible(false);
         centerPanel.add(progressBar);
 
@@ -130,11 +149,11 @@ public class ProfileOpenPageCardElement extends JPanel {
         add(new ModPanelElement(profile, this));
     }
 
-    public void reload(){
+    public void reload() {
         boolean anyOutdated = profile.getInstalledMods()
                 .stream().anyMatch(mod -> mod.isOutdated(profile));
         updateAll.setEnabled(anyOutdated);
         ModPanelElement.redraw(profile);
-        progressBar.setVisible(Utils.isDownloading(profile));
+        progressBar.setVisible(ModUtils.isDownloading(profile));
     }
 }
