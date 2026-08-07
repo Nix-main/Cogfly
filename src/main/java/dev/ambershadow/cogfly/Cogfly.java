@@ -264,7 +264,7 @@ public class Cogfly {
                 "-File",
                 localDataPath.resolve("updater", "updater.ps1").toString(),
                 ProcessHandle.current().pid() + "",
-                "https://github.com/Nix-main/Cogfly/releases/latest/download/Cogfly-ver-installer.exe".replace("ver", version),
+                String.format("https://github.com/Nix-main/Cogfly/releases/latest/download/Cogfly-%s-installer.exe", version),
                 windowsSha256
         ).start();
         System.exit(0);
@@ -283,7 +283,7 @@ public class Cogfly {
         new ProcessBuilder(
                 localDataPath.resolve("updater_mac.sh").toString(),
                 ProcessHandle.current().pid() + "",
-                "https://github.com/Nix-main/Cogfly/releases/latest/download/Cogfly-ver.dmg".replace("ver", version),
+                String.format("https://ambershadow.dev/Cogfly-%s.dmg", version),
                 macSha256
         ).start();
         System.exit(0);
