@@ -46,7 +46,6 @@ val compileWinFolderPicker by tasks.register("compileWinFolderPicker") {
         } catch (e: Exception) {
             if (System.getProperty("os.name").contains("Windows", ignoreCase = true))
                 throw e
-            throw e
         }
     }
 }
