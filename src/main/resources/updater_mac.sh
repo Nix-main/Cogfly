@@ -19,6 +19,7 @@ hdiutil attach "$dmg" -mountpoint "$mnt" -nobrowse -quiet
 rm -rf /Applications/Cogfly.app
 cp -R "$mnt/Cogfly.app" /Applications/
 hdiutil detach "$mnt"
+/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f /Applications/Cogfly.app
 
 rm "$dmg"
 open "cogfly://launch"

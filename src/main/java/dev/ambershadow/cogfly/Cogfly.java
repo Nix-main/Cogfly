@@ -293,17 +293,16 @@ public class Cogfly {
     }
 
     private static void autoUpdateMac() throws IOException {
-        String cmd = String.format(
-                "do shell script \"%s %s %s %s\" with administrator privileges",
-                localDataPath.resolve("updater").resolve("updater_mac.sh"),
-                ProcessHandle.current().pid(),
-                String.format("https://ambershadow.dev/Cogfly-%s.dmg", latestVersion),
-                macSha256
-        );
         new ProcessBuilder(
                 "osascript",
                 "-e",
-                cmd
+                String.format(
+                        "do shell script \"'%s' %s '%s' '%s'\" with administrator privileges",
+                        localDataPath.resolve("updater").resolve("updater_mac.sh"),
+                        ProcessHandle.current().pid(),
+                        String.format("https://ambershadow.dev/Cogfly-%s.dmg", latestVersion),
+                        macSha256
+                )
         ).start();
         System.exit(0);
     }
