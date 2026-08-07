@@ -192,12 +192,12 @@ public class Cogfly {
                 ProfilesScreenElement.queueRefresh();
                 if (FrameManager.getOrCreate().getCurrentPage() != null)
                     FrameManager.getOrCreate().getCurrentPage().reload();
+                try {
+                    showEarlyDialogs();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             });
-            try {
-                showEarlyDialogs();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
             GameUtils.afterLoad();
         });
         UIManager.put("TextComponent.arc", 5);

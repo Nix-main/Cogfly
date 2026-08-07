@@ -59,8 +59,10 @@ public class ProfileManager {
             }
         }
         profiles.add(prof);
-        ProfilesScreenElement.queueRefresh();
-        FrameManager.getOrCreate().getCurrentPage().reload();
+        SwingUtilities.invokeLater(() -> {
+            ProfilesScreenElement.queueRefresh();
+            FrameManager.getOrCreate().getCurrentPage().reload();
+        });
     }
     private static void deleteFolder(Path path) {
         try(Stream<Path> stream = Files.walk(path)) {
