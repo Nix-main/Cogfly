@@ -27,6 +27,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
+import java.nio.file.attribute.PosixFilePermission;
 import java.time.Instant;
 import java.util.*;
 import java.util.List;
@@ -131,6 +132,7 @@ public class Cogfly {
                     Files.createDirectories(localDataPath.resolve("updater"));
                     try (InputStream stream = getResource("/updater.sh").openStream()) {
                         Files.write(localDataPath.resolve("updater", "updater.sh"), stream.readAllBytes());
+                        setExecutable(localDataPath.resolve("updater", "updater.sh"));
                     }
                     Path updater = localDataPath.resolve("appimageupdatetool-x86_64.appimage");
                     if (!Files.exists(updater)) {
@@ -144,6 +146,7 @@ public class Cogfly {
                 Files.createDirectories(localDataPath.resolve("updater"));
                 try (InputStream stream = getResource("/updater_mac.sh").openStream()) {
                     Files.write(localDataPath.resolve("updater", "updater_mac.sh"), stream.readAllBytes());
+                    setExecutable(localDataPath.resolve("updater", "updater_mac.sh"));
                 }
             }
         }
@@ -203,6 +206,14 @@ public class Cogfly {
         UIManager.put("TextComponent.arc", 5);
         logger.info("Showing UI");
         FrameManager.getOrCreate().frame.setVisible(true);
+    }
+
+    public static void setExecutable(Path path) throws IOException {
+        Set<PosixFilePermission> perms = Files.getPosixFilePermissions(path);
+        perms.add(PosixFilePermission.GROUP_EXECUTE);
+        perms.add(PosixFilePermission.OWNER_EXECUTE);
+        perms.add(PosixFilePermission.OTHERS_EXECUTE);
+        Files.setPosixFilePermissions(path, perms);
     }
 
     private static boolean handleArgs(String arg) throws IOException {
@@ -280,11 +291,17 @@ public class Cogfly {
     }
 
     private static void autoUpdateMac() throws IOException {
-        new ProcessBuilder(
-                localDataPath.resolve("updater").resolve("updater_mac.sh").toString(),
-                ProcessHandle.current().pid() + "",
-                String.format("https://ambershadow.dev/Cogfly-%s.dmg", version),
+        String cmd = String.format(
+                "do shell script \"%s %s %s %s\" with administrator privileges",
+                localDataPath.resolve("updater").resolve("updater_mac.sh"),
+                ProcessHandle.current().pid(),
+                "https://ambershadow.dev/Cogfly-" + version + ".dmg",
                 macSha256
+        );
+        new ProcessBuilder(
+                "osascript",
+                "-e",
+                cmd
         ).start();
         System.exit(0);
     }
