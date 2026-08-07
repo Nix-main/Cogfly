@@ -260,8 +260,8 @@ public class GameUtils {
                         }
                     }
                 }
-                Cogfly.logger.info("Launching with Steam Client. Command={}", cmd);
                 cmd = cmd.replace("+", "%20");
+                Cogfly.logger.info("Launching with Steam Client. Command={}", cmd);
                 FileUtils.openURI(URI.create(cmd));
             } else {
                 List<String> cmds = getStrings();
