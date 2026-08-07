@@ -118,9 +118,7 @@ public class Cogfly {
             });
         }
         if (args.length > 0) {
-            Cogfly.logger.info("Received arguments: {}", Arrays.toString(args));
-            String arg = args[0].replace("cogfly://", "");
-            boolean a = handleArgs(arg);
+            boolean a = handleArgs(args[0]);
             if (a)
                 return;
         }
@@ -217,8 +215,10 @@ public class Cogfly {
     }
 
     private static boolean handleArgs(String arg) throws IOException {
-        if (arg.toLowerCase().startsWith("launch/")) {
-            String name = arg.substring(7);
+        Cogfly.logger.info("Received arguments: {}", arg);
+        String a = arg.replace("cogfly://", "");
+        if (a.toLowerCase().startsWith("launch/")) {
+            String name = a.substring(7);
             final String[] profile = new String[]{null};
             List<Path> paths = new ArrayList<>();
             paths.add(Path.of(settings.profileSavePath));
