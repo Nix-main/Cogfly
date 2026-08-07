@@ -54,7 +54,7 @@ public class ManageProfileSourcesDialog extends JDialog {
         button2.addActionListener(_ -> {
             int row = table.getSelectedRow();
             if (row >= 0 && row < base.get(s -> s.profileSources).size()) {
-                base.update(s -> s.profileSources.remove(row));
+                base.update(s -> s.profileSources.remove(table.getValueAt(row, 0).toString()));
                 model.removeRow(row);
                 table.setModel(model);
             }

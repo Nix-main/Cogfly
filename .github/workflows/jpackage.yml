@@ -79,6 +79,9 @@ jobs:
       - name: Build DEB
         if: runner.os == 'Linux'
         run: |
+          mkdir build/libs/repo
+          wget -P build/libs/repo https://apt.ambershadow.dev/cogfly.sources
+          wget -P build/libs/repo https://apt.ambershadow.dev/repo.gpg 
           jpackage \
             --input build/libs \
             --main-jar Cogfly-${{ env.ver }}.jar \
@@ -96,19 +99,41 @@ jobs:
       - name: Build RPM
         if: runner.os == 'Linux'
         run: |
-          jpackage \
-            --input build/libs \
-            --main-jar Cogfly-${{ env.ver }}.jar \
-            --main-class dev.ambershadow.cogfly.Cogfly \
-            --name Cogfly \
-            --type rpm \
-            --vendor "Ambershadow" \
-            --icon ./resources/icons/icon.png \
-            --app-version ${{ env.ver }} \
-            --dest output/${{ runner.os }} \
-            --resource-dir resources/linux \
-            --verbose \
+          rm -rf build/libs/repo
+          mkdir build/libs/repo
+          wget -P build/libs/repo https://rpm.ambershadow.dev/cogfly.repo
+          
+          args=(
+            --input build/libs
+            --main-jar Cogfly-${{ env.ver }}.jar
+            --main-class dev.ambershadow.cogfly.Cogfly
+            --name Cogfly
+            --type rpm
+            --vendor "Ambershadow"
+            --icon ./resources/icons/icon.png
+            --app-version ${{ env.ver }}
+            --dest output/${{ runner.os }}
+            --resource-dir resources/linux
+            --verbose
             --linux-shortcut
+          )
+          
+          jpackage "${args[@]}" --temp temp
+          awk '
+            /^%post$/ {
+            print
+            print "install -Dm644 /opt/cogfly/lib/app/repo/cogfly.repo /etc/yum.repos.d/cogfly.repo"
+            next
+          }
+            /^%preun/ {
+            print
+            print "rm -f /etc/yum.repos.d/cogfly.repo"
+            next
+          }
+            { print }
+          ' temp/SPECS/cogfly.spec > resources/linux/cogfly.spec
+          cat resources/linux/cogfly.spec
+          jpackage "${args[@]}"
 
       - name: Build APPIMAGE
         if: runner.os == 'Linux'

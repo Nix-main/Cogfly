@@ -7,6 +7,7 @@ import dev.ambershadow.cogfly.Cogfly;
 import dev.ambershadow.cogfly.elements.ModPanelElement;
 import dev.ambershadow.cogfly.loader.ModData;
 import dev.ambershadow.cogfly.profile.Profile;
+import dev.ambershadow.cogfly.util.swing.FrameManager;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.swing.*;
@@ -100,6 +101,7 @@ public class ModUtils {
 
     public static void downloadManualMod(Path path, Profile profile, boolean copy) {
         final String[] fname = {""};
+        checkSilksong();
         Cogfly.runAsync(() -> {
             try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(path))) {
                 String fullName = "";
@@ -163,7 +165,9 @@ public class ModUtils {
         });
         ModPanelElement.setProgressBar(profile);
     }
+
     public static void downloadMod(ModData mod, Profile profile, boolean deps, boolean enabled) {
+        checkSilksong();
         CompletableFuture<Void> download = Cogfly.runAsync(() -> {
             String fn = mod.getFullName();
             if (!getDownloads(profile).add(fn))
@@ -282,6 +286,9 @@ public class ModUtils {
                     SwingUtilities.invokeLater(() -> ModPanelElement.setProgressBar(profile));
                 } catch (IOException e) {
                     Cogfly.logger.error("Failed to extract entry '{}'", entry.getName(), e);
+                    if (e instanceof FileSystemException){
+                        JOptionPane.showMessageDialog(FrameManager.getOrCreate().frame, String.format("Failed to extract %s when installing %s. This could be caused by having the game open.", entry.getName(), fullName), "Failed to install!", JOptionPane.ERROR_MESSAGE);
+                    }
                 }
             }
             getActiveDownloads(profile).getAndAdd(-(total - extracted));
@@ -289,6 +296,17 @@ public class ModUtils {
             Cogfly.logger.info("Extracted {}/{} entries for {}", extracted, total, fullName);
         } finally {
             Files.delete(temp);
+        }
+    }
+
+    private static void checkSilksong(){
+        Optional<ProcessHandle> silksong = ProcessHandle.allProcesses().filter(p -> p.info().command().map(cmd -> cmd.toLowerCase().contains("silksong")).orElse(false)).findFirst();
+        if (silksong.isPresent()){
+            int yes = JOptionPane.showConfirmDialog(FrameManager.getOrCreate().frame, "Silksong is currently running, which may cause issues installing or updating mods, close it?", "Silksong is running", JOptionPane.YES_NO_OPTION);
+            if (yes == JOptionPane.YES_OPTION){
+                silksong.get().destroy();
+                silksong.get().onExit().join();
+            }
         }
     }
 

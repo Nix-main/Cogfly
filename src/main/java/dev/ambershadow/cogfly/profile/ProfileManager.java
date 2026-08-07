@@ -59,8 +59,10 @@ public class ProfileManager {
             }
         }
         profiles.add(prof);
-        ProfilesScreenElement.queueRefresh();
-        FrameManager.getOrCreate().getCurrentPage().reload();
+        SwingUtilities.invokeLater(() -> {
+            ProfilesScreenElement.queueRefresh();
+            FrameManager.getOrCreate().getCurrentPage().reload();
+        });
     }
     private static void deleteFolder(Path path) {
         try(Stream<Path> stream = Files.walk(path)) {
@@ -240,19 +242,12 @@ public class ProfileManager {
                 (List<Map<String, Object>>) data.get("mods");
         List<ModData> outdatedMods = new ArrayList<>();
         Profile profile = new Profile(profileName, Paths.get(Cogfly.settings.profileSavePath + "/" + profileName));
-        try {
-            Files.writeString(profile.getPath().resolve("cogfly_data.json"), cogflyData);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
         String gamePath = "";
         if (!cogflyData.isEmpty())
             gamePath = JsonParser.parseString(cogflyData).getAsJsonObject().get("gamePath").getAsString();
-        if (!gamePath.isEmpty())
-            profile.setGamePath(Paths.get(gamePath).toString());
         FrameManager.getOrCreate().setPage(FrameManager.CogflyPage.PROFILES,
                 FrameManager.getOrCreate().profilesPageButton);
-        if (Paths.get(Cogfly.settings.profileSavePath).resolve(profileName).toFile().exists()) {
+        if (Files.exists(profile.getPath())) {
             int result = JOptionPane.showConfirmDialog(FrameManager.getOrCreate().frame,
                     "A profile with this name in this location already exists. Would you like to overwrite it?", "Profile already exists.",
                     JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE,
@@ -262,6 +257,14 @@ public class ProfileManager {
             }
             deleteFolder(Paths.get(Cogfly.settings.profileSavePath).resolve(profileName));
             loadProfiles();
+        }
+        if (!gamePath.isEmpty())
+            profile.setGamePath(Paths.get(gamePath).toString());
+        try {
+            Files.createDirectories(profile.getPath());
+            Files.writeString(profile.getPath().resolve("cogfly_data.json"), cogflyData);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
         profiles.add(profile);
         GameUtils.downloadBepInEx(profile.getPath());
