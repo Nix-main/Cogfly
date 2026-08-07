@@ -80,8 +80,8 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           mkdir build/libs/repo
-          wget -q -P build/libs/repo https://rpm.ambershadow.dev/cogfly.repo
-          wget -q -P build/libs/repo https://rpm.ambershadow.dev/repo.gpg 
+          wget -P build/libs/repo https://apt.ambershadow.dev/cogfly.sources
+          wget -P build/libs/repo https://apt.ambershadow.dev/repo.gpg 
           jpackage \
             --input build/libs \
             --main-jar Cogfly-${{ env.ver }}.jar \
@@ -101,7 +101,7 @@ jobs:
         run: |
           rm -rf build/libs/repo
           mkdir build/libs/repo
-          wget -q -P build/libs/repo https://rpm.ambershadow.dev/cogfly.repo
+          wget -P build/libs/repo https://rpm.ambershadow.dev/cogfly.repo
           
           args=(
             --input build/libs
