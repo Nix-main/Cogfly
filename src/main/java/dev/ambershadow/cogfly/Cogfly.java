@@ -45,6 +45,8 @@ public class Cogfly {
             ? Cogfly.class.getPackage().getImplementationVersion()
             : "";
 
+    private static String latestVersion = version;
+
     public static URL getResource(String path) {
         URL url = Cogfly.class.getResource(path);
         if (url == null) throw new IllegalStateException("Resource not found: " + path);
@@ -265,7 +267,7 @@ public class Cogfly {
             }
     }
 
-    private static void autoUpdateWindows(String version) throws IOException {
+    private static void autoUpdateWindows() throws IOException {
         new ProcessBuilder(
                 "cmd.exe",
                 "/c",
@@ -275,7 +277,7 @@ public class Cogfly {
                 "-File",
                 localDataPath.resolve("updater", "updater.ps1").toString(),
                 ProcessHandle.current().pid() + "",
-                String.format("https://github.com/Nix-main/Cogfly/releases/latest/download/Cogfly-%s-installer.exe", version),
+                String.format("https://github.com/Nix-main/Cogfly/releases/latest/download/Cogfly-%s-installer.exe", latestVersion),
                 windowsSha256
         ).start();
         System.exit(0);
@@ -295,7 +297,7 @@ public class Cogfly {
                 "do shell script \"%s %s %s %s\" with administrator privileges",
                 localDataPath.resolve("updater").resolve("updater_mac.sh"),
                 ProcessHandle.current().pid(),
-                "https://ambershadow.dev/Cogfly-" + version + ".dmg",
+                String.format("https://ambershadow.dev/Cogfly-%s.dmg", latestVersion),
                 macSha256
         );
         new ProcessBuilder(
@@ -410,29 +412,23 @@ public class Cogfly {
             }
         }
 
-        String latestVer = ((Supplier<String>)() -> {
-            try (HttpClient client = HttpClient.newHttpClient()) {
-                HttpRequest request = HttpRequest.newBuilder()
-                        .GET()
-                        .uri(URI.create("https://ambershadow.dev/api/cogfly/latest/"))
-                        .build();
-                try {
-                    HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-                    JsonObject obj = JsonParser.parseString(response.body()).getAsJsonObject();
-                    windowsSha256 = obj.get("windowsSha256").getAsString();
-                    macSha256 = obj.get("macSha256").getAsString();
-                    return obj.get("version").getAsString();
-                } catch (IOException | InterruptedException e) {
-                    if (e instanceof ConnectException)
-                        return version;
-                    throw new RuntimeException(e);
-                }
-            }
-        }).get();
-        if (!version.equals(latestVer)) {
+        try (HttpClient client = HttpClient.newHttpClient()) {
+            HttpRequest request = HttpRequest.newBuilder()
+                .GET()
+                .uri(URI.create("https://ambershadow.dev/api/cogfly/latest/"))
+                .build();
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            JsonObject obj = JsonParser.parseString(response.body()).getAsJsonObject();
+            windowsSha256 = obj.get("windowsSha256").getAsString();
+            macSha256 = obj.get("macSha256").getAsString();
+            latestVersion = obj.get("version").getAsString();
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        if (!version.equals(latestVersion)) {
             int update = JOptionPane.showOptionDialog(
                     FrameManager.getOrCreate().frame,
-                    String.format(LocaleManager.messageUpdateAvailable.get(), version, latestVer),
+                    String.format(LocaleManager.messageUpdateAvailable.get(), version, latestVersion),
                     LocaleManager.titleUpdate.get(),
                     JOptionPane.YES_NO_CANCEL_OPTION,
                     JOptionPane.WARNING_MESSAGE,
@@ -446,7 +442,7 @@ public class Cogfly {
             );
             if (update == JOptionPane.YES_OPTION) {
                 switch (getOs()) {
-                    case WINDOWS -> autoUpdateWindows(latestVer);
+                    case WINDOWS -> autoUpdateWindows();
                     case LINUX -> {
                         if (System.getenv("APPIMAGE") != null)
                             autoUpdateAppImage();
