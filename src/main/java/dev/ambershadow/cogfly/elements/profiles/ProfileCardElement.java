@@ -210,7 +210,6 @@ public class ProfileCardElement extends JPanel {
             create.setAlignmentX(Component.LEFT_ALIGNMENT);
 
             // lowkey this jpanel chain sucks but nothing else was working lol
-            JPanel e = new JPanel(new BorderLayout());
             JPanel main = new JPanel();
             
             main.setLayout(new BoxLayout(main, BoxLayout.Y_AXIS));
