@@ -37,6 +37,7 @@ public class SettingsDialog extends JDialog {
         holder.add(new ProfileSavePathPanelElement(this));
         holder.add(new ScrollingIncrementElement(this));
         holder.add(new ProfileButtonSizeElement(this));
+        holder.add(new FontSizeElement(this));
         holder.add(new BaseGameEnabledElement(this));
         holder.add(new AutoNameSpacingElement(this));
         holder.add(new UseRelativeTimeElement(this));

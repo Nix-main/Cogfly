@@ -84,6 +84,7 @@ public class Settings {
     public boolean finishedSteamPopup = false;
     public boolean acceptedSteamArgs = false;
     public int profileButtonSize = 15;
+    public int modFontSize = 12;
     public String lastLaunchedVersion = Cogfly.version;
 
     private Settings() {}

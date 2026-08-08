@@ -6,6 +6,7 @@ import dev.ambershadow.cogfly.loader.ModData;
 import dev.ambershadow.cogfly.profile.Profile;
 import dev.ambershadow.cogfly.util.FileUtils;
 import dev.ambershadow.cogfly.util.ModUtils;
+import dev.ambershadow.cogfly.util.swing.FrameManager;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -183,7 +184,7 @@ public class ModPanelElement extends JPanel {
                 }
                 toggleButton.setHorizontalAlignment(SwingConstants.LEFT);
                 toggleButton.setAlignmentX(Component.LEFT_ALIGNMENT);
-                toggleButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, toggleButton.getPreferredSize().height));
+                toggleButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
 
                 JButton installButton = new JButton();
                 installButton.setPreferredSize(new Dimension(100, installButton.getPreferredSize().height));
@@ -200,7 +201,6 @@ public class ModPanelElement extends JPanel {
                 rowPanel.add(toggleButton);
                 rowPanel.add(Box.createHorizontalGlue());
                 rowPanel.add(installButton);
-                rowPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, toggleButton.getPreferredSize().height));
                 rowPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
                 modPanel.add(rowPanel);
 
@@ -300,6 +300,7 @@ public class ModPanelElement extends JPanel {
                 entry.modPanel = modPanel;
                 entry.installButton = installButton;
                 entry.enableButton = enableButton;
+                entry.toggleButton = toggleButton;
                 entry.version = installedVersionLabel;
 
                 update(mod, entry);
@@ -318,7 +319,6 @@ public class ModPanelElement extends JPanel {
     private void update(ModData mod, Mod entry) {
         boolean installedNow = mod.isInstalled(profile);
         entry.installButton.setText(installedNow ? (mod.isOutdated(profile) ? "Update" : "Uninstall") : "Install");
-
         boolean enabled = mod.isEnabled(profile);
         entry.enableButton.setSelected(enabled);
         entry.enableButton.setText(enabled ? "On" : "Off");
@@ -346,6 +346,11 @@ public class ModPanelElement extends JPanel {
             entry.created.setText("Date created: " + formatRelative(localCreated.toInstant(), now));
             entry.updated.setText("Date updated: " + formatRelative(localModified.toInstant(), now));
         }
+
+        entry.toggleButton.setFont(entry.toggleButton.getFont().deriveFont((float)Cogfly.settings.modFontSize));
+        entry.toggleButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, entry.toggleButton.getPreferredSize().height));
+        entry.installButton.setMaximumSize(new Dimension(entry.installButton.getMaximumSize().width, entry.toggleButton.getPreferredSize().height));
+        entry.enableButton.setMaximumSize(new Dimension(entry.enableButton.getMaximumSize().width, entry.toggleButton.getPreferredSize().height));
     }
 
     private void filterButtons() {
@@ -421,6 +426,7 @@ public class ModPanelElement extends JPanel {
         JPanel modPanel;
         JButton installButton;
         JToggleButton enableButton;
+        JToggleButton toggleButton;
         JLabel created;
         JLabel updated;
         JLabel version;
