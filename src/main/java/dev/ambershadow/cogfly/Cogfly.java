@@ -461,6 +461,11 @@ public class Cogfly {
                 FileUtils.openURI(URI.create("https://github.com/nix-main/Cogfly/releases/latest"));
             }
         }
+        if (!settings.lastLaunchedVersion.equals(version)){
+            settings.lastLaunchedVersion = version;
+            settings.dontShowPatreonAgain = false;
+            settings.save();
+        }
         if (!settings.dontShowPatreonAgain) {
             int val = JOptionPane.showOptionDialog(
                     FrameManager.getOrCreate().frame,
