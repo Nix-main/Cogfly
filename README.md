@@ -49,14 +49,18 @@ The output will be in __/build/libs__
 
 ## Repositories
 ### Debian-based/apt:
+```shell
 curl -fsSL https://apt.ambershadow.dev/repo.gpg -o cogfly.gpg
 curl -fsSL https://apt.ambershadow.dev/cogfly.sources -o cogfly.sources
 sudo install -Dm644 cogfly.sources /etc/apt/sources.list.d/cogfly.sources
 sudo install -Dm644 cogfly.gpg /usr/share/keyrings/cogfly.gpg
+```
 
 ### RPM/yum:
+```shell
 curl -fsSL https://rpm.ambershadow.dev/cogfly.repo -o cogfly.repo
 sudo install -Dm644 cogfly.repo /etc/yum.repos.d/cogfly.repo
+```
 
 <details>
 <summary><h3>Credits</h3></summary>
