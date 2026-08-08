@@ -27,7 +27,6 @@ public class SettingsDialog extends JDialog {
     public SettingsDialog(Frame parent, String name, boolean modal) {
         super(parent, name, modal);
         resetQueue();
-        setResizable(false);
 
         JPanel panel = new JPanel(new BorderLayout());
         JPanel holder = new JPanel();
@@ -61,7 +60,6 @@ public class SettingsDialog extends JDialog {
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         pack();
         setLocationRelativeTo(parent);
-
         saveButton.setEnabled(false);
         addWindowListener(new WindowAdapter() {
             @Override
@@ -121,9 +119,8 @@ public class SettingsDialog extends JDialog {
         if (queued.baseGameEnabled)
             GameUtils.downloadBepInEx(Path.of(queued.gamePath));
         SwingUtilities.invokeLater(ModPanelElement::redrawAll);
-        SwingUtilities.updateComponentTreeUI(FrameManager.getOrCreate().frame);
-        SwingUtilities.updateComponentTreeUI(this);
         Cogfly.settings.save();
+        SwingUtilities.updateComponentTreeUI(FrameManager.getOrCreate().frame);
     }
 
     private void resetQueue() {

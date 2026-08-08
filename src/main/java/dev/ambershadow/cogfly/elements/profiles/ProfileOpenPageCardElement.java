@@ -137,14 +137,20 @@ public class ProfileOpenPageCardElement extends JPanel {
         upperPanel.add(copyLaunchArgs);
         upperPanel.add(install);
 
-        JPanel centerPanel = new JPanel();
+        JPanel b = new JPanel();
+        JLabel name = new JLabel(profile.getName());
+        name.setFont(name.getFont().deriveFont(32f));
+        b.add(name);
+        JPanel panel = new JPanel();
         progressBar = new JProgressBar();
         progressBar.setVisible(false);
-        centerPanel.add(progressBar);
+        panel.add(progressBar);
 
         add(upperPanel);
         add(Box.createVerticalGlue());
-        add(centerPanel);
+        add(b);
+        add(Box.createVerticalGlue());
+        add(panel);
         add(Box.createVerticalGlue());
         add(new ModPanelElement(profile, this));
     }
