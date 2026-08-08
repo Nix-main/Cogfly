@@ -12,6 +12,8 @@ import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -111,7 +113,6 @@ public class ModPanelElement extends JPanel {
                 JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
                 JScrollPane.HORIZONTAL_SCROLLBAR_NEVER
         );
-
         scrollPane.setBorder(null);
 
         add(searchPanel, BorderLayout.NORTH);
@@ -140,6 +141,25 @@ public class ModPanelElement extends JPanel {
         searchField.setSize(getSize());
         buttonsPanel.setSize(getSize());
         scrollPane.setSize(getSize());
+
+
+        Window window = SwingUtilities.getWindowAncestor(FrameManager.getOrCreate().frame);
+        if (window != null) {
+            window.addComponentListener(new ComponentAdapter() {
+                @Override
+                public void componentResized(ComponentEvent e) {
+                    int wrapWidth = (int) (FrameManager.getOrCreate().frame.getWidth() * 2.0 / 3.0);
+                    for (Mod entry : mods.values()) {
+                        JTextArea area = entry.descriptionArea;
+                        if (area == null) continue;
+                        area.setSize(wrapWidth, Short.MAX_VALUE);
+                        area.setPreferredSize(new Dimension(wrapWidth, area.getPreferredSize().height));
+                    }
+                    buttonsPanel.revalidate();
+                    buttonsPanel.repaint();
+                }
+            });
+        }
     }
 
     private final Map<ModData, Mod> mods = new HashMap<>();
@@ -207,9 +227,19 @@ public class ModPanelElement extends JPanel {
                 JPanel holderPanel = new JPanel();
                 holderPanel.setBorder(BorderFactory.createEmptyBorder(2, 10, 2, 10));
                 JPanel infoPanel = new JPanel();
+                JLabel author = new JLabel("Author: " + mod.getAuthor());
                 infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
-                infoPanel.add(new JLabel("Description: " + mod.getDescription()));
-                infoPanel.add(new JLabel("Author: " + mod.getAuthor()));
+                JTextArea descArea = new JTextArea(mod.getDescription());
+                descArea.setLineWrap(true);
+                descArea.setWrapStyleWord(true);
+                descArea.setEditable(false);
+                descArea.setOpaque(false);
+                descArea.setFont(author.getFont());
+                descArea.setFocusable(false);
+                descArea.setAlignmentX(Component.LEFT_ALIGNMENT);
+                infoPanel.add(descArea);
+                entry.descriptionArea = descArea;
+                infoPanel.add(author);
                 JLabel versionLabel = new JLabel("Latest version: " + mod.getVersionNumber());
                 JLabel installedVersionLabel = new JLabel("Installed version: " + mod.getVersionNumber());
                 infoPanel.add(versionLabel);
@@ -315,6 +345,7 @@ public class ModPanelElement extends JPanel {
 
         buttonsPanel.revalidate();
         buttonsPanel.repaint();
+        SwingUtilities.invokeLater(() -> scrollPane.getViewport().setViewPosition(new Point(0, 0)));
     }
     private void update(ModData mod, Mod entry) {
         boolean installedNow = mod.isInstalled(profile);
@@ -428,6 +459,7 @@ public class ModPanelElement extends JPanel {
         JToggleButton enableButton;
         JToggleButton toggleButton;
         JLabel created;
+        JTextArea descriptionArea;
         JLabel updated;
         JLabel version;
     }
