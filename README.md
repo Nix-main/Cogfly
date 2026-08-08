@@ -42,7 +42,7 @@ __To build Cogfly on Windows, you'll need both GCC and G++ in your PATH, as they
 `.\gradlew.bat clean shadowJar`
 
 Unix/OSX:\
-__To build a cross-platform jar that works on Windows, you need MinGW-w64 on your PATH. If you do not have this, the Windows file dialog libraries will be skipped.__\
+__To build a cross-platform jar that works on Windows, you'll need a Windows cross-compiler, such as MinGW-w64. If not using MinGW-w64, you'll need to modify `build.gradle.kts` to match your compiler's command. If you do not have this, the Windows file dialog libraries will be skipped.__\
 `./gradlew clean shadowJar`
 
 The output will be in __/build/libs__
