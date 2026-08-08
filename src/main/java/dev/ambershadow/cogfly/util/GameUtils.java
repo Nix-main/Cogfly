@@ -196,6 +196,20 @@ public class GameUtils {
             JOptionPane.showMessageDialog(FrameManager.getOrCreate().frame, "Downloads are currently in-progress for this profile. Please wait for them to complete before launching.", "Downloads in progress!", JOptionPane.WARNING_MESSAGE);
             return;
         }
+        if (!profile.getGamePath().equals(Cogfly.settings.gamePath)){
+            int launch = JOptionPane.showOptionDialog(FrameManager.getOrCreate().frame,
+                    "This profile has a custom game path. How would you like to launch it?",
+                    "Launch",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE,
+                    Assets.icon.getAsIcon(),
+                    new Object[]{"Launch Modded", "Launch Vanilla"},
+                    "Launch Modded");
+            if (launch == JOptionPane.NO_OPTION){
+                launchGameAsync(false, profile.getBepInExPath().toString(), profile.getGamePath());
+                return;
+            }
+        }
         launchGameAsync(true, profile.getBepInExPath().toString(), profile.getGamePath());
     }
 

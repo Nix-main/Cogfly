@@ -180,7 +180,7 @@ public class ProfileCardElement extends JPanel {
             JLabel pth = new JLabel("Path: ");
             JButton btn = new JButton(profile.getGamePath());
             nameField.getDocument().addDocumentListener(new ProfilesScreenElement.NameDocumentListener(nameField, create));
-            button.addActionListener(_ -> FileUtils.pickFile((path) -> btn.setText(path.toString()), "Hollow Knight Silksong", "png", "jpg", "jpeg", "gif"));
+            btn.addActionListener(_ -> FileUtils.pickFile((path) -> btn.setText(path.toString()), "Hollow Knight Silksong", "png", "jpg", "jpeg", "gif"));
 
             create.addActionListener(_ -> {
                 if ((profile.getIconPath() == null || !button.getText().equals(profile.getIconPath().toString()))
