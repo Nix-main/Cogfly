@@ -16,8 +16,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -305,7 +304,13 @@ public class ModUtils {
             int yes = JOptionPane.showConfirmDialog(FrameManager.getOrCreate().frame, "Silksong is currently running, which may cause issues installing or updating mods, close it?", "Silksong is running", JOptionPane.YES_NO_OPTION);
             if (yes == JOptionPane.YES_OPTION){
                 silksong.get().destroy();
-                silksong.get().onExit().join();
+                try {
+                    silksong.get().onExit().get(5, TimeUnit.SECONDS);
+                } catch (TimeoutException e) {
+                    JOptionPane.showMessageDialog(FrameManager.getOrCreate().frame, "Silksong did not close within 5 seconds, please close it manually.", "Silksong did not close", JOptionPane.ERROR_MESSAGE);
+                } catch (ExecutionException | InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
             }
         }
     }
