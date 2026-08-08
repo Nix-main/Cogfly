@@ -334,6 +334,7 @@ public class ModPanelElement extends JPanel {
                 entry.version = installedVersionLabel;
 
                 update(mod, entry);
+                SwingUtilities.invokeLater(() -> scrollPane.getViewport().setViewPosition(new Point(0, 0)));
                 this.mods.put(mod, entry);
             } else {
                 update(mod, entry);
@@ -345,7 +346,6 @@ public class ModPanelElement extends JPanel {
 
         buttonsPanel.revalidate();
         buttonsPanel.repaint();
-        SwingUtilities.invokeLater(() -> scrollPane.getViewport().setViewPosition(new Point(0, 0)));
     }
     private void update(ModData mod, Mod entry) {
         boolean installedNow = mod.isInstalled(profile);
