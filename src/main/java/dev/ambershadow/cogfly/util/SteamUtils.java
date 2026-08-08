@@ -50,7 +50,7 @@ public class SteamUtils {
             return true;
         if (!Cogfly.settings.finishedSteamPopup) {
             int opt = JOptionPane.showOptionDialog(FrameManager.getOrCreate().frame,
-                    "Cogfly is trying to add " + "\"" + args + "\" to your steam launch arguments, this is necessary for the Launch with Steam setting to work on Mac and Linux. This will not overwrite your existing launch arguments, they will still work. You will not be shown this popup again, but can always modify this value in your settings.",
+                    "Cogfly is trying to add " + "\"" + args + "\" to your steam launch arguments, this is necessary for the Launch with Steam setting to work on Mac and Linux. This WILL overwrite your existing launch arguments, but only once. You will not be shown this popup again, but can always modify this value in your settings.",
                     "Steam Launch Args",
                     JOptionPane.YES_NO_CANCEL_OPTION,
                     JOptionPane.INFORMATION_MESSAGE,
@@ -76,17 +76,10 @@ public class SteamUtils {
         else {
             String[] vals = launchOpts.split("\"");
             if (vals.length > 3) {
-                if (vals[3].contains("%command%")) {
-                    List<String> a = new ArrayList<>(Arrays.stream(vals[3].split("%command%")).toList());
-                    a.add(1, args + " %command%");
-                    a.add("\"");
-                    vals[3] = String.join("", a);
-                }
-                else
-                    vals[3] = args + " %command% " + vals[3] + "\"";
+                vals[3] = args + " \"";
+            } else {
+                vals[2] = " \t\"" + args + " \"";
             }
-            else
-                vals[2] = " \t\"" + args + " %command% \"";
             lines.remove(launchOptsIndex);
             index = launchOptsIndex;
             val = String.join("\"", vals);
