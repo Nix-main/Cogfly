@@ -22,10 +22,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 
@@ -217,11 +215,7 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
                                 desktop = desktop.replace("ICON_PATH", Cogfly.localDataPath.resolve("icon.png").toAbsolutePath().toString());
                                 Path file = loc.resolve(profile.getName() + ".desktop");
                                 Files.writeString(file, desktop);
-                                Set<PosixFilePermission> perms = Files.getPosixFilePermissions(file);
-                                perms.add(PosixFilePermission.OWNER_EXECUTE);
-                                perms.add(PosixFilePermission.GROUP_EXECUTE);
-                                perms.add(PosixFilePermission.OTHERS_EXECUTE);
-                                Files.setPosixFilePermissions(file, perms);
+                                Cogfly.setExecutable(file);
                             }
                         }
                         case MAC -> {
@@ -241,11 +235,7 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
                             if (exit != 0)
                                 throw new RuntimeException("osacompile failed with exit code " + exit + ": " + output);
                             Files.copy(Cogfly.localDataPath.resolve("icon.icns"), file.resolve("Contents/Resources/applet.icns"), StandardCopyOption.REPLACE_EXISTING);
-                            Set<PosixFilePermission> perms = Files.getPosixFilePermissions(file);
-                            perms.add(PosixFilePermission.OWNER_EXECUTE);
-                            perms.add(PosixFilePermission.GROUP_EXECUTE);
-                            perms.add(PosixFilePermission.OTHERS_EXECUTE);
-                            Files.setPosixFilePermissions(file, perms);
+                            Cogfly.setExecutable(file);
                         }
                     }
                 } catch (IOException | InterruptedException e) {

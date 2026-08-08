@@ -39,11 +39,10 @@ The latest CI build can be retrieved from the workflow, but building manually is
 
 Windows:\
 __To build Cogfly on Windows, you'll need both GCC and G++ in your PATH, as they are invoked to compile the Windows file dialog libraries.__\
-I personally use https://www.mingw-w64.org/ \
 `.\gradlew.bat clean shadowJar`
 
 Unix/OSX:\
-__If you have GCC and G++ on PATH, the windows DLLs will be built so that your jar works on Windows. If not, the build will still succeed, but not work properly on Windows.__\
+__To build a cross-platform jar that works on Windows, you need MinGW-w64 on your PATH. If you do not have this, the Windows file dialog libraries will be skipped.__\
 `./gradlew clean shadowJar`
 
 The output will be in __/build/libs__
@@ -54,7 +53,9 @@ The output will be in __/build/libs__
 Nix herself very likely did anything not listed here.
 
 - Art
-    - [Jngo](https://github.com/jngo102) - Main icon on the info page
+    - [Jngo](https://github.com/jngo102) - Main icon on the info 
+- Reese
+    - [Slaurent](https://github.com/slaurent22) - Pictures of his lovely cat 
 - Contributions
     - [Hien Ngo](https://github.com/hien-ngo29) 
       - RPM build in the workflow

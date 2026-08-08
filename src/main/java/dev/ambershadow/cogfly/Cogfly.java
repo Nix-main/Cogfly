@@ -27,6 +27,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
+import java.nio.file.attribute.PosixFilePermission;
 import java.time.Instant;
 import java.util.*;
 import java.util.List;
@@ -43,6 +44,8 @@ public class Cogfly {
     public static final String version = Cogfly.class.getPackage().getImplementationVersion() != null
             ? Cogfly.class.getPackage().getImplementationVersion()
             : "";
+
+    private static String latestVersion = version;
 
     public static URL getResource(String path) {
         URL url = Cogfly.class.getResource(path);
@@ -68,9 +71,7 @@ public class Cogfly {
     public static boolean showUnknownHost;
     private static String windowsSha256;
     private static String macSha256;
-
     public static Path tempDir;
-
     private static HashMap<String, List<String>> failedDownloads = new HashMap<>();
     
     public static @SuppressWarnings("unused") void main(String[] args) throws IOException {
@@ -117,9 +118,7 @@ public class Cogfly {
             });
         }
         if (args.length > 0) {
-            Cogfly.logger.info("Received arguments: {}", Arrays.toString(args));
-            String arg = args[0].replace("cogfly://", "");
-            boolean a = handleArgs(arg);
+            boolean a = handleArgs(args[0]);
             if (a)
                 return;
         }
@@ -131,6 +130,7 @@ public class Cogfly {
                     Files.createDirectories(localDataPath.resolve("updater"));
                     try (InputStream stream = getResource("/updater.sh").openStream()) {
                         Files.write(localDataPath.resolve("updater", "updater.sh"), stream.readAllBytes());
+                        setExecutable(localDataPath.resolve("updater", "updater.sh"));
                     }
                     Path updater = localDataPath.resolve("appimageupdatetool-x86_64.appimage");
                     if (!Files.exists(updater)) {
@@ -144,6 +144,7 @@ public class Cogfly {
                 Files.createDirectories(localDataPath.resolve("updater"));
                 try (InputStream stream = getResource("/updater_mac.sh").openStream()) {
                     Files.write(localDataPath.resolve("updater", "updater_mac.sh"), stream.readAllBytes());
+                    setExecutable(localDataPath.resolve("updater", "updater_mac.sh"));
                 }
             }
         }
@@ -205,9 +206,19 @@ public class Cogfly {
         FrameManager.getOrCreate().frame.setVisible(true);
     }
 
+    public static void setExecutable(Path path) throws IOException {
+        Set<PosixFilePermission> perms = Files.getPosixFilePermissions(path);
+        perms.add(PosixFilePermission.GROUP_EXECUTE);
+        perms.add(PosixFilePermission.OWNER_EXECUTE);
+        perms.add(PosixFilePermission.OTHERS_EXECUTE);
+        Files.setPosixFilePermissions(path, perms);
+    }
+
     private static boolean handleArgs(String arg) throws IOException {
-        if (arg.toLowerCase().startsWith("launch/")) {
-            String name = arg.substring(7);
+        Cogfly.logger.info("Received arguments: {}", arg);
+        String a = arg.replace("cogfly://", "");
+        if (a.toLowerCase().startsWith("launch/")) {
+            String name = a.substring(7);
             final String[] profile = new String[]{null};
             List<Path> paths = new ArrayList<>();
             paths.add(Path.of(settings.profileSavePath));
@@ -254,7 +265,7 @@ public class Cogfly {
             }
     }
 
-    private static void autoUpdateWindows(String version) throws IOException {
+    private static void autoUpdateWindows() throws IOException {
         new ProcessBuilder(
                 "cmd.exe",
                 "/c",
@@ -264,7 +275,7 @@ public class Cogfly {
                 "-File",
                 localDataPath.resolve("updater", "updater.ps1").toString(),
                 ProcessHandle.current().pid() + "",
-                "https://github.com/Nix-main/Cogfly/releases/latest/download/Cogfly-ver-installer.exe".replace("ver", version),
+                String.format("https://github.com/Nix-main/Cogfly/releases/latest/download/Cogfly-%s-installer.exe", latestVersion),
                 windowsSha256
         ).start();
         System.exit(0);
@@ -272,7 +283,7 @@ public class Cogfly {
 
     private static void autoUpdateAppImage() throws IOException {
         new ProcessBuilder(
-                "bash", localDataPath.resolve("updater.sh").toString(),
+                "bash", localDataPath.resolve("updater").resolve("updater.sh").toString(),
                 ProcessHandle.current().pid() + "",
                 localDataPath.resolve("appimageupdatetool-x86_64.appimage").toString()
         ).start();
@@ -281,10 +292,15 @@ public class Cogfly {
 
     private static void autoUpdateMac() throws IOException {
         new ProcessBuilder(
-                localDataPath.resolve("updater_mac.sh").toString(),
-                ProcessHandle.current().pid() + "",
-                "https://github.com/Nix-main/Cogfly/releases/latest/download/Cogfly-ver.dmg".replace("ver", version),
-                macSha256
+                "osascript",
+                "-e",
+                String.format(
+                        "do shell script \"'%s' %s '%s' '%s'\" with administrator privileges",
+                        localDataPath.resolve("updater").resolve("updater_mac.sh"),
+                        ProcessHandle.current().pid(),
+                        String.format("https://ambershadow.dev/Cogfly-%s.dmg", latestVersion),
+                        macSha256
+                )
         ).start();
         System.exit(0);
     }
@@ -393,29 +409,23 @@ public class Cogfly {
             }
         }
 
-        String latestVer = ((Supplier<String>)() -> {
-            try (HttpClient client = HttpClient.newHttpClient()) {
-                HttpRequest request = HttpRequest.newBuilder()
-                        .GET()
-                        .uri(URI.create("https://ambershadow.dev/api/cogfly/latest/"))
-                        .build();
-                try {
-                    HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-                    JsonObject obj = JsonParser.parseString(response.body()).getAsJsonObject();
-                    windowsSha256 = obj.get("windowsSha256").getAsString();
-                    macSha256 = obj.get("macSha256").getAsString();
-                    return obj.get("version").getAsString();
-                } catch (IOException | InterruptedException e) {
-                    if (e instanceof ConnectException)
-                        return version;
-                    throw new RuntimeException(e);
-                }
-            }
-        }).get();
-        if (!version.equals(latestVer)) {
+        try (HttpClient client = HttpClient.newHttpClient()) {
+            HttpRequest request = HttpRequest.newBuilder()
+                .GET()
+                .uri(URI.create("https://ambershadow.dev/api/cogfly/latest/"))
+                .build();
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            JsonObject obj = JsonParser.parseString(response.body()).getAsJsonObject();
+            windowsSha256 = obj.get("windowsSha256").getAsString();
+            macSha256 = obj.get("macSha256").getAsString();
+            latestVersion = obj.get("version").getAsString();
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        if (!version.equals(latestVersion)) {
             int update = JOptionPane.showOptionDialog(
                     FrameManager.getOrCreate().frame,
-                    String.format(LocaleManager.messageUpdateAvailable.get(), version, latestVer),
+                    String.format(LocaleManager.messageUpdateAvailable.get(), version, latestVersion),
                     LocaleManager.titleUpdate.get(),
                     JOptionPane.YES_NO_CANCEL_OPTION,
                     JOptionPane.WARNING_MESSAGE,
@@ -429,7 +439,7 @@ public class Cogfly {
             );
             if (update == JOptionPane.YES_OPTION) {
                 switch (getOs()) {
-                    case WINDOWS -> autoUpdateWindows(latestVer);
+                    case WINDOWS -> autoUpdateWindows();
                     case LINUX -> {
                         if (System.getenv("APPIMAGE") != null)
                             autoUpdateAppImage();

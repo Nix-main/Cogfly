@@ -13,6 +13,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Random;
 
 public class InfoPageElement extends JPanel implements ReloadablePage {
 
@@ -20,7 +21,20 @@ public class InfoPageElement extends JPanel implements ReloadablePage {
     public InfoPageElement() {
         setLayout(new BorderLayout());
 
-        JLabel image = new JLabel(Assets.centralIcon.getAsScaledIcon(1 / 3f));
+        Random random = new Random();
+        int a = random.nextInt(0, 1000);
+        JLabel image;
+        if (a == 1 && Cogfly.settings.profileSpecificPaths){
+            if (random.nextBoolean()){
+                image = new JLabel(Assets.reese1.getAsScaledIcon(1 / 10f));
+            }
+            else {
+                image = new JLabel(Assets.reese2.getAsScaledIcon(1 / 8f));
+            }
+            image.setToolTipText("Reese.");
+        } else {
+            image = new JLabel(Assets.centralIcon.getAsScaledIcon(1 / 3f));
+        }
         image.setHorizontalAlignment(SwingConstants.CENTER);
         add(image, BorderLayout.NORTH);
         add(createButtons(), BorderLayout.CENTER);
