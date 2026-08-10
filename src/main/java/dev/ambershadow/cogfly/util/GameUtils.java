@@ -92,8 +92,6 @@ public class GameUtils {
     }
 
     private static void downloadDoorstop(Path path) {
-        if (hasDoorstop(path))
-            return;
         try(Stream<Path> files = Files.list(doorstop)) {
             for (Path file : files.toList()) {
                 if (!latestPackVer.equals(oldPackVersion)) {
@@ -106,19 +104,6 @@ public class GameUtils {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private static boolean hasDoorstop(Path path) {
-        boolean exists = false;
-        try (Stream<Path> files = Files.list(doorstop)) {
-            for (Path file : files.toList()) {
-                exists = Files.exists(path.resolve(file.getFileName()));
-            }
-        }
-        catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return exists;
     }
 
     public static void afterLoad() {
