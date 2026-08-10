@@ -24,7 +24,7 @@ case "$1" in
     configure)
 xdg-desktop-menu install /opt/cogfly/lib/cogfly-Cogfly.desktop
 install -Dm644 /opt/cogfly/lib/app/repo/cogfly.sources /etc/apt/sources.list.d/cogfly.sources
-install -Dm644 /opt/cogfly/lib/app/repo/cogfly.gpg /usr/share/keyrings/cogfly.gpg
+install -Dm644 /opt/cogfly/lib/app/repo/repo.gpg /usr/share/keyrings/cogfly.gpg
 apt-get update || true
     ;;
 
