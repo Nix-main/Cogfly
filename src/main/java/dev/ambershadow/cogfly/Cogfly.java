@@ -129,29 +129,23 @@ public class Cogfly {
                 if (System.getenv("APPIMAGE") != null) {
                     Files.createDirectories(localDataPath.resolve("updater"));
                     Path updaterSh = localDataPath.resolve("updater", "updater.sh");
-                    if (!Files.exists(updaterSh)) {
-                        try (InputStream stream = getResource("/updater.sh").openStream()) {
-                            Files.write(updaterSh, stream.readAllBytes());
-                            setExecutable(updaterSh);
-                        }
+                    try (InputStream stream = getResource("/updater.sh").openStream()) {
+                        Files.write(updaterSh, stream.readAllBytes());
+                        setExecutable(updaterSh);
                     }
                     Path updater = localDataPath.resolve("appimageupdatetool-x86_64.appimage");
-                    if (!Files.exists(updater)) {
-                        try (InputStream stream = URL.of(URI.create("https://github.com/AppImageCommunity/AppImageUpdate/releases/latest/download/appimageupdatetool-x86_64.AppImage"), null).openStream()) {
-                            Files.copy(stream, updater);
-                        }
-                        setExecutable(updater);
+                    try (InputStream stream = URL.of(URI.create("https://github.com/AppImageCommunity/AppImageUpdate/releases/latest/download/appimageupdatetool-x86_64.AppImage"), null).openStream()) {
+                        Files.copy(stream, updater);
                     }
+                    setExecutable(updater);
                 }
             }
             case MAC -> {
                 Files.createDirectories(localDataPath.resolve("updater"));
                 Path updaterMac = localDataPath.resolve("updater", "updater_mac.sh");
-                if (!Files.exists(updaterMac)) {
-                    try (InputStream stream = getResource("/updater_mac.sh").openStream()) {
-                        Files.write(updaterMac, stream.readAllBytes());
-                        setExecutable(updaterMac);
-                    }
+                try (InputStream stream = getResource("/updater_mac.sh").openStream()) {
+                    Files.write(updaterMac, stream.readAllBytes());
+                    setExecutable(updaterMac);
                 }
             }
         }
