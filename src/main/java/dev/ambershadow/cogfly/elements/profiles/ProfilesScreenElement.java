@@ -105,13 +105,17 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
                 if (result == JOptionPane.YES_OPTION) {
                     List<CompletableFuture<Void>> voids = new ArrayList<>();
                     for (ModData modData : outdated) {
-                        voids.add(Cogfly.runAsync(() -> ModUtils.downloadLatestMod(
+                        voids.add(ModUtils.downloadLatestMod(
                                 ModData.getMod(modData.getFullName()),
                                 profile,
                                 false
-                        )));
+                        ));
                     }
-                    CompletableFuture.allOf(voids.toArray(CompletableFuture[]::new)).join();
+                    CompletableFuture
+                            .allOf(voids.toArray(CompletableFuture[]::new))
+                            .exceptionally(e -> {
+                                throw new RuntimeException(e);
+                            });
                 }
             }
             drawProfiles();
@@ -139,13 +143,17 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
                     if (result == JOptionPane.YES_OPTION) {
                         List<CompletableFuture<Void>> voids = new ArrayList<>();
                         for (ModData modData : outdated) {
-                            voids.add(Cogfly.runAsync(() -> ModUtils.downloadLatestMod(
+                            voids.add(ModUtils.downloadLatestMod(
                                     ModData.getMod(modData.getFullName()),
                                     profile,
                                     false
-                            )));
+                            ));
                         }
-                        CompletableFuture.allOf(voids.toArray(CompletableFuture[]::new)).join();
+                        CompletableFuture
+                                .allOf(voids.toArray(CompletableFuture[]::new))
+                                .exceptionally(e -> {
+                                    throw new RuntimeException(e);
+                                });
                     }
                 }
                 drawProfiles();

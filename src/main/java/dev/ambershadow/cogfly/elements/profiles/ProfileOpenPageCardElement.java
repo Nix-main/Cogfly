@@ -57,13 +57,18 @@ public class ProfileOpenPageCardElement extends JPanel {
                 if (result == JOptionPane.YES_OPTION) {
                     List<CompletableFuture<Void>> voids = new ArrayList<>();
                     for (ModData modData : outdated) {
-                        voids.add(Cogfly.runAsync(() -> ModUtils.downloadLatestMod(
+                        voids.add(ModUtils.downloadLatestMod(
                                 ModData.getMod(modData.getFullName()),
                                 profile,
                                 false
-                        )));
+                        ));
                     }
-                    CompletableFuture.allOf(voids.toArray(CompletableFuture[]::new)).thenRun(() -> GameUtils.launchModdedGame(profile)).join();
+                    CompletableFuture
+                            .allOf(voids.toArray(CompletableFuture[]::new))
+                            .thenRun(() -> GameUtils.launchModdedGame(profile))
+                            .exceptionally(e -> {
+                                throw new RuntimeException(e);
+                            });
                     return;
                 }
             }
@@ -76,11 +81,11 @@ public class ProfileOpenPageCardElement extends JPanel {
             updateAll.setEnabled(false);
             for (ModData modData : profile.getInstalledMods()) {
                 if (!modData.isOutdated(profile)) continue;
-                Cogfly.runAsync(() -> ModUtils.downloadLatestMod(
+                ModUtils.downloadLatestMod(
                         ModData.getMod(modData.getFullName()),
                         profile,
                         false
-                ));
+                );
             }
         });
 

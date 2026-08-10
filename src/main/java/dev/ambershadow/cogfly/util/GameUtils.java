@@ -205,10 +205,11 @@ public class GameUtils {
                     Assets.icon.getAsIcon(),
                     new Object[]{"Launch Modded", "Launch Vanilla"},
                     "Launch Modded");
-            if (launch == JOptionPane.NO_OPTION){
+            if (launch == JOptionPane.NO_OPTION)
                 launchGameAsync(false, profile.getBepInExPath().toString(), profile.getGamePath());
+
+            if (launch != JOptionPane.YES_OPTION)
                 return;
-            }
         }
         launchGameAsync(true, profile.getBepInExPath().toString(), profile.getGamePath());
     }

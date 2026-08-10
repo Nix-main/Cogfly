@@ -146,13 +146,18 @@ public class ProfileCardElement extends JPanel {
                 if (result == JOptionPane.YES_OPTION) {
                     List<CompletableFuture<Void>> voids = new ArrayList<>();
                     for (ModData modData : outdated) {
-                        voids.add(Cogfly.runAsync(() -> ModUtils.downloadLatestMod(
+                        voids.add(ModUtils.downloadLatestMod(
                                 ModData.getMod(modData.getFullName()),
                                 profile,
                                 false
-                        )));
+                        ));
                     }
-                    CompletableFuture.allOf(voids.toArray(CompletableFuture[]::new)).thenRun(() -> GameUtils.launchModdedGame(profile)).join();
+                    CompletableFuture
+                            .allOf(voids.toArray(CompletableFuture[]::new))
+                            .thenRun(() -> GameUtils.launchModdedGame(profile))
+                            .exceptionally(e -> {
+                                throw new RuntimeException(e);
+                            });
                     return;
                 }
             }
@@ -164,7 +169,6 @@ public class ProfileCardElement extends JPanel {
             JDialog prompt = new JDialog(FrameManager.getOrCreate().frame);
             prompt.setTitle("Edit Profile - " + profile.getName());
             prompt.setModal(true);
-            prompt.setResizable(false);
             prompt.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
             JLabel name = new JLabel("Name: ");
             JTextField nameField = new JTextField(profile.getName());
@@ -173,14 +177,12 @@ public class ProfileCardElement extends JPanel {
             if (profile.getIconPath() != null)
                 button.setText(profile.getIconPath().toString());
             JButton create = new JButton("Update");
-
             nameField.getDocument().addDocumentListener(new ProfilesScreenElement.NameDocumentListener(nameField, create));
             button.addActionListener(_ -> FileUtils.pickFile((path) -> button.setText(path.toString()), "*", "png", "jpg", "jpeg", "gif"));
 
             JLabel pth = new JLabel("Path: ");
             JButton btn = new JButton(profile.getGamePath());
-            nameField.getDocument().addDocumentListener(new ProfilesScreenElement.NameDocumentListener(nameField, create));
-            btn.addActionListener(_ -> FileUtils.pickFile((path) -> btn.setText(path.toString()), "Hollow Knight Silksong", "png", "jpg", "jpeg", "gif"));
+            btn.addActionListener(_ -> FileUtils.pickFile((path) -> btn.setText(path.getParent().toString()), "Hollow Knight Silksong", "exe", "app", ""));
 
             create.addActionListener(_ -> {
                 if ((profile.getIconPath() == null || !button.getText().equals(profile.getIconPath().toString()))

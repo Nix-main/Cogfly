@@ -30,7 +30,9 @@ public class ModUtils {
 
         if (mod.isManual()) {
             try {
-                Files.delete(profile.getPluginsPath().resolve(mod.getManualFileName()));
+                Files.deleteIfExists(profile.getPluginsPath().resolve(mod.getManualFileName()));
+                if (Files.exists(profile.getPluginsPath().resolve(mod.getName())))
+                    FileUtils.deleteFolder(profile.getPluginsPath().resolve(mod.getName()));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -54,12 +56,12 @@ public class ModUtils {
 
         ModPanelElement.redraw(profile);
     }
-    public static void downloadLatestMod(ModData mod, Profile profile, boolean deps) {
-        downloadMod(ModData.getMod(mod), profile, deps);
+    public static CompletableFuture<Void> downloadLatestMod(ModData mod, Profile profile, boolean deps) {
+        return downloadMod(ModData.getMod(mod), profile, deps);
     }
 
-    public static void downloadMod(ModData mod, Profile profile, boolean deps) {
-        downloadMod(mod, profile, deps, true);
+    public static CompletableFuture<Void> downloadMod(ModData mod, Profile profile, boolean deps) {
+        return downloadMod(mod, profile, deps, true);
     }
     public static boolean isDownloading(Profile profile) {
         return activeDownloads.containsKey(profile);
@@ -165,7 +167,7 @@ public class ModUtils {
         ModPanelElement.setProgressBar(profile);
     }
 
-    public static void downloadMod(ModData mod, Profile profile, boolean deps, boolean enabled) {
+    public static CompletableFuture<Void> downloadMod(ModData mod, Profile profile, boolean deps, boolean enabled) {
         checkSilksong();
         CompletableFuture<Void> download = Cogfly.runAsync(() -> {
             String fn = mod.getFullName();
@@ -206,6 +208,7 @@ public class ModUtils {
             });
         });
         download.whenComplete((_, _) -> ModPanelElement.setProgressBar(profile));
+        return download;
     }
 
     public static void downloadModZipStream(InputStream is, String fullName, Profile profile, long totalBytes) throws IOException {
