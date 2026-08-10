@@ -22,4 +22,4 @@ hdiutil detach "$mnt"
 /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f /Applications/Cogfly.app
 
 rm "$dmg"
-open "cogfly://launch"
+open "cogfly://"
