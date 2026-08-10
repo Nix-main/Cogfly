@@ -40,7 +40,10 @@ val compileWinFolderPicker by tasks.register("compileWinFolderPicker") {
                     "${layout.buildDirectory.get()}/native/winfolderpicker.dll",
                     "resources/libs/folderpicker.cpp",
                     "-lole32",
-                    "-luuid"
+                    "-luuid",
+                    "-static",
+                    "-static-libgcc",
+                    "-static-libstdc++"
                 )
             }.result.get()
         } catch (e: Exception) {
@@ -64,7 +67,9 @@ val compileTinyFileDialogs = tasks.register("compileTinyFileDialogs") {
                     "-lole32",
                     "-lcomdlg32",
                     "-lshell32",
-                    "-luuid"
+                    "-luuid",
+                    "-static",
+                    "-static-libgcc"
                 )
                 isIgnoreExitValue = true
             }.result.get()

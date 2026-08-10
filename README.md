@@ -42,10 +42,25 @@ __To build Cogfly on Windows, you'll need both GCC and G++ in your PATH, as they
 `.\gradlew.bat clean shadowJar`
 
 Unix/OSX:\
-__To build a cross-platform jar that works on Windows, you need MinGW-w64 on your PATH. If you do not have this, the Windows file dialog libraries will be skipped.__\
+__To build a cross-platform jar that works on Windows, you'll need a Windows cross-compiler, such as MinGW-w64. If not using MinGW-w64, you'll need to modify `build.gradle.kts` to match your compiler's command. If you do not have this, the Windows file dialog libraries will be skipped.__\
 `./gradlew clean shadowJar`
 
 The output will be in __/build/libs__
+
+## Repositories
+### Debian-based/apt:
+```shell
+curl -fsSL https://apt.ambershadow.dev/repo.gpg -o cogfly.gpg
+curl -fsSL https://apt.ambershadow.dev/cogfly.sources -o cogfly.sources
+sudo install -Dm644 cogfly.sources /etc/apt/sources.list.d/cogfly.sources
+sudo install -Dm644 cogfly.gpg /usr/share/keyrings/cogfly.gpg
+```
+
+### RPM/yum:
+```shell
+curl -fsSL https://rpm.ambershadow.dev/cogfly.repo -o cogfly.repo
+sudo install -Dm644 cogfly.repo /etc/yum.repos.d/cogfly.repo
+```
 
 <details>
 <summary><h3>Credits</h3></summary>
