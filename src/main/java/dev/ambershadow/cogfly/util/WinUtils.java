@@ -63,10 +63,20 @@ public class WinUtils {
                         "");
 
                 if (!command.equals("\"" + exe + "\" \"%1\"")) {
-                    registerWinKey(exe);
+                    registerWinKey(exe, WinReg.HKEY_CURRENT_USER);
                 }
-            } else {
-                registerWinKey(exe);
+            } else if (Advapi32Util.registryValueExists(
+                    WinReg.HKEY_LOCAL_MACHINE,
+                    commandKey,
+                    "")) {
+                String command = Advapi32Util.registryGetStringValue(
+                        WinReg.HKEY_LOCAL_MACHINE,
+                        commandKey,
+                        "");
+
+                if (!command.equals("\"" + exe + "\" \"%1\"")) {
+                    registerWinKey(exe, WinReg.HKEY_LOCAL_MACHINE);
+                }
             }
             Files.createDirectories(Cogfly.localDataPath.resolve("updater"));
             try(InputStream stream = Cogfly.getResource("/updater.ps1").openStream()) {
@@ -77,23 +87,23 @@ public class WinUtils {
         }
     }
 
-    private static void registerWinKey(Path exe) {
-        Advapi32Util.registryCreateKey(WinReg.HKEY_CURRENT_USER, "Software\\Classes\\cogfly");
+    private static void registerWinKey(Path exe, WinReg.HKEY key) {
+        Advapi32Util.registryCreateKey(key, "Software\\Classes\\cogfly");
         Advapi32Util.registrySetStringValue(
-                WinReg.HKEY_CURRENT_USER,
+                key,
                 "Software\\Classes\\cogfly",
                 "",
                 "URL:Cogfly Protocol");
         Advapi32Util.registrySetStringValue(
-                WinReg.HKEY_CURRENT_USER,
+                key,
                 "Software\\Classes\\cogfly",
                 "URL Protocol",
                 "");
         Advapi32Util.registryCreateKey(
-                WinReg.HKEY_CURRENT_USER,
+                key,
                 "Software\\Classes\\cogfly\\shell\\open\\command");
         Advapi32Util.registrySetStringValue(
-                WinReg.HKEY_CURRENT_USER,
+                key,
                 "Software\\Classes\\cogfly\\shell\\open\\command",
                 "",
                 "\"" + exe + "\" \"%1\""
