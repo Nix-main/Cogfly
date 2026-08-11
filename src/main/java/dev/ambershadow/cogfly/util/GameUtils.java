@@ -212,7 +212,7 @@ public class GameUtils {
             if (enabled) {
                 args.add("--doorstop-target-assembly");
                 String target = bix.resolve("core/BepInEx.Preloader.dll").toString();
-                target = Cogfly.isWindows() || (Cogfly.isMac() && Cogfly.settings.launchWithSteam) ? "\"" + target + "\"" : target;
+                target = Cogfly.isWindows() || Cogfly.settings.launchWithSteam ? "\"" + target + "\"" : target;
                 args.add(target);
             }
             String arg = String.join(" ", args);
