@@ -251,9 +251,12 @@ public class GameUtils {
                             for (Path config : SteamUtils.getSteamFolders()) {
                                 Path vdf = config.resolve("localconfig.vdf");
                                 String prefix = Cogfly.isMac() ? "/usr/bin/arch -x86_64 " : "";
-                                if (Files.exists(game.resolve("Hollow Knight Silksong.exe")))
-                                    prefix += "WINEDLLOVERRIDES=\"winhttp=n,b\" ";
-                                boolean argsSet = SteamUtils.setLaunchArgs(vdf, prefix + "/bin/sh \\\"" + game.resolve("run_bepinex.sh").toAbsolutePath() + "\\\" %command%");
+                                boolean argsSet;
+                                if (Cogfly.isProton(game))
+                                    argsSet = SteamUtils.setLaunchArgs(vdf, "WINEDLLOVERRIDES=\\\"winhttp=n,b\\\" %command%", s -> s.contains("WINEDLLOVERRIDES="));
+                                else
+                                    argsSet = SteamUtils.setLaunchArgs(vdf, prefix + "/bin/sh \\\"" + game.resolve("run_bepinex.sh").toAbsolutePath() + "\\\" %command%",
+                                        s -> s.contains("run_bepinex.sh"));
                                 if (argsSet)
                                     break;
                             }
@@ -269,6 +272,10 @@ public class GameUtils {
                 List<String> cmds = getStrings();
                 ProcessBuilder builder = new ProcessBuilder();
                 builder.directory(game.toFile());
+                if (Cogfly.isProton(game)){
+                    JOptionPane.showMessageDialog(FrameManager.getOrCreate().frame, "Cogfly can't launch proton standalone. Please use \"Launch with steam\".");
+                    return;
+                }
                 cmds.addAll(args);
                 builder.command(cmds);
                 Cogfly.logger.info("Launching standalone. Command={}, Directory={}", String.join(" ", cmds), game);
