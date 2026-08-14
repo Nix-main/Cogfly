@@ -135,7 +135,7 @@ public class Cogfly {
                     }
                     Path updater = localDataPath.resolve("appimageupdatetool-x86_64.appimage");
                     try (InputStream stream = URL.of(URI.create("https://github.com/AppImageCommunity/AppImageUpdate/releases/latest/download/appimageupdatetool-x86_64.AppImage"), null).openStream()) {
-                        Files.copy(stream, updater);
+                        Files.copy(stream, updater, StandardCopyOption.REPLACE_EXISTING);
                     }
                     setExecutable(updater);
                 }
