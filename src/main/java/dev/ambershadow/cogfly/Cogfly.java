@@ -612,12 +612,19 @@ public class Cogfly {
     public static boolean isWindows() {
         return OperatingSystem.current() == OperatingSystem.WINDOWS;
     }
+
     public static boolean isLinux() {
         return OperatingSystem.current() == OperatingSystem.LINUX;
     }
+
+    public static boolean isProton(Path game){
+        return isLinux() && Files.exists(game.resolve("Hollow Knight Silksong.exe"));
+    }
+
     public static boolean isMac() {
         return OperatingSystem.current() == OperatingSystem.MAC;
     }
+
     public static OperatingSystem getOs() {
         return OperatingSystem.current();
     }

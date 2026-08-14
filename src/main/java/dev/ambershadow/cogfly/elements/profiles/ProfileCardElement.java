@@ -182,7 +182,7 @@ public class ProfileCardElement extends JPanel {
 
             JLabel pth = new JLabel("Path: ");
             JButton btn = new JButton(profile.getGamePath());
-            btn.addActionListener(_ -> FileUtils.pickFile((path) -> btn.setText(path.getParent().toString()), "Hollow Knight Silksong", "exe", "app", ""));
+            btn.addActionListener(_ -> FileUtils.pickFile((path) -> btn.setText(path.getParent().toString()), "Hollow Knight Silksong", "exe", "app", "*"));
 
             create.addActionListener(_ -> {
                 if ((profile.getIconPath() == null || !button.getText().equals(profile.getIconPath().toString()))

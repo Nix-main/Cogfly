@@ -16,11 +16,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class SteamUtils {
 
-    public static boolean setLaunchArgs(Path vdf, String args) throws IOException {
+    public static boolean setLaunchArgs(Path vdf, String args, Function<String, Boolean> check) throws IOException {
         if (!Files.exists(vdf))
             return false;
         int silksongIndex = -1;
@@ -46,7 +47,7 @@ public class SteamUtils {
         }
         if (silksongIndex == -1)
             return false;
-        if (launchOpts.contains("run_bepinex.sh"))
+        if (check.apply(launchOpts))
             return true;
         if (!Cogfly.settings.finishedSteamPopup) {
             int opt = JOptionPane.showOptionDialog(FrameManager.getOrCreate().frame,
@@ -66,24 +67,13 @@ public class SteamUtils {
             return true;
         String val;
         int index;
-        if (launchOptsIndex == -1 || launchOpts.isEmpty()) {
-            String[] vals = lines.get(silksongIndex+2).split("\"");
-            vals[1] = "LaunchOptions";
-            vals[3] = args + "\"";
-            val = String.join("\"", vals);
-            index = silksongIndex + 2;
-        }
-        else {
-            String[] vals = launchOpts.split("\"");
-            if (vals.length > 3) {
-                vals[3] = args + " \"";
-            } else {
-                vals[2] = " \t\"" + args + " \"";
-            }
+        String[] vals = lines.get(silksongIndex+2).split("\"");
+        vals[1] = "LaunchOptions";
+        vals[3] = args + "\"";
+        val = String.join("\"", vals);
+        index = launchOptsIndex != -1 ? launchOptsIndex : silksongIndex + 3;
+        if (launchOptsIndex != -1)
             lines.remove(launchOptsIndex);
-            index = launchOptsIndex;
-            val = String.join("\"", vals);
-        }
         FileUtils.openURI(URI.create("steam://exit"));
         ProcessHandle.allProcesses()
                 .filter((p) ->

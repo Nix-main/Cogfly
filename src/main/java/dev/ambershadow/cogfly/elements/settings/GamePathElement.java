@@ -17,7 +17,7 @@ public class GamePathElement extends SettingsElement {
                     .getParentFile().getAbsolutePath();
             button.setText(p);
             parent.update(s -> s.gamePath = p);
-        }, "Hollow Knight Silksong", "exe", "app", ""));
+        }, "Hollow Knight Silksong", "exe", "app", "*"));
         add(label, button);
     }
 }

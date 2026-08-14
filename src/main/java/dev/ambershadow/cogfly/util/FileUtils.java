@@ -38,7 +38,6 @@ public class FileUtils {
     );
 
     private static final Map<String, String> EXT_TO_MIME = Map.ofEntries(
-            Map.entry("linux_executable", "application/x-executable"), // not a real extension but a filler to use the MIME type
             Map.entry("exe", "application/x-msdownload"),
             Map.entry("sh",  "application/x-sh"),
             Map.entry("bin", "application/octet-stream"),
@@ -209,6 +208,9 @@ public class FileUtils {
                         })
                         .distinct()
                         .collect(Collectors.joining(" "));
+                if (Arrays.asList(extensions).contains("*")) {
+                    patterns = patterns.isEmpty() ? "*" : patterns + " *";
+                }
                 Optional<Path> path = readValue(new ProcessBuilder(List.of(
                         "zenity",
                         "--file-selection",
