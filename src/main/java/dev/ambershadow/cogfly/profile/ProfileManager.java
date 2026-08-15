@@ -262,7 +262,8 @@ public class ProfileManager {
             profile.setGamePath(Paths.get(gamePath).toString());
         try {
             Files.createDirectories(profile.getPath());
-            Files.writeString(profile.getPath().resolve("cogfly_data.json"), cogflyData);
+            if (!cogflyData.isEmpty())
+                Files.writeString(profile.getPath().resolve("cogfly_data.json"), cogflyData);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
