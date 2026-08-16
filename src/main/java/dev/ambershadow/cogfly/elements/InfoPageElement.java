@@ -22,7 +22,7 @@ public class InfoPageElement extends JPanel implements ReloadablePage {
         setLayout(new BorderLayout());
 
         Random random = new Random();
-        int a = random.nextInt(0, 1000);
+        int a = random.nextInt(0, 100);
         JLabel image;
         if (a == 1 && Cogfly.settings.profileSpecificPaths){
             if (random.nextBoolean()){
