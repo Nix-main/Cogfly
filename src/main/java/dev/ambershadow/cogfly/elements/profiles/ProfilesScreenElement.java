@@ -36,7 +36,7 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
         FrameManager.getOrCreate().getCurrentPage().reload();
     };
     private static boolean refreshQueued = false;
-    public static void queueRefresh() {
+    public static synchronized void queueRefresh() {
         refreshQueued = true;
     }
 
@@ -311,7 +311,7 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
     }
 
     @Override
-    public void reload() {
+    public synchronized void reload() {
         if (ProfileManager.profiles.stream().anyMatch(profile -> !Files.exists(profile.getPath()))) {
             ProfileManager.loadProfiles();
             JOptionPane.showMessageDialog(FrameManager.getOrCreate().frame, "One of your profiles wasn't found on the system, so they're being reloaded. If you changed or deleted a profile in your file system while Cogfly is open, note that this is dangerous behavior.");

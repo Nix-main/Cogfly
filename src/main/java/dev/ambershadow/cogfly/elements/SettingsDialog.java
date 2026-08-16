@@ -2,6 +2,7 @@ package dev.ambershadow.cogfly.elements;
 
 import dev.ambershadow.cogfly.Cogfly;
 import dev.ambershadow.cogfly.elements.profiles.ProfileCardElement;
+import dev.ambershadow.cogfly.elements.profiles.ProfilesScreenElement;
 import dev.ambershadow.cogfly.elements.settings.*;
 import dev.ambershadow.cogfly.profile.ProfileManager;
 import dev.ambershadow.cogfly.util.GameUtils;
@@ -118,6 +119,8 @@ public class SettingsDialog extends JDialog {
         ProfileManager.loadProfiles();
         if (queued.baseGameEnabled)
             GameUtils.downloadBepInEx(Path.of(queued.gamePath));
+        ProfilesScreenElement.queueRefresh();
+        FrameManager.getOrCreate().getCurrentPage().reload();
         SwingUtilities.invokeLater(ModPanelElement::redrawAll);
         Cogfly.settings.save();
         SwingUtilities.updateComponentTreeUI(FrameManager.getOrCreate().frame);
