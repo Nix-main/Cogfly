@@ -245,7 +245,7 @@ public class Cogfly {
                         }
                     }
                 }
-                GameUtils.launchModdedGame(f);
+                GameUtils.launchModdedGame(f, true);
             } else {
                 JOptionPane.showMessageDialog(null, LocaleManager.errorProfileNotExist.get(), LocaleManager.titleError.get(), JOptionPane.ERROR_MESSAGE);
             }

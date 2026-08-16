@@ -176,6 +176,10 @@ public class GameUtils {
     }
 
     public static void launchModdedGame(Profile profile) {
+        launchModdedGame(profile, false);
+    }
+
+    public static void launchModdedGame(Profile profile, boolean shortcut) {
         Cogfly.logger.info("Attempting to launch game with profile: {}",  profile.getName());
         if (ModUtils.isDownloading(profile)) {
             JOptionPane.showMessageDialog(FrameManager.getOrCreate().frame, "Downloads are currently in-progress for this profile. Please wait for them to complete before launching.", "Downloads in progress!", JOptionPane.WARNING_MESSAGE);
@@ -191,19 +195,19 @@ public class GameUtils {
                     new Object[]{"Launch Modded", "Launch Vanilla"},
                     "Launch Modded");
             if (launch == JOptionPane.NO_OPTION)
-                launchGameAsync(false, profile.getBepInExPath().toString(), profile.getGamePath());
+                launchGameAsync(false, profile.getBepInExPath().toString(), profile.getGamePath(), shortcut);
 
             if (launch != JOptionPane.YES_OPTION)
                 return;
         }
-        launchGameAsync(true, profile.getBepInExPath().toString(), profile.getGamePath());
+        launchGameAsync(true, profile.getBepInExPath().toString(), profile.getGamePath(), shortcut);
     }
 
-    public static void launchGameAsync(boolean enabled, String path, String gamePath) {
+    public static void launchGameAsync(boolean enabled, String path, String gamePath, boolean shortcut) {
         CompletableFuture.runAsync(() -> {
             Cogfly.logger.info("Launching game. OS: {}, BepInExPath: {}, GamePath: {}", Cogfly.getOs(), path, gamePath);
             Path game = Paths.get(gamePath);
-            if (enabled)
+            if (enabled && !shortcut)
                 downloadDoorstop(game);
             List<String> args = new ArrayList<>();
             args.add("--doorstop-enabled");

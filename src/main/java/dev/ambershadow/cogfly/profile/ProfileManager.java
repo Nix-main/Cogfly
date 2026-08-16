@@ -128,11 +128,13 @@ public class ProfileManager {
                 continue;
             try(Stream<Path> files = Files.list(path)) {
                 for (Path file : files.toList()) {
-                    if (!Files.isDirectory(file))
-                        continue;
-                    Profile profile = loadProfile(file);
-                    profile.refreshMods();
-                    profiles.add(profile);
+                    try {
+                        Profile profile = loadProfile(file);
+                        profile.refreshMods();
+                        profiles.add(profile);
+                    } catch (Exception e) {
+                        Cogfly.logger.error("Failed to load profile at {}", file, e);
+                    }
                 }
             }
             catch (IOException e) {
@@ -165,7 +167,7 @@ public class ProfileManager {
                 }
                 reader.endObject();
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                Cogfly.logger.error("Corrupt cogfly_data.json for profile {}", path.getFileName(), e);
             }
         }
         Profile profile = new Profile(path.getFileName().toString(), path.toAbsolutePath(), imagePath, icon);

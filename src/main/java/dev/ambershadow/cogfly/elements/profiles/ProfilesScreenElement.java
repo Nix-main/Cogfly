@@ -83,7 +83,7 @@ public class ProfilesScreenElement extends JPanel implements ReloadablePage {
         upperPanel.setPreferredSize(new Dimension(getWidth(), 30));
 
         JButton launchVanilla = new JButton("Launch Vanilla Game");
-        launchVanilla.addActionListener(_ -> GameUtils.launchGameAsync(false, "", Cogfly.settings.gamePath));
+        launchVanilla.addActionListener(_ -> GameUtils.launchGameAsync(false, "", Cogfly.settings.gamePath, false));
 
         JButton importFromFile = new JButton("Import From File");
         importFromFile.addActionListener(_ -> FileUtils.pickFile((path) -> ProfileManager.fromFile(path, (profile, outdated) -> {

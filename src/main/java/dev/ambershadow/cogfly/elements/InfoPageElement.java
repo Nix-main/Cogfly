@@ -111,7 +111,7 @@ public class InfoPageElement extends JPanel implements ReloadablePage {
         launchVanilla.setHorizontalAlignment(SwingConstants.CENTER);
         launchVanilla.setPreferredSize(dim);
         launchVanilla.setMaximumSize(max);
-        launchVanilla.addActionListener(_ -> GameUtils.launchGameAsync(false, "", Cogfly.settings.gamePath));
+        launchVanilla.addActionListener(_ -> GameUtils.launchGameAsync(false, "", Cogfly.settings.gamePath, false));
 
         JPanel buttons = new JPanel();
         buttons.setLayout(new BoxLayout(buttons, BoxLayout.X_AXIS));
