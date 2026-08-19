@@ -571,8 +571,6 @@ public class Cogfly {
         clipboard.setContents(selection, null);
     }
 
-
-
     public static CompletableFuture<Void> runAsync(Runnable runnable) {
         CompletableFuture<Void> future = CompletableFuture.runAsync(runnable);
         future.exceptionally(f -> {

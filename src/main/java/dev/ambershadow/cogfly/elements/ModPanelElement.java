@@ -322,8 +322,7 @@ public class ModPanelElement extends JPanel {
 
                 installButton.addActionListener(_ -> {
                     if (mod.isInstalled(profile) && !mod.isOutdated(profile)) ModUtils.removeMod(mod, profile);
-                    else ModUtils.downloadMod(mod, profile, true);
-                    update(mod, ModPanelElement.this.mods.get(mod));
+                    else ModUtils.downloadLatestMod(mod, profile, true).whenComplete((_, _) -> update(mod, ModPanelElement.this.mods.get(mod)));
                     filterButtons();
                 });
 
