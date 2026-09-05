@@ -15,14 +15,13 @@ import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 
 public class ModPanelElement extends JPanel {
     private static final HashMap<Profile, ModPanelElement> panels = new HashMap<>();
@@ -240,7 +239,7 @@ public class ModPanelElement extends JPanel {
                 infoPanel.add(descArea);
                 entry.descriptionArea = descArea;
                 infoPanel.add(author);
-                JLabel versionLabel = new JLabel("Latest version: " + mod.getVersionNumber());
+                JLabel versionLabel = new JLabel("Latest version: " + Optional.ofNullable(ModData.getMod(mod)).map(ModData::getVersionNumber).orElse(mod.getVersionNumber()));
                 JLabel installedVersionLabel = new JLabel("Installed version: " + mod.getVersionNumber());
                 infoPanel.add(versionLabel);
                 if (mod.isInstalled(profile))
@@ -412,44 +411,39 @@ public class ModPanelElement extends JPanel {
 
     // this method is SO UGLY
     public static String formatRelative(Instant then, Instant now) {
-
+        long value;
+        String unit;
         long minutes = ChronoUnit.MINUTES.between(then, now);
         if (minutes < 60) {
-            return minutes + " minute" + plural(minutes) + " ago";
+            value = minutes;
+            unit = "minute";
+        } else {
+            long hours = ChronoUnit.HOURS.between(then, now);
+            if (hours < 24) {
+                value = hours;
+                unit = "hour";
+            } else {
+                long days = ChronoUnit.DAYS.between(then, now);
+                if (days < 7) {
+                    value = days;
+                    unit = "day";
+                } else if (days < 28) {
+                    value = days / 7;
+                    unit = "week";
+                } else {
+                    LocalDate from = then.atZone(ZoneId.systemDefault()).toLocalDate();
+                    LocalDate to = now.atZone(ZoneId.systemDefault()).toLocalDate();
+                    long months = ChronoUnit.MONTHS.between(from, to);
+                    if (months < 12) {
+                        value = months; unit = "month";
+                    } else {
+                        value = ChronoUnit.YEARS.between(from, to);
+                        unit = "year";
+                    }
+                }
+            }
         }
-
-        long hours = ChronoUnit.HOURS.between(then, now);
-        if (hours < 24) {
-            return hours + " hour" + plural(hours) + " ago";
-        }
-
-        long days = ChronoUnit.DAYS.between(then, now);
-        if (days < 7) {
-            return days + " day" + plural(days) + " ago";
-        }
-
-        long weeks = days / 7;
-        if (weeks < 4) {
-            return weeks + " week" + plural(weeks) + " ago";
-        }
-
-        long months = ChronoUnit.MONTHS.between(
-                then.atZone(ZoneId.systemDefault()).toLocalDate(),
-                now.atZone(ZoneId.systemDefault()).toLocalDate()
-        );
-        if (months < 12) {
-            return months + " month" + plural(months) + " ago";
-        }
-
-        long years = ChronoUnit.YEARS.between(
-                then.atZone(ZoneId.systemDefault()).toLocalDate(),
-                now.atZone(ZoneId.systemDefault()).toLocalDate()
-        );
-        return years + " year" + plural(years) + " ago";
-    }
-
-    private static String plural(long value) {
-        return value == 1 ? "" : "s";
+        return value + " " + unit + (value == 1 ? "" : "s") + " ago";
     }
 
     private static class Mod {
