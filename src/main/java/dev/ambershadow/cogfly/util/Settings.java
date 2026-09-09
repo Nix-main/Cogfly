@@ -70,7 +70,8 @@ public class Settings {
 
 
     public String theme = FlatNordIJTheme.class.getName();
-    public String gamePath = findDefaultPath();
+    public String steamPath = findDefaultSteamPath();
+    public String gamePath = findDefaultGamePath(steamPath);
     public String profileSavePath = Cogfly.roamingDataPath.resolve("profiles").toString();
     public final Set<String> profileSources = new HashSet<>();
     public boolean baseGameEnabled = false;
@@ -92,7 +93,26 @@ public class Settings {
     public JsonObject getData() {
         return getData(dataFile);
     }
-    private String findDefaultPath() {
+    private String findDefaultGamePath(String steamPath) {
+        for (Path root : FileSystems.getDefault().getRootDirectories()) {
+            for (String path : STATIC_PATHS) {
+                Path combined = root.resolve(path);
+                if (Files.isDirectory(combined)) {
+                    return combined.toAbsolutePath().toString();
+                }
+            }
+        }
+        if (Cogfly.isMac()) {
+            String path = steamPath + "/steamapps/common/Hollow Knight Silksong/";
+            return Files.isDirectory(Paths.get(path)) ? path : "";
+        }
+        if (Cogfly.isLinux()) {
+            String path = steamPath + "steamapps/common/Hollow Knight Silksong/";
+            return Files.isDirectory(Paths.get(path)) ? path : "";
+        }
+        return "";
+    }
+    private String findDefaultSteamPath() {
         for (Path root : FileSystems.getDefault().getRootDirectories()) {
             for (String path : STATIC_PATHS) {
                 Path combined = root.resolve(path);
@@ -103,12 +123,11 @@ public class Settings {
         }
         if (Cogfly.isMac()) {
             String path = AppDirsFactory.getInstance().getUserDataDir
-                    ("Steam", null, "Steam")
-                    + "/steamapps/common/Hollow Knight Silksong/";
+                    ("Steam", null, "Steam");
             return Files.isDirectory(Paths.get(path)) ? path : "";
         }
         if (Cogfly.isLinux()) {
-            String path = System.getProperty("user.home") + "/.local/share/Steam/steamapps/common/Hollow Knight Silksong/";
+            String path = System.getProperty("user.home") + "/.local/share/Steam/";
             return Files.isDirectory(Paths.get(path)) ? path : "";
         }
         return "";

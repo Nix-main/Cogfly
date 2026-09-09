@@ -1,7 +1,5 @@
 package dev.ambershadow.cogfly.util;
 
-import com.sun.jna.platform.win32.Advapi32Util;
-import com.sun.jna.platform.win32.WinReg;
 import dev.ambershadow.cogfly.Cogfly;
 import dev.ambershadow.cogfly.asset.Assets;
 import dev.ambershadow.cogfly.util.swing.FrameManager;
@@ -89,12 +87,9 @@ public class SteamUtils {
     }
 
     public static List<Path> getSteamFolders() throws IOException {
-        Path steamRoot = switch (Cogfly.getOs()) {
-            case WINDOWS -> Paths.get(Advapi32Util.registryGetStringValue(WinReg.HKEY_CURRENT_USER, "Software\\Valve\\Steam", "SteamPath"));
-            case LINUX -> Paths.get(System.getProperty("user.home"), ".local/share/Steam");
-            case MAC -> Paths.get(System.getProperty("user.home"), "Library/Application Support/Steam");
-            default -> null;
-        };
+        Path steamRoot = Cogfly.settings.steamPath.isBlank()
+                ? null
+                : Paths.get(Cogfly.settings.steamPath);
         if (steamRoot == null) return List.of();
         List<Path> paths = new ArrayList<>();
         for (int id : getSteamUserIds(steamRoot.resolve("config", "loginusers.vdf"))) {
