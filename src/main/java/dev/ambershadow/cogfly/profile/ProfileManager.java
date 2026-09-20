@@ -128,6 +128,8 @@ public class ProfileManager {
                 continue;
             try(Stream<Path> files = Files.list(path)) {
                 for (Path file : files.toList()) {
+                    if (Files.isHidden(file) || !Files.isDirectory(file))
+                        continue;
                     try {
                         Profile profile = loadProfile(file);
                         profile.refreshMods();
