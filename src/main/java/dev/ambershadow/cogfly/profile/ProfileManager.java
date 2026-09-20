@@ -128,7 +128,7 @@ public class ProfileManager {
                 continue;
             try(Stream<Path> files = Files.list(path)) {
                 for (Path file : files.toList()) {
-                    if (Files.isHidden(file) || !Files.isDirectory(file))
+                    if (Files.isHidden(file) || !Files.isDirectory(file) || !Files.exists(file.resolve("BepInEx")))
                         continue;
                     try {
                         Profile profile = loadProfile(file);
