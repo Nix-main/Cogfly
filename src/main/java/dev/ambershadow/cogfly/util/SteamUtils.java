@@ -72,7 +72,7 @@ public class SteamUtils {
         if (vals.length > 3)
             vals[3] = args + "\"";
         else
-            vals[2] = args + "\"";
+            vals[1] = args + "\"";
         val = String.join("\"", vals);
         index = launchOptsIndex != -1 ? launchOptsIndex : silksongIndex + 3;
         if (launchOptsIndex != -1)
