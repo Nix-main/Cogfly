@@ -190,7 +190,7 @@ public class ProfileManager {
     public static void fromId(String id, BiConsumer<Profile, ModData[]> outdated) {
         if (id == null) return;
         try {
-            URL url = URL.of(URI.create("https://thunderstore.io/api/experimental/legacyprofile/get/" + id), null);
+            URL url = URL.of(URI.create("https://thunderstore.io/api/experimental/legacyprofile/get/" + id + "/"), null);
             InputStream is = url.openStream();
             String content = new String(is.readAllBytes());
             content = content.replace("#r2modman", "");
