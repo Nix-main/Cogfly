@@ -77,7 +77,11 @@ public class SteamUtils {
         index = launchOptsIndex != -1 ? launchOptsIndex : silksongIndex + 3;
         if (launchOptsIndex != -1)
             lines.remove(launchOptsIndex);
-        FileUtils.openURI(URI.create("steam://exit"));
+        try {
+            FileUtils.openURI(URI.create("steam://exit"));
+        } catch (RuntimeException e) {
+            JOptionPane.showMessageDialog(null, "Steam failed to close, please close Steam yourself.");
+        }
         ProcessHandle.allProcesses()
                 .filter((p) ->
                         p.info().command().map(cmd -> cmd.toLowerCase().endsWith("steam.exe")
