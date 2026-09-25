@@ -465,7 +465,7 @@ public class Cogfly {
         if (!settings.dontShowPatreonAgain) {
             int val = JOptionPane.showOptionDialog(
                     FrameManager.getOrCreate().frame,
-                    "I have a Patreon! If you want to support me and Cogfly, please do so at https://www.patreon/com/c/AmberShadowo",
+                    "I have a Patreon! It's fairly affordable, so if you want to support me and access bonus content coming soon, please do so at https://www.patreon/com/c/AmberShadowo",
                     "Support me?",
                     JOptionPane.YES_NO_CANCEL_OPTION,
                     JOptionPane.INFORMATION_MESSAGE,
