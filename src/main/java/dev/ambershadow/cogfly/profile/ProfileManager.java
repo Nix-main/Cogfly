@@ -135,12 +135,12 @@ public class ProfileManager {
                         profile.refreshMods();
                         profiles.add(profile);
                     } catch (Exception e) {
-                        Cogfly.logger.error("Failed to load profile at {}", file, e);
+                        Cogfly.logger.error("Failed to load profile {} at {}", path.getFileName(), file, e);
                     }
                 }
             }
             catch (IOException e) {
-                throw new RuntimeException(e);
+                Cogfly.logger.error("Failed to load profile {}", path.getFileName(), e);
             }
         }
         baseGame = new Profile("Base Game", Paths.get(Cogfly.settings.gamePath), null, Assets.silksongIcon.getAsIcon());

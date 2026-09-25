@@ -422,7 +422,9 @@ public class Cogfly {
             macSha256 = obj.get("macSha256").getAsString();
             latestVersion = obj.get("version").getAsString();
         } catch (IOException | InterruptedException e) {
-            throw new RuntimeException(e);
+            windowsSha256 = "";
+            macSha256 = "";
+            latestVersion = version;
         }
         if (!version.equals(latestVersion)) {
             int update = JOptionPane.showOptionDialog(
@@ -496,8 +498,8 @@ public class Cogfly {
                             message.get("type").getAsInt()
                     );
                 }
-            } catch (IOException | InterruptedException e) {
-                throw new RuntimeException(e);
+            } catch (IOException | InterruptedException ignored) {
+                Cogfly.logger.error("Failed to fetch dynamic message.");
             }
         }
         if (showUnknownHost) {

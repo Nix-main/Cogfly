@@ -39,20 +39,19 @@ public class ModFetcher {
             content = v.toString();
             Files.writeString(cache, content);
         }
-        catch (UnknownHostException unknown) {
-            Cogfly.showUnknownHost = true;
+        catch (Exception e) {
+            Cogfly.logger.error("Encountered error while fetching modlist.", e);
+            if (e instanceof UnknownHostException)
+                Cogfly.showUnknownHost = true;
             if (!found && Files.exists(cache)) {
                 try {
                     content = Files.readString(cache);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
+                } catch (IOException v) {
+                    throw new RuntimeException(v);
                 }
             } else {
                 return all;
             }
-        }
-        catch (IOException e) {
-            throw new RuntimeException(e);
         }
         JsonArray items = JsonParser.parseString(content).getAsJsonArray();
         for (JsonElement el : items)

@@ -70,7 +70,7 @@ public class GameUtils {
         FileUtils.deleteFolder(newPack);
         Files.move(downloadedPack.resolve("BepInExPack"), newPack);
         FileUtils.deleteFolder(downloadedPack);
-        Files.deleteIfExists(newDoorstop);
+        FileUtils.deleteFolder(newDoorstop);
         Files.createDirectory(newDoorstop);
         Files.deleteIfExists(newPack.resolve("changelog.txt"));
         try (Stream<Path> files = Files.list(newPack)) {
@@ -110,7 +110,10 @@ public class GameUtils {
         try {
             downloadPack(latestPackVer);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            Cogfly.logger.error("Failed to download BepInExPack.", e);
+            JOptionPane.showOptionDialog(null, "Cogfly failed to install the BepInEx pack. The app must now exit.", "Pack install failed!", JOptionPane.DEFAULT_OPTION, JOptionPane.ERROR_MESSAGE, null, new String[]{"Close"}, "Close");
+            System.exit(100);
+            return;
         }
         if (Cogfly.settings.baseGameEnabled)
             downloadBepInEx(Path.of(Cogfly.settings.gamePath));
