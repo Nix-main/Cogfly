@@ -602,7 +602,7 @@ public class Cogfly {
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.ERROR_MESSAGE,
                 null,
-                new Object[]{LocaleManager.buttonCopy, LocaleManager.buttonClose.get()},
+                new Object[]{LocaleManager.buttonCopy.get(), LocaleManager.buttonClose.get()},
                 0);
         if (val == JOptionPane.YES_OPTION) {
             copyString(sw.toString());
